@@ -56,6 +56,11 @@ final class DataController: ObservableObject {
                     return
                 }
                 do {
+                    #if DEBUG
+                    if ProcessInfo.processInfo.arguments.contains("-initialize-cloudkit-schema") {
+                        try self.container.initializeCloudKitSchema(options: [])
+                    }
+                    #endif
                     try self.finishMigrationAndSeed()
                     if ProcessInfo.processInfo.arguments.contains("-seed-installments") {
                         try self.seedUITestInstallmentsIfNeeded()

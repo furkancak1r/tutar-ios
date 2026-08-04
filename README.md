@@ -40,6 +40,8 @@ xcodebuild test -project Tutar.xcodeproj -scheme Tutar \
 
 Kendi cihazınızda çalıştırmak için bundle ID, App Group, iCloud container ve geliştirme takımını kendi Apple Developer hesabınızla değiştirin.
 
+CloudKit development şemasını oluşturmak için Debug çalıştırmasına `-initialize-cloudkit-schema` argümanını bir kez ekleyin; TestFlight veya App Store dağıtımından önce CloudKit Console’daki şema değişikliklerini production’a dağıtın.
+
 ## Kaynak, atıf ve lisans
 
 Tutar, [Dime](https://github.com/rafsoh/dimeApp) temel alınarak oluşturulmuş değiştirilmiş bir çalışmadır. Dime’ın özgün yaratıcısı Rafael Soh’tur; önceki katkılar Git geçmişinde kendi yazarlarıyla korunmaktadır. Bu türev ilk kez **4 Ağustos 2026** tarihinde Tutar olarak değiştirilmiştir ve dayandığı upstream revizyonu `0463cb8caba237de781ae02e70a2ec82ae900c67`’dir.
@@ -66,4 +68,4 @@ Tutar supports complete Turkish and English localization, locale-aware dates and
 
 Tutar is a modified work based on [Dime](https://github.com/rafsoh/dimeApp), originally created by Rafael Soh with contributions preserved in Git history. It was first modified as Tutar on **4 August 2026**, based on upstream revision `0463cb8caba237de781ae02e70a2ec82ae900c67`. The complete source is available in this repository and remains licensed under GNU GPLv3; see [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md).
 
-Support and privacy pages are linked above. Build instructions are identical to the Turkish section.
+Support and privacy pages are linked above. Build instructions are identical to the Turkish section. Initialize the development CloudKit schema once with the `-initialize-cloudkit-schema` Debug launch argument, then deploy the schema changes to production in CloudKit Console before TestFlight or App Store distribution.
