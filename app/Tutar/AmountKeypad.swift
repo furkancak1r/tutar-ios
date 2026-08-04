@@ -128,8 +128,8 @@ struct AmountKeypad: View {
                     Image(systemName: "checkmark")
                         .font(.title2.weight(.semibold))
                         .frame(maxWidth: .infinity, minHeight: 56)
-                        .foregroundStyle(.white)
-                        .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .foregroundStyle(Color(.systemBackground))
+                        .background(Color.primary, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Text("action.save"))

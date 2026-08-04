@@ -5,6 +5,7 @@ import SwiftUI
 @main
 struct TutarApp: App {
     @StateObject private var dataController = DataController.shared
+    @StateObject private var appLockController: AppLockController
     @AppStorage("appLanguage", store: .tutar) private var languageRaw = AppLanguage.system.rawValue
     @AppStorage("appearance", store: .tutar) private var appearance = 0
     @AppStorage("biometricLock", store: .tutar) private var biometricLock = false
@@ -14,6 +15,21 @@ struct TutarApp: App {
     }
 
     init() {
+        let arguments = ProcessInfo.processInfo.arguments
+        #if DEBUG
+        if arguments.contains("-ui-test-app-lock") {
+            let succeeds = !arguments.contains("-ui-test-authentication-fails")
+            _appLockController = StateObject(wrappedValue: AppLockController { _ in
+                try? await Task.sleep(nanoseconds: 150_000_000)
+                return succeeds
+            })
+        } else {
+            _appLockController = StateObject(wrappedValue: AppLockController())
+        }
+        #else
+        _appLockController = StateObject(wrappedValue: AppLockController())
+        #endif
+
         UserDefaults.tutar.register(defaults: [
             "appLanguage": AppLanguage.system.rawValue,
             "appearance": 0,
@@ -26,8 +42,11 @@ struct TutarApp: App {
             "biometricLock": false
         ])
         #if DEBUG
-        if ProcessInfo.processInfo.arguments.contains("-ui-testing") {
+        if arguments.contains("-ui-testing") {
             UserDefaults.tutar.set("", forKey: "currencyCode")
+        }
+        if arguments.contains("-ui-test-app-lock") {
+            UserDefaults.tutar.set(true, forKey: "biometricLock")
         }
         #endif
     }
@@ -37,6 +56,7 @@ struct TutarApp: App {
             rootView
                 .environment(\.managedObjectContext, dataController.context)
                 .environmentObject(dataController)
+                .environmentObject(appLockController)
                 .environment(\.appLanguage, language)
                 .environment(\.locale, language.locale)
                 .preferredColorScheme(appearance == 1 ? .light : appearance == 2 ? .dark : nil)

@@ -116,7 +116,9 @@ struct BudgetsView: View {
                         Text("empty.budgets.message")
                     } actions: {
                         Button("budgets.add") { editorTarget = .new }
-                            .buttonStyle(.borderedProminent)
+                            .buttonStyle(.bordered)
+                            .controlSize(.large)
+                            .accessibilityIdentifier("emptyBudgetAddButton")
                     }
                     .frame(maxWidth: .infinity)
                     .listRowBackground(Color.clear)

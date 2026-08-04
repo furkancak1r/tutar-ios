@@ -1,4 +1,4 @@
-# Tutar 1.0 (5) — TestFlight metadata
+# Tutar 1.0 (6) — TestFlight metadata
 
 ## Beta Description — Turkish
 
@@ -7,6 +7,8 @@ Tutar; gelir, gider, bütçe, tekrar ve taksitleri takip etmek için tamamen üc
 Tutar, Rafael Soh ve katkıda bulunanların oluşturduğu Dime temel alınarak değiştirilmiş GPLv3 çalışmasıdır. Değişiklik tarihi: 4 Ağustos 2026. Tam kaynak: https://github.com/furkancak1r/tutar-ios
 
 ## What to Test — Turkish
+
+Build 6, Face ID/Touch ID/aygıt parolası doğrulamasını tek istemle kararlı hâle getirir. Başarılı doğrulamadan sonra uygulama yeniden kilitlenmemeli; iptal veya başarısızlıkta otomatik istem döngüsü başlamamalıdır. Kilit, boş işlem, boş bütçe ve numaratör onay düğmelerinin açık/koyu görünüm kontrastı da düzeltildi.
 
 1. 3.000 TL, 3 taksit ve ilk tarih 18 Ağustos seçerek tam üç işlemin 18 Ağustos, 18 Eylül ve 18 Ekim’e oluşturulduğunu doğrulayın.
 2. Kuruşla tam bölünmeyen bir tutarda farkın yalnız son taksite verildiğini kontrol edin.
@@ -30,6 +32,8 @@ Tutar is a completely free, ad-free, open-source iOS app for tracking income, ex
 Tutar is a GPLv3 modified work based on Dime, originally created by Rafael Soh and contributors. Modification date: 4 August 2026. Complete source: https://github.com/furkancak1r/tutar-ios
 
 ## What to Test — English
+
+Build 6 makes Face ID, Touch ID, and device-passcode authentication stable with one request. The app must not relock after success, and cancellation or failure must not start an automatic prompt loop. Button contrast was also fixed on the lock screen, empty transaction and budget screens, and the keypad submit control in light and dark appearances.
 
 1. Enter a total of 3,000, choose 3 installments and 18 August, then verify exactly three linked entries on 18 August, 18 September, and 18 October.
 2. Use a total that does not divide evenly into cents and confirm only the last installment receives the remainder.

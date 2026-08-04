@@ -4,6 +4,93 @@ import XCTest
 
 final class TutarUITests: XCTestCase {
     @MainActor
+    func testAppLockSuccessStaysUnlockedAfterForegroundReturn() {
+        let app = launch(
+            language: "tr",
+            locale: "tr_TR",
+            lockAuthenticationSucceeds: true
+        )
+
+        XCTAssertTrue(app.navigationBars["Kayıtlar"].waitForExistence(timeout: 8))
+        Thread.sleep(forTimeInterval: 3)
+        XCTAssertTrue(app.navigationBars["Kayıtlar"].exists)
+        XCTAssertFalse(app.buttons["unlockButton"].exists)
+
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        XCTAssertTrue(app.navigationBars["Kayıtlar"].waitForExistence(timeout: 8))
+        Thread.sleep(forTimeInterval: 3)
+        XCTAssertTrue(app.navigationBars["Kayıtlar"].exists)
+        XCTAssertFalse(app.buttons["unlockButton"].exists)
+    }
+
+    @MainActor
+    func testFailedAppLockDoesNotRetryAndIsLocalized() {
+        let turkish = launch(
+            language: "tr",
+            locale: "tr_TR",
+            lockAuthenticationSucceeds: false
+        )
+        XCTAssertTrue(turkish.staticTexts["Uygulama kilitli"].waitForExistence(timeout: 8))
+        XCTAssertTrue(turkish.buttons["Kilidi aç"].waitForExistence(timeout: 3))
+        Thread.sleep(forTimeInterval: 2)
+        XCTAssertTrue(turkish.buttons["Kilidi aç"].exists)
+        XCTAssertFalse(turkish.navigationBars["Kayıtlar"].exists)
+        turkish.terminate()
+
+        let english = launch(
+            language: "en",
+            locale: "en_US",
+            lockAuthenticationSucceeds: false
+        )
+        XCTAssertTrue(english.staticTexts["App locked"].waitForExistence(timeout: 8))
+        XCTAssertTrue(english.buttons["Unlock"].waitForExistence(timeout: 3))
+        Thread.sleep(forTimeInterval: 2)
+        XCTAssertTrue(english.buttons["Unlock"].exists)
+        XCTAssertFalse(english.navigationBars["Records"].exists)
+    }
+
+    @MainActor
+    func testLockAndEmptyStateControlsPassContrastAudit() throws {
+        for appearance in ["Light", "Dark"] {
+            let locked = launch(
+                language: "en",
+                locale: "en_US",
+                appearance: appearance,
+                lockAuthenticationSucceeds: false
+            )
+            XCTAssertTrue(locked.buttons["unlockButton"].waitForExistence(timeout: 8))
+            try locked.performAccessibilityAudit(for: [.contrast]) { self.contrastFalsePositive($0) }
+            locked.terminate()
+
+            let app = launch(
+                language: "en",
+                locale: "en_US",
+                seed: false,
+                appearance: appearance
+            )
+            XCTAssertTrue(app.buttons["emptyTransactionAddButton"].waitForExistence(timeout: 8))
+            try app.performAccessibilityAudit(for: [.contrast]) { self.contrastFalsePositive($0) }
+
+            app.buttons["emptyTransactionAddButton"].tap()
+            XCTAssertTrue(app.buttons["keypadSubmit"].waitForExistence(timeout: 5))
+            try app.performAccessibilityAudit(for: [.contrast]) { self.contrastFalsePositive($0) }
+            app.terminate()
+
+            let budgets = launch(
+                language: "en",
+                locale: "en_US",
+                seed: false,
+                appearance: appearance
+            )
+            openTab("Budgets", in: budgets)
+            XCTAssertTrue(budgets.buttons["emptyBudgetAddButton"].waitForExistence(timeout: 5))
+            try budgets.performAccessibilityAudit(for: [.contrast]) { self.contrastFalsePositive($0) }
+            budgets.terminate()
+        }
+    }
+
+    @MainActor
     func testTurkishInstallmentsStayInRecordsAtLargestText() throws {
         let app = launch(language: "tr", locale: "tr_TR", largestText: true)
 
@@ -152,7 +239,9 @@ final class TutarUITests: XCTestCase {
         language: String,
         locale: String,
         seed: Bool = true,
-        largestText: Bool = false
+        largestText: Bool = false,
+        appearance: String? = nil,
+        lockAuthenticationSucceeds: Bool? = nil
     ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [
@@ -163,6 +252,15 @@ final class TutarUITests: XCTestCase {
         ]
         if largestText {
             app.launchArguments.append("-ui-test-largest-text")
+        }
+        if let appearance {
+            app.launchArguments += ["-AppleInterfaceStyle", appearance]
+        }
+        if let lockAuthenticationSucceeds {
+            app.launchArguments.append("-ui-test-app-lock")
+            if !lockAuthenticationSucceeds {
+                app.launchArguments.append("-ui-test-authentication-fails")
+            }
         }
         if seed { app.launchArguments.append("-seed-installments") }
         app.launch()
@@ -191,5 +289,10 @@ final class TutarUITests: XCTestCase {
             .firstMatch
         XCTAssertTrue(tab.waitForExistence(timeout: 5))
         tab.tap()
+    }
+
+    private func contrastFalsePositive(_ issue: XCUIAccessibilityAuditIssue) -> Bool {
+        // ponytail: this regression targets controls; iOS 26 flags native secondary text and color emoji pixels on iPad.
+        [.staticText, .searchField].contains(issue.element?.elementType) || issue.element?.label == "🛒"
     }
 }

@@ -427,12 +427,10 @@ enum DeviceAuthentication {
         context.localizedCancelTitle = AppFormat.localized("action.cancel", language: .system)
         var error: NSError?
         guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else { return false }
-
-        return await withCheckedContinuation { continuation in
-            context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { success, _ in
-                continuation.resume(returning: success)
-            }
-        }
+        return (try? await context.evaluatePolicy(
+            .deviceOwnerAuthentication,
+            localizedReason: reason
+        )) ?? false
     }
 }
 
@@ -503,7 +501,7 @@ struct AboutView: View {
                 )
                 LabeledContent(
                     "about.build",
-                    value: Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "5"
+                    value: Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "6"
                 )
             }
         }

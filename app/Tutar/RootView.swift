@@ -11,53 +11,160 @@ private enum AppTab: Hashable {
     case settings
 }
 
-struct AppLockLifecycle {
-    private var authenticationOwnsSceneTransition = false
-    private var shouldAuthenticateAfterBackground = false
-
-    mutating func authenticationStarted() {
-        authenticationOwnsSceneTransition = true
+@MainActor
+final class AppLockController: ObservableObject {
+    enum State: Equatable {
+        case locked
+        case authenticating
+        case unlocked
     }
 
-    mutating func authenticationFinished(sceneIsActive: Bool) {
-        if sceneIsActive { authenticationOwnsSceneTransition = false }
+    typealias Authenticator = (String) async -> Bool
+
+    @Published private(set) var state: State = .locked
+
+    private let authenticate: Authenticator
+    private var scenePhase = ScenePhase.active
+    private var didHandleStartup = false
+    private var shouldAuthenticateWhenActive = false
+    private var requestSequence = 0
+    private var activeRequestID: Int?
+    private var pendingResult: Bool?
+
+    init(authenticate: @escaping Authenticator = DeviceAuthentication.authenticate) {
+        self.authenticate = authenticate
     }
 
-    mutating func enteredBackground() -> Bool {
-        guard !authenticationOwnsSceneTransition else { return false }
-        shouldAuthenticateAfterBackground = true
-        return true
+    var isUnlocked: Bool { state == .unlocked }
+    var isAuthenticating: Bool { state == .authenticating }
+
+    func start(enabled: Bool, reason: String, scenePhase: ScenePhase) {
+        self.scenePhase = scenePhase
+        guard !didHandleStartup else { return }
+        didHandleStartup = true
+
+        guard enabled else {
+            disable()
+            return
+        }
+        if scenePhase == .active {
+            requestAuthentication(reason: reason)
+        } else {
+            shouldAuthenticateWhenActive = true
+        }
     }
 
-    mutating func becameActive(authenticationInProgress: Bool) -> Bool {
-        if !authenticationInProgress { authenticationOwnsSceneTransition = false }
-        defer { shouldAuthenticateAfterBackground = false }
-        return shouldAuthenticateAfterBackground
+    func setEnabled(_ enabled: Bool, reason: String, scenePhase: ScenePhase) {
+        self.scenePhase = scenePhase
+        guard enabled else {
+            disable()
+            return
+        }
+
+        invalidateRequest()
+        state = .locked
+        if scenePhase == .active {
+            requestAuthentication(reason: reason)
+        } else {
+            shouldAuthenticateWhenActive = true
+        }
     }
 
-    mutating func reset() {
-        authenticationOwnsSceneTransition = false
-        shouldAuthenticateAfterBackground = false
+    func requestAuthentication(reason: String) {
+        guard state == .locked else { return }
+        guard scenePhase == .active else {
+            shouldAuthenticateWhenActive = true
+            return
+        }
+
+        requestSequence &+= 1
+        let requestID = requestSequence
+        activeRequestID = requestID
+        pendingResult = nil
+        shouldAuthenticateWhenActive = false
+        state = .authenticating
+
+        Task { [weak self, authenticate] in
+            let success = await authenticate(reason)
+            self?.authenticationFinished(success, requestID: requestID)
+        }
+    }
+
+    func scenePhaseChanged(
+        to phase: ScenePhase,
+        lockEnabled: Bool,
+        reason: String
+    ) {
+        scenePhase = phase
+        guard lockEnabled else {
+            if state != .unlocked || activeRequestID != nil { disable() }
+            return
+        }
+
+        switch phase {
+        case .active:
+            if let pendingResult {
+                apply(pendingResult)
+            } else if shouldAuthenticateWhenActive, state == .locked {
+                shouldAuthenticateWhenActive = false
+                requestAuthentication(reason: reason)
+            }
+        case .background:
+            guard state != .authenticating else { return }
+            invalidateRequest()
+            state = .locked
+            shouldAuthenticateWhenActive = true
+        case .inactive:
+            break
+        @unknown default:
+            break
+        }
+    }
+
+    private func disable() {
+        invalidateRequest()
+        shouldAuthenticateWhenActive = false
+        state = .unlocked
+    }
+
+    private func authenticationFinished(_ success: Bool, requestID: Int) {
+        guard activeRequestID == requestID, state == .authenticating else { return }
+        if scenePhase == .active {
+            apply(success)
+        } else {
+            pendingResult = success
+        }
+    }
+
+    private func apply(_ success: Bool) {
+        activeRequestID = nil
+        pendingResult = nil
+        shouldAuthenticateWhenActive = false
+        state = success ? .unlocked : .locked
+    }
+
+    private func invalidateRequest() {
+        requestSequence &+= 1
+        activeRequestID = nil
+        pendingResult = nil
     }
 }
 
 struct RootView: View {
     @EnvironmentObject private var dataController: DataController
+    @EnvironmentObject private var appLockController: AppLockController
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.appLanguage) private var language
     @AppStorage("biometricLock", store: .tutar) private var biometricLock = false
     @State private var selectedTab = AppTab.log
     @State private var showingEditor = false
-    @State private var unlocked = false
-    @State private var authenticationInProgress = false
-    @State private var lockLifecycle = AppLockLifecycle()
 
     var body: some View {
-        Group {
-            if lockEnabled, !unlocked {
+        ZStack {
+            if lockEnabled, !appLockController.isUnlocked {
                 LockedView(
-                    isAuthenticating: authenticationInProgress,
-                    authenticate: authenticateIfNeeded
+                    isAuthenticating: appLockController.isAuthenticating,
+                    authenticate: requestAuthentication
                 )
             } else {
                 appContent
@@ -69,34 +176,35 @@ struct RootView: View {
             Text("error.data.message")
         }
         .onOpenURL { url in
-            if url.scheme == "tutar", url.host == "add", !lockEnabled || unlocked {
+            if url.scheme == "tutar", url.host == "add", !lockEnabled || appLockController.isUnlocked {
                 showingEditor = true
             }
         }
         .task {
-            if lockEnabled { authenticateIfNeeded() } else { unlocked = true }
+            appLockController.start(
+                enabled: lockEnabled,
+                reason: authenticationReason,
+                scenePhase: scenePhase
+            )
         }
         .onChange(of: biometricLock) { _, enabled in
-            if enabled {
-                showingEditor = false
-                unlocked = false
-                lockLifecycle.reset()
-                authenticateIfNeeded()
-            } else {
-                unlocked = true
-                lockLifecycle.reset()
-            }
+            if enabled { showingEditor = false }
+            appLockController.setEnabled(
+                enabled && lockAllowedInCurrentProcess,
+                reason: authenticationReason,
+                scenePhase: scenePhase
+            )
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 try? dataController.materializeRecurringTransactions()
-                if lockLifecycle.becameActive(authenticationInProgress: authenticationInProgress) {
-                    authenticateIfNeeded()
-                }
-            } else if phase == .background, lockEnabled {
-                showingEditor = false
-                if lockLifecycle.enteredBackground() { unlocked = false }
             }
+            if phase == .background, lockEnabled { showingEditor = false }
+            appLockController.scenePhaseChanged(
+                to: phase,
+                lockEnabled: lockEnabled,
+                reason: authenticationReason
+            )
         }
     }
 
@@ -132,22 +240,20 @@ struct RootView: View {
     }
 
     private var lockEnabled: Bool {
-        biometricLock && !ProcessInfo.processInfo.arguments.contains("-ui-testing")
+        biometricLock && lockAllowedInCurrentProcess
     }
 
-    private func authenticateIfNeeded() {
-        guard lockEnabled, !unlocked, !authenticationInProgress else { return }
-        authenticationInProgress = true
-        lockLifecycle.authenticationStarted()
-        let reason = AppFormat.localized("settings.lock.reason", language: language)
-        Task {
-            let success = await DeviceAuthentication.authenticate(reason: reason)
-            await MainActor.run {
-                unlocked = success
-                authenticationInProgress = false
-                lockLifecycle.authenticationFinished(sceneIsActive: scenePhase == .active)
-            }
-        }
+    private var lockAllowedInCurrentProcess: Bool {
+        let arguments = ProcessInfo.processInfo.arguments
+        return !arguments.contains("-ui-testing") || arguments.contains("-ui-test-app-lock")
+    }
+
+    private var authenticationReason: String {
+        AppFormat.localized("settings.lock.reason", language: language)
+    }
+
+    private func requestAuthentication() {
+        appLockController.requestAuthentication(reason: authenticationReason)
     }
 
     private var loadErrorBinding: Binding<Bool> {
@@ -180,15 +286,18 @@ private struct LockedView: View {
             Button(action: authenticate) {
                 if isAuthenticating {
                     ProgressView()
+                        .tint(.primary)
                         .frame(maxWidth: .infinity)
                 } else {
                     Label("settings.lock.retry", systemImage: "lock.open")
                         .frame(maxWidth: .infinity)
                 }
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.bordered)
+            .controlSize(.large)
             .disabled(isAuthenticating)
             .frame(maxWidth: 280)
+            .accessibilityIdentifier("unlockButton")
         }
         .padding(28)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -289,7 +398,9 @@ struct TransactionsView: View {
                     } actions: {
                         if searchText.isEmpty {
                             Button("action.addTransaction") { showingEditor = true }
-                                .buttonStyle(.borderedProminent)
+                                .buttonStyle(.bordered)
+                                .controlSize(.large)
+                                .accessibilityIdentifier("emptyTransactionAddButton")
                         }
                     }
                     .frame(maxWidth: .infinity)

@@ -36,23 +36,128 @@ final class AppFormatTests: XCTestCase {
     }
 }
 
-final class AppLockLifecycleTests: XCTestCase {
-    func testAuthenticationSceneChangesDoNotRelockOrStartAnotherPrompt() {
-        var lifecycle = AppLockLifecycle()
+@MainActor
+private final class AuthenticationProbe {
+    private(set) var callCount = 0
+    private var continuations: [CheckedContinuation<Bool, Never>] = []
 
-        lifecycle.authenticationStarted()
-        XCTAssertFalse(lifecycle.enteredBackground())
-        lifecycle.authenticationFinished(sceneIsActive: false)
-        XCTAssertFalse(lifecycle.becameActive(authenticationInProgress: false))
+    func authenticate(_: String) async -> Bool {
+        callCount += 1
+        return await withCheckedContinuation { continuations.append($0) }
+    }
 
-        XCTAssertTrue(lifecycle.enteredBackground())
-        XCTAssertTrue(lifecycle.becameActive(authenticationInProgress: false))
-        XCTAssertFalse(lifecycle.becameActive(authenticationInProgress: false))
+    func complete(_ result: Bool, at index: Int = 0) {
+        continuations.remove(at: index).resume(returning: result)
+    }
+}
 
-        lifecycle.authenticationStarted()
-        XCTAssertFalse(lifecycle.enteredBackground())
-        lifecycle.authenticationFinished(sceneIsActive: true)
-        XCTAssertFalse(lifecycle.becameActive(authenticationInProgress: false))
+@MainActor
+final class AppLockControllerTests: XCTestCase {
+    func testStartupAndButtonRequestsUseOneAuthentication() async {
+        let probe = AuthenticationProbe()
+        let controller = makeController(probe)
+
+        controller.requestAuthentication(reason: "Test")
+        controller.start(enabled: true, reason: "Test", scenePhase: .active)
+
+        await waitUntil { probe.callCount == 1 }
+        probe.complete(true)
+        await waitUntil { controller.state == .unlocked }
+    }
+
+    func testResultWhileInactiveIsAppliedOnceWhenActive() async {
+        let probe = AuthenticationProbe()
+        let controller = makeController(probe)
+        controller.start(enabled: true, reason: "Test", scenePhase: .active)
+        await waitUntil { probe.callCount == 1 }
+
+        controller.scenePhaseChanged(to: .inactive, lockEnabled: true, reason: "Test")
+        probe.complete(true)
+        await Task.yield()
+        XCTAssertEqual(controller.state, .authenticating)
+
+        controller.scenePhaseChanged(to: .active, lockEnabled: true, reason: "Test")
+        XCTAssertEqual(controller.state, .unlocked)
+        XCTAssertEqual(probe.callCount, 1)
+    }
+
+    func testActiveBeforeResultAlsoUnlocks() async {
+        let probe = AuthenticationProbe()
+        let controller = makeController(probe)
+        controller.start(enabled: true, reason: "Test", scenePhase: .active)
+        await waitUntil { probe.callCount == 1 }
+
+        controller.scenePhaseChanged(to: .inactive, lockEnabled: true, reason: "Test")
+        controller.scenePhaseChanged(to: .active, lockEnabled: true, reason: "Test")
+        probe.complete(true)
+
+        await waitUntil { controller.state == .unlocked }
+        XCTAssertEqual(probe.callCount, 1)
+    }
+
+    func testFailureStaysLockedWithoutAutomaticRetry() async {
+        let probe = AuthenticationProbe()
+        let controller = makeController(probe)
+        controller.start(enabled: true, reason: "Test", scenePhase: .active)
+        await waitUntil { probe.callCount == 1 }
+
+        probe.complete(false)
+        await waitUntil { controller.state == .locked }
+        controller.scenePhaseChanged(to: .active, lockEnabled: true, reason: "Test")
+        controller.scenePhaseChanged(to: .active, lockEnabled: true, reason: "Test")
+        await Task.yield()
+
+        XCTAssertEqual(probe.callCount, 1)
+    }
+
+    func testRealBackgroundStartsOneNewAuthentication() async {
+        let probe = AuthenticationProbe()
+        let controller = makeController(probe)
+        controller.start(enabled: true, reason: "Test", scenePhase: .active)
+        await waitUntil { probe.callCount == 1 }
+        probe.complete(true)
+        await waitUntil { controller.state == .unlocked }
+
+        controller.scenePhaseChanged(to: .background, lockEnabled: true, reason: "Test")
+        XCTAssertEqual(controller.state, .locked)
+        controller.scenePhaseChanged(to: .active, lockEnabled: true, reason: "Test")
+        controller.scenePhaseChanged(to: .active, lockEnabled: true, reason: "Test")
+
+        await waitUntil { probe.callCount == 2 }
+        XCTAssertEqual(controller.state, .authenticating)
+    }
+
+    func testStaleResultCannotChangeReenabledLock() async {
+        let probe = AuthenticationProbe()
+        let controller = makeController(probe)
+        controller.start(enabled: true, reason: "Test", scenePhase: .active)
+        await waitUntil { probe.callCount == 1 }
+
+        controller.setEnabled(false, reason: "Test", scenePhase: .active)
+        controller.setEnabled(true, reason: "Test", scenePhase: .active)
+        await waitUntil { probe.callCount == 2 }
+
+        probe.complete(true)
+        await Task.yield()
+        XCTAssertEqual(controller.state, .authenticating)
+        probe.complete(false)
+        await waitUntil { controller.state == .locked }
+    }
+
+    private func makeController(_ probe: AuthenticationProbe) -> AppLockController {
+        AppLockController(authenticate: probe.authenticate)
+    }
+
+    private func waitUntil(
+        _ condition: @escaping @MainActor () -> Bool,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) async {
+        for _ in 0 ..< 100 {
+            if condition() { return }
+            await Task.yield()
+        }
+        XCTFail("Condition was not met", file: file, line: line)
     }
 }
 
