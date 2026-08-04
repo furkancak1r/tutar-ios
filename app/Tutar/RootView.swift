@@ -210,7 +210,16 @@ struct RootView: View {
         }
     }
 
+    @ViewBuilder
     private var appContent: some View {
+        if #available(iOS 26.0, *) {
+            tabContent.tabBarMinimizeBehavior(.never)
+        } else {
+            tabContent
+        }
+    }
+
+    private var tabContent: some View {
         TabView(selection: $selectedTab) {
             NavigationStack {
                 TransactionsView(showingEditor: $showingEditor)
@@ -276,9 +285,9 @@ private struct LockedView: View {
     var body: some View {
         VStack(spacing: 18) {
             Image(systemName: "lock.fill")
-                .font(.system(size: 32, weight: .semibold))
-                .frame(width: 72, height: 72)
-                .background(Color.primary.opacity(0.08), in: Circle())
+                .font(.system(size: 36, weight: .semibold))
+                .symbolRenderingMode(.hierarchical)
+                .frame(width: 56, height: 56)
                 .accessibilityHidden(true)
 
             Text("settings.lock.title")
@@ -390,7 +399,7 @@ struct TransactionsView: View {
             if !upcoming.isEmpty {
                 Section("transactions.upcoming") {
                     ForEach(upcoming) { transaction in
-                        row(transaction)
+                        row(transaction, showsDate: true)
                     }
                 }
             }
@@ -411,6 +420,7 @@ struct TransactionsView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
                 }
             } else {
                 ForEach(groupedHistory, id: \.date) { group in
@@ -424,11 +434,20 @@ struct TransactionsView: View {
                 }
             }
         }
-        .listStyle(.insetGrouped)
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(Color(.systemBackground))
+        .frame(maxWidth: 760)
+        .frame(maxWidth: .infinity)
         .id(selectedMonth)
         .transition(.push(from: monthTransitionEdge))
         .navigationTitle("transactions.title")
-        .searchable(text: $searchText, prompt: "transactions.search")
+        .navigationBarTitleDisplayMode(.inline)
+        .searchable(
+            text: $searchText,
+            placement: .navigationBarDrawer(displayMode: .automatic),
+            prompt: "transactions.search"
+        )
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -486,8 +505,8 @@ struct TransactionsView: View {
         }
     }
 
-    private func row(_ transaction: Transaction) -> some View {
-        TransactionRow(transaction: transaction)
+    private func row(_ transaction: Transaction, showsDate: Bool = false) -> some View {
+        TransactionRow(transaction: transaction, showsDate: showsDate)
             .contentShape(Rectangle())
             .onTapGesture { editing = transaction }
             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -524,7 +543,7 @@ private struct MonthSummaryView: View {
     let next: () -> Void
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 10) {
             HStack {
                 Button(action: previous) {
                     Label("month.previous", systemImage: "chevron.left")
@@ -553,7 +572,13 @@ private struct MonthSummaryView: View {
                 .buttonStyle(.plain)
             }
 
-            VStack(spacing: 10) { summaryItems }
+            HStack(spacing: 8) {
+                metric("summary.expense", value: expense)
+                Divider().frame(height: 34)
+                metric("summary.income", value: income)
+                Divider().frame(height: 34)
+                metric("summary.net", value: income - expense, isNegative: income < expense)
+            }
         }
         .contentShape(Rectangle())
         .gesture(
@@ -570,24 +595,20 @@ private struct MonthSummaryView: View {
         .accessibilityHint(Text("month.swipeHint"))
     }
 
-    @ViewBuilder
-    private var summaryItems: some View {
-        metric("summary.expense", value: expense, color: .primary)
-        metric("summary.income", value: income, color: .green)
-        metric("summary.net", value: income - expense, color: income >= expense ? .green : .red)
-    }
-
-    private func metric(_ key: LocalizedStringKey, value: Double, color: Color) -> some View {
+    private func metric(_ key: LocalizedStringKey, value: Double, isNegative: Bool = false) -> some View {
         let formattedValue = AppFormat.money(value, language: language, currencyCode: currency)
-        return LabeledContent {
-            Text(formattedValue)
-                .font(.headline.monospacedDigit())
-                .foregroundStyle(color)
-                .multilineTextAlignment(.trailing)
-        } label: {
+        return VStack(spacing: 3) {
             Text(key)
+                .font(.caption)
                 .foregroundStyle(.secondary)
+            Text(formattedValue)
+                .font(.subheadline.monospacedDigit().weight(.semibold))
+                .foregroundStyle(isNegative ? Color.red : .primary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
         }
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -595,6 +616,12 @@ struct TransactionRow: View {
     @Environment(\.appLanguage) private var language
     @AppStorage("currencyCode", store: .tutar) private var preferredCurrency = ""
     let transaction: Transaction
+    let showsDate: Bool
+
+    init(transaction: Transaction, showsDate: Bool = false) {
+        self.transaction = transaction
+        self.showsDate = showsDate
+    }
 
     private var formattedAmount: String {
         AppFormat.money(
@@ -611,26 +638,25 @@ struct TransactionRow: View {
             Spacer(minLength: 4)
             amountLabel
         }
-        .frame(minHeight: 44)
+        .frame(minHeight: 48)
         .accessibilityIdentifier("transactionRow")
         .accessibilityElement(children: .contain)
     }
 
     private var categoryIcon: some View {
         Text(transaction.category?.wrappedEmoji ?? "•")
-            .font(.body)
-            .frame(width: 34, height: 34)
+            .font(.title3)
+            .frame(width: 28)
             .accessibilityIdentifier("transactionCategoryIcon")
             .accessibilityHidden(true)
     }
 
     private var details: some View {
         HStack(spacing: 6) {
-            Text(verbatim: "\(transaction.displayNote(language: language)) · \(transaction.category?.displayName(language: language) ?? AppFormat.localized("category.uncategorized", language: language)) · \(AppFormat.date(transaction.wrappedDate, language: language))")
+            Text(verbatim: rowTitle)
                 .font(.body.weight(.medium))
                 .lineLimit(1)
                 .truncationMode(.tail)
-                .minimumScaleFactor(0.82)
                 .allowsTightening(true)
                 .accessibilityIdentifier("transactionTitle")
             scheduleIndicator
@@ -657,7 +683,7 @@ struct TransactionRow: View {
             .foregroundStyle(transaction.income ? Color.green : .primary)
             .multilineTextAlignment(.trailing)
             .lineLimit(1)
-            .minimumScaleFactor(0.65)
+            .minimumScaleFactor(0.78)
             .allowsTightening(true)
             .layoutPriority(2)
             .accessibilityIdentifier("transactionAmount")
@@ -671,10 +697,19 @@ struct TransactionRow: View {
             .fixedSize(horizontal: true, vertical: false)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .foregroundStyle(Color.accentColor)
-            .background(Color.accentColor.opacity(0.12), in: Capsule())
+            .foregroundStyle(.secondary)
+            .background(Color(.tertiarySystemFill), in: Capsule())
             .accessibilityLabel(Text(accessibilityKey))
             .accessibilityValue(Text(verbatim: text))
+    }
+
+    private var rowTitle: String {
+        let category = transaction.category?.displayName(language: language)
+            ?? AppFormat.localized("category.uncategorized", language: language)
+        let note = transaction.note?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        var parts = note.isEmpty ? [category] : [note, category]
+        if showsDate { parts.append(AppFormat.date(transaction.wrappedDate, language: language)) }
+        return parts.joined(separator: " · ")
     }
 }
 
@@ -763,9 +798,14 @@ struct AnalysisView: View {
                 }
                 .pickerStyle(.segmented)
 
-                LabeledContent("summary.expense", value: AppFormat.money(expense, language: language, currencyCode: currency))
-                LabeledContent("summary.income", value: AppFormat.money(income, language: language, currencyCode: currency))
-                LabeledContent("summary.net", value: AppFormat.money(income - expense, language: language, currencyCode: currency))
+                HStack(spacing: 8) {
+                    summaryMetric("summary.expense", value: expense)
+                    Divider().frame(height: 34)
+                    summaryMetric("summary.income", value: income)
+                    Divider().frame(height: 34)
+                    summaryMetric("summary.net", value: income - expense, isNegative: income < expense)
+                }
+                .padding(.vertical, 4)
             }
 
             Section {
@@ -781,18 +821,20 @@ struct AnalysisView: View {
                 } else {
                     Chart(chartData, id: \.date) { point in
                         BarMark(
-                            x: .value(AppFormat.localized("analysis.dateAxis", language: language), point.date, unit: period == .year ? .month : .day),
-                            y: .value(AppFormat.localized("analysis.amountAxis", language: language), point.amount)
+                            x: .value(AppFormat.localized("analysis.dateAxis", language: language), chartLabel(point.date)),
+                            y: .value(AppFormat.localized("analysis.amountAxis", language: language), point.amount),
+                            width: .fixed(20)
                         )
-                        .foregroundStyle(kind == .income ? Color.green : Color.accentColor)
-                        .cornerRadius(4)
+                        .foregroundStyle(Color.primary)
+                        .cornerRadius(3)
                     }
                     .chartXAxis {
-                        AxisMarks(values: .automatic(desiredCount: period == .year ? 6 : 7)) { value in
-                            AxisValueLabel(format: period == .year ? .dateTime.month(.narrow) : .dateTime.day())
-                        }
+                        AxisMarks(values: .automatic(desiredCount: period == .month ? 5 : 7))
                     }
-                    .frame(height: 220)
+                    .chartYAxis {
+                        AxisMarks(position: .leading, values: .automatic(desiredCount: 4))
+                    }
+                    .frame(height: 200)
                     .accessibilityLabel(Text("analysis.chart"))
                 }
             } header: {
@@ -815,7 +857,38 @@ struct AnalysisView: View {
                 }
             }
         }
-        .listStyle(.insetGrouped)
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(Color(.systemBackground))
+        .frame(maxWidth: 760)
+        .frame(maxWidth: .infinity)
         .navigationTitle("analysis.title")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func summaryMetric(_ key: LocalizedStringKey, value: Double, isNegative: Bool = false) -> some View {
+        VStack(spacing: 3) {
+            Text(key)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text(AppFormat.money(value, language: language, currencyCode: currency))
+                .font(.subheadline.monospacedDigit().weight(.semibold))
+                .foregroundStyle(isNegative ? Color.red : .primary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
+    }
+
+    private func chartLabel(_ date: Date) -> String {
+        switch period {
+        case .week:
+            date.formatted(.dateTime.weekday(.abbreviated).locale(language.locale))
+        case .month:
+            date.formatted(.dateTime.day().locale(language.locale))
+        case .year:
+            date.formatted(.dateTime.month(.abbreviated).locale(language.locale))
+        }
     }
 }

@@ -122,11 +122,17 @@ struct BudgetsView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
                 }
             }
         }
-        .listStyle(.insetGrouped)
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(Color(.systemBackground))
+        .frame(maxWidth: 760)
+        .frame(maxWidth: .infinity)
         .navigationTitle("budgets.title")
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -177,13 +183,17 @@ struct BudgetsView: View {
         type: Int
     ) -> some View {
         let progress = amount > 0 ? spent / amount : 0
-        return VStack(alignment: .leading, spacing: 10) {
-            HStack {
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
                 Text(verbatim: emoji)
                     .font(.title3)
                     .accessibilityHidden(true)
                 Text(verbatim: title)
                     .font(.headline)
+                    .lineLimit(1)
+                Text(budgetPeriodLabel(type))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 Spacer()
                 Text(AppFormat.money(amount, language: language, currencyCode: currency))
                     .font(.subheadline.monospacedDigit().weight(.semibold))
@@ -192,29 +202,24 @@ struct BudgetsView: View {
             }
 
             ProgressView(value: min(max(progress, 0), 1))
-                .tint(progress > 1 ? .red : .accentColor)
+                .tint(progress > 1 ? .red : .primary)
                 .accessibilityLabel(Text("budgets.progress"))
                 .accessibilityValue(Text(verbatim: "\(Int((progress * 100).rounded()))%"))
 
-            HStack {
+            HStack(spacing: 8) {
                 Text(verbatim: "\(AppFormat.localized("budgets.spent.label", language: language)) \(AppFormat.money(spent, language: language, currencyCode: currency))")
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
                 Spacer()
-                Text(budgetPeriodLabel(type))
-                    .foregroundStyle(.secondary)
+                Text(verbatim: "\(AppFormat.localized("budgets.remaining", language: language)) \(AppFormat.money(amount - spent, language: language, currencyCode: currency))")
+                    .foregroundStyle(spent > amount ? .red : .secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
             .font(.caption)
-
-            LabeledContent {
-                Text(AppFormat.money(amount - spent, language: language, currencyCode: currency))
-                    .monospacedDigit()
-                    .foregroundStyle(spent > amount ? .red : .primary)
-            } label: {
-                Text("budgets.remaining")
-            }
-            .font(.subheadline)
         }
-        .padding(.vertical, 5)
+        .padding(.vertical, 4)
         .accessibilityElement(children: .contain)
     }
 
@@ -353,7 +358,7 @@ private struct BudgetEditorView: View {
                             .padding(.vertical, 10)
                         }
                         .padding(.horizontal, 14)
-                        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
 
                         if kind == .category, availableCategories.isEmpty {
                             Label("budgets.error.noCategory", systemImage: "exclamationmark.triangle")
@@ -374,7 +379,7 @@ private struct BudgetEditorView: View {
 
                 AmountKeypad(entry: $amountEntry, submit: save)
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Color(.systemBackground))
             .navigationTitle(isEditing ? "budgets.edit.title" : "budgets.new.title")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -80,7 +80,7 @@ struct TransactionEditorView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 ScrollView {
-                    VStack(spacing: 18) {
+                    VStack(spacing: 16) {
                         Picker("editor.type.label", selection: $income) {
                             Text("editor.expense").tag(false)
                             Text("editor.income").tag(true)
@@ -110,8 +110,8 @@ struct TransactionEditorView: View {
                                 } label: {
                                     Image(systemName: "delete.left")
                                         .font(.body.weight(.semibold))
-                                        .padding(9)
-                                        .background(Color(.secondarySystemGroupedBackground), in: Circle())
+                                        .frame(width: 44, height: 44)
+                                        .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
                                 .accessibilityLabel(Text("keypad.delete"))
@@ -124,7 +124,10 @@ struct TransactionEditorView: View {
                             .textInputAutocapitalization(.sentences)
                             .submitLabel(.done)
                             .focused($noteFocused)
-                            .textFieldStyle(.roundedBorder)
+                            .textFieldStyle(.plain)
+                            .padding(.horizontal, 12)
+                            .frame(minHeight: 44)
+                            .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                             .accessibilityIdentifier("noteField")
 
                         if !suggestions.isEmpty {
@@ -209,7 +212,7 @@ struct TransactionEditorView: View {
                             .padding(.vertical, 13)
                         }
                         .padding(.horizontal, 14)
-                        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
 
                         if isEditingInstallment {
                             VStack(alignment: .leading, spacing: 10) {
@@ -257,7 +260,7 @@ struct TransactionEditorView: View {
                     AmountKeypad(entry: $amountEntry, submit: save)
                 }
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Color(.systemBackground))
             .navigationTitle(transaction == nil ? "editor.new.title" : "editor.edit.title")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -497,6 +500,7 @@ private struct SchedulePickerView: View {
             }
         }
         .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 
     private func titleKey(_ schedule: TransactionSchedule) -> LocalizedStringKey {

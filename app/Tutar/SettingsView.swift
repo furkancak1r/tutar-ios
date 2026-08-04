@@ -50,7 +50,6 @@ struct SettingsView: View {
                     Text("appearance.light").tag(1)
                     Text("appearance.dark").tag(2)
                 }
-                .pickerStyle(.segmented)
             }
 
             Section("settings.entry.section") {
@@ -171,6 +170,9 @@ struct SettingsView: View {
             }
         }
         .navigationTitle("settings.title")
+        .navigationBarTitleDisplayMode(.inline)
+        .frame(maxWidth: 760)
+        .frame(maxWidth: .infinity)
         .confirmationDialog("settings.erase.confirmTitle", isPresented: $showingDeleteConfirmation, titleVisibility: .visible) {
             Button("settings.erase.confirm", role: .destructive) { eraseData() }
             Button("action.cancel", role: .cancel) {}
@@ -386,6 +388,8 @@ private struct CurrencyPickerView: View {
         }
         .navigationTitle("settings.currency")
         .navigationBarTitleDisplayMode(.inline)
+        .frame(maxWidth: 760)
+        .frame(maxWidth: .infinity)
         .searchable(
             text: $searchText,
             placement: .navigationBarDrawer(displayMode: .always),
@@ -507,5 +511,7 @@ struct AboutView: View {
         }
         .navigationTitle("about.title")
         .navigationBarTitleDisplayMode(.inline)
+        .frame(maxWidth: 760)
+        .frame(maxWidth: .infinity)
     }
 }

@@ -25,6 +25,11 @@ struct CategoriesView: View {
             categorySection("editor.income", items: income)
         }
         .navigationTitle("categories.title")
+        .navigationBarTitleDisplayMode(.inline)
+        .scrollContentBackground(.hidden)
+        .background(Color(.systemBackground))
+        .frame(maxWidth: 760)
+        .frame(maxWidth: .infinity)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -73,7 +78,7 @@ struct CategoriesView: View {
                 HStack(spacing: 12) {
                     Text(verbatim: category.wrappedEmoji)
                         .font(.title3)
-                        .frame(width: 36, height: 36)
+                        .frame(width: 28)
                     Text(verbatim: category.displayName(language: language))
                     Spacer()
                     Circle()
@@ -170,6 +175,7 @@ private struct CategoryEditorView: View {
                                                 .foregroundStyle(.white)
                                         }
                                     }
+                                    .frame(minWidth: 44, minHeight: 44)
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel(Text("categories.colour"))

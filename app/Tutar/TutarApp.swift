@@ -43,6 +43,12 @@ struct TutarApp: App {
         #if DEBUG
         if arguments.contains("-ui-testing") {
             UserDefaults.tutar.set("", forKey: "currencyCode")
+            if let index = arguments.firstIndex(of: "-appLanguage"), arguments.indices.contains(index + 1) {
+                UserDefaults.tutar.set(arguments[index + 1], forKey: "appLanguage")
+            }
+            if let index = arguments.firstIndex(of: "-AppleInterfaceStyle"), arguments.indices.contains(index + 1) {
+                UserDefaults.tutar.set(arguments[index + 1] == "Dark" ? 2 : 1, forKey: "appearance")
+            }
         }
         if arguments.contains("-ui-test-app-lock") || arguments.contains("-ui-test-real-app-lock") {
             UserDefaults.tutar.set(true, forKey: "biometricLock")

@@ -100,45 +100,50 @@ struct AmountKeypad: View {
     private let rows = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
 
     var body: some View {
-        Grid(horizontalSpacing: 10, verticalSpacing: 10) {
-            ForEach(rows, id: \.self) { row in
+        VStack(spacing: 0) {
+            Divider()
+            Grid(horizontalSpacing: 8, verticalSpacing: 8) {
+                ForEach(rows, id: \.self) { row in
+                    GridRow {
+                        ForEach(row, id: \.self) { digit in
+                            digitButton(digit)
+                        }
+                    }
+                }
+
                 GridRow {
-                    ForEach(row, id: \.self) { digit in
-                        digitButton(digit)
+                    if entry.mode == .automaticCents {
+                        keypadButton(systemImage: "delete.left", identifier: "keypadDelete") {
+                            entry.deleteLast()
+                        }
+                        .accessibilityLabel(Text("keypad.delete"))
+                    } else {
+                        keypadButton(title: decimalSeparator, identifier: "keypadDecimal") {
+                            entry.insertDecimalSeparator()
+                        }
+                        .accessibilityLabel(Text("keypad.decimal"))
                     }
+
+                    digitButton(0)
+
+                    Button(action: submit) {
+                        Image(systemName: "checkmark")
+                            .font(.title3.weight(.semibold))
+                            .frame(maxWidth: .infinity, minHeight: 48)
+                            .foregroundStyle(Color(.systemBackground))
+                            .background(Color.primary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(Text("action.save"))
+                    .accessibilityIdentifier("keypadSubmit")
                 }
             }
-
-            GridRow {
-                if entry.mode == .automaticCents {
-                    keypadButton(systemImage: "delete.left", identifier: "keypadDelete") {
-                        entry.deleteLast()
-                    }
-                    .accessibilityLabel(Text("keypad.delete"))
-                } else {
-                    keypadButton(title: decimalSeparator, identifier: "keypadDecimal") {
-                        entry.insertDecimalSeparator()
-                    }
-                    .accessibilityLabel(Text("keypad.decimal"))
-                }
-
-                digitButton(0)
-
-                Button(action: submit) {
-                    Image(systemName: "checkmark")
-                        .font(.title2.weight(.semibold))
-                        .frame(maxWidth: .infinity, minHeight: 56)
-                        .foregroundStyle(Color(.systemBackground))
-                        .background(Color.primary, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(Text("action.save"))
-                .accessibilityIdentifier("keypadSubmit")
-            }
+            .frame(maxWidth: 620)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(Color(.systemGroupedBackground))
+        .frame(maxWidth: .infinity)
+        .background(Color(.systemBackground))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("amountKeypad")
     }
@@ -167,15 +172,15 @@ struct AmountKeypad: View {
             Group {
                 if let title {
                     Text(verbatim: title)
-                        .font(.title2.weight(.medium).monospacedDigit())
+                        .font(.title3.weight(.medium).monospacedDigit())
                 } else if let systemImage {
                     Image(systemName: systemImage)
                         .font(.title3.weight(.medium))
                 }
             }
-            .frame(maxWidth: .infinity, minHeight: 56)
+            .frame(maxWidth: .infinity, minHeight: 48)
             .foregroundStyle(.primary)
-            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier(identifier)
