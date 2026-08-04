@@ -1,4 +1,4 @@
-# Tutar 1.0 (2) — TestFlight metadata
+# Tutar 1.0 (3) — TestFlight metadata
 
 ## Beta Description — Turkish
 
@@ -17,6 +17,7 @@ Tutar, Rafael Soh ve katkıda bulunanların oluşturduğu Dime temel alınarak d
 7. Dime CSV içe aktarmayı iki kez yapıp ikinci geçişte mükerrerlerin atlandığını; CSV ve tam JSON yedeğin dışa aktarılabildiğini kontrol edin.
 8. Ayarlar’dan Sistem, Türkçe ve English seçeneklerini; açık/koyu modu; iCloud kapatma/açma sonrası yeniden başlatmayı deneyin.
 9. iPhone ve iPad’de büyük metin/VoiceOver ile taşma veya etiketsiz denetim bildirin.
+10. Ayarlar > Kategoriler > Kategori ekle akışında “Simge veya emoji” alanına dokununca emoji klavyesinin doğrudan açıldığını doğrulayın.
 
 ## Beta Description — English
 
@@ -35,6 +36,7 @@ Tutar is a GPLv3 modified work based on Dime, originally created by Rafael Soh a
 7. Import a Dime CSV twice and confirm duplicates are skipped, then test transaction CSV and complete JSON backup export.
 8. Test System, Turkish, and English language choices, light/dark appearance, and an iCloud sync change followed by relaunch.
 9. Report clipping or unlabeled controls with large text or VoiceOver on iPhone and iPad.
+10. In Settings > Categories > Add category, tap “Symbol or emoji” and confirm the emoji keyboard opens directly.
 
 Feedback email: furkancakr7@gmail.com
 

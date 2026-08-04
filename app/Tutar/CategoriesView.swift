@@ -2,6 +2,7 @@
 
 import CoreData
 import SwiftUI
+import UIKit
 
 struct CategoriesView: View {
     @FetchRequest(
@@ -119,6 +120,7 @@ struct CategoriesView: View {
 private struct CategoryEditorView: View {
     @EnvironmentObject private var dataController: DataController
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.appLanguage) private var language
 
     let category: Category?
     let initialName: String
@@ -141,8 +143,10 @@ private struct CategoryEditorView: View {
                     TextField("categories.name", text: $name)
                         .textInputAutocapitalization(.words)
                         .accessibilityIdentifier("categoryNameField")
-                    TextField("categories.emoji", text: $emoji)
-                        .accessibilityIdentifier("categoryEmojiField")
+                    EmojiKeyboardField(
+                        text: $emoji,
+                        placeholder: AppFormat.localized("categories.emoji", language: language)
+                    )
                     Picker("editor.type.label", selection: $income) {
                         Text("editor.expense").tag(false)
                         Text("editor.income").tag(true)
@@ -228,5 +232,48 @@ private struct CategoryEditorView: View {
         } catch {
             errorKey = "editor.error.save"
         }
+    }
+}
+
+private struct EmojiKeyboardField: UIViewRepresentable {
+    @Binding var text: String
+    let placeholder: String
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(text: $text)
+    }
+
+    func makeUIView(context: Context) -> EmojiKeyboardTextField {
+        let field = EmojiKeyboardTextField()
+        field.font = .preferredFont(forTextStyle: .body)
+        field.adjustsFontForContentSizeCategory = true
+        field.autocorrectionType = .no
+        field.spellCheckingType = .no
+        field.accessibilityIdentifier = "categoryEmojiField"
+        field.addTarget(context.coordinator, action: #selector(Coordinator.textChanged), for: .editingChanged)
+        return field
+    }
+
+    func updateUIView(_ field: EmojiKeyboardTextField, context: Context) {
+        if field.text != text { field.text = text }
+        field.placeholder = placeholder
+    }
+
+    final class Coordinator: NSObject {
+        private var text: Binding<String>
+
+        init(text: Binding<String>) {
+            self.text = text
+        }
+
+        @objc func textChanged(_ field: UITextField) {
+            text.wrappedValue = field.text ?? ""
+        }
+    }
+}
+
+private final class EmojiKeyboardTextField: UITextField {
+    override var textInputMode: UITextInputMode? {
+        UITextInputMode.activeInputModes.first { $0.primaryLanguage == "emoji" } ?? super.textInputMode
     }
 }

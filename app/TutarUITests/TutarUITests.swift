@@ -110,6 +110,21 @@ final class TutarUITests: XCTestCase {
     }
 
     @MainActor
+    func testCategoryEmojiFieldOpensEmojiKeyboard() {
+        let app = launch(language: "en", locale: "en_US", seed: false)
+        app.tabBars.buttons["Settings"].tap()
+        for _ in 0 ..< 4 where !app.buttons["Categories"].exists { app.swipeUp() }
+        app.buttons["Categories"].tap()
+        app.buttons["Add category"].tap()
+
+        let emoji = app.textFields["categoryEmojiField"]
+        XCTAssertTrue(emoji.waitForExistence(timeout: 5))
+        emoji.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 3))
+        XCTAssertTrue(app.keys["😀"].waitForExistence(timeout: 3))
+    }
+
+    @MainActor
     private func launch(
         language: String,
         locale: String,
