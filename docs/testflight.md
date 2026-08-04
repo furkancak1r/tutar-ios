@@ -1,4 +1,4 @@
-# Tutar 1.0 (4) — TestFlight metadata
+# Tutar 1.0 (5) — TestFlight metadata
 
 ## Beta Description — Turkish
 
@@ -20,7 +20,7 @@ Tutar, Rafael Soh ve katkıda bulunanların oluşturduğu Dime temel alınarak d
 10. Ayarlar > Kategoriler > Kategori ekle akışında “Simge veya emoji” alanına dokununca emoji klavyesinin doğrudan açıldığını doğrulayın.
 11. Ay özetini sağa/sola kaydırarak ay değiştirmeyi; uzun kayıtların tek satırda kaldığını ve kırpılan metnin VoiceOver’da tam okunduğunu kontrol edin.
 12. Para birimi listesinden TRY dışında bir ISO para birimi seçin; Türkçe arayüzde seçimin korunduğunu doğrulayın.
-13. Uygulama Kilidi’ni açın, Tutar’ı arka plana gönderip geri dönün ve tek bir Face ID/aygıt doğrulamasından sonra uygulamanın açıldığını doğrulayın.
+13. Uygulama Kilidi’ni açın, Tutar’ı arka plana gönderip geri dönün ve Face ID sırasında uygulamanın yeniden kilitlenmeden, ikinci istem açmadan tek doğrulamayla açıldığını doğrulayın.
 14. Açık ve koyu görünümde yeni siyah-beyaz temayı; ikon ve widget dahil hiçbir ana vurgu alanında mavi/gradient kalmadığını kontrol edin.
 
 ## Beta Description — English
@@ -43,7 +43,7 @@ Tutar is a GPLv3 modified work based on Dime, originally created by Rafael Soh a
 10. In Settings > Categories > Add category, tap “Symbol or emoji” and confirm the emoji keyboard opens directly.
 11. Swipe the month summary left/right to change months; confirm long records stay on one line and VoiceOver reads truncated content in full.
 12. Choose a non-default ISO currency and confirm the choice remains active in both English and Turkish.
-13. Enable App Lock, background and reopen Tutar, then confirm one Face ID/device-authentication attempt unlocks it without a prompt loop.
+13. Enable App Lock, background and reopen Tutar, then confirm one Face ID/device-authentication attempt unlocks it without relocking or showing a second prompt.
 14. Check the new black-and-white theme in light and dark appearance, including the icon and widget; there should be no blue primary accent or gradient.
 
 Feedback email: furkancakr7@gmail.com

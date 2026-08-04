@@ -503,7 +503,7 @@ struct AboutView: View {
                 )
                 LabeledContent(
                     "about.build",
-                    value: Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "4"
+                    value: Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "5"
                 )
             }
         }

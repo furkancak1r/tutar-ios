@@ -11,6 +11,36 @@ private enum AppTab: Hashable {
     case settings
 }
 
+struct AppLockLifecycle {
+    private var authenticationOwnsSceneTransition = false
+    private var shouldAuthenticateAfterBackground = false
+
+    mutating func authenticationStarted() {
+        authenticationOwnsSceneTransition = true
+    }
+
+    mutating func authenticationFinished(sceneIsActive: Bool) {
+        if sceneIsActive { authenticationOwnsSceneTransition = false }
+    }
+
+    mutating func enteredBackground() -> Bool {
+        guard !authenticationOwnsSceneTransition else { return false }
+        shouldAuthenticateAfterBackground = true
+        return true
+    }
+
+    mutating func becameActive(authenticationInProgress: Bool) -> Bool {
+        if !authenticationInProgress { authenticationOwnsSceneTransition = false }
+        defer { shouldAuthenticateAfterBackground = false }
+        return shouldAuthenticateAfterBackground
+    }
+
+    mutating func reset() {
+        authenticationOwnsSceneTransition = false
+        shouldAuthenticateAfterBackground = false
+    }
+}
+
 struct RootView: View {
     @EnvironmentObject private var dataController: DataController
     @Environment(\.scenePhase) private var scenePhase
@@ -20,7 +50,7 @@ struct RootView: View {
     @State private var showingEditor = false
     @State private var unlocked = false
     @State private var authenticationInProgress = false
-    @State private var authenticateAfterBackground = false
+    @State private var lockLifecycle = AppLockLifecycle()
 
     var body: some View {
         Group {
@@ -50,24 +80,22 @@ struct RootView: View {
             if enabled {
                 showingEditor = false
                 unlocked = false
-                authenticateAfterBackground = false
+                lockLifecycle.reset()
                 authenticateIfNeeded()
             } else {
                 unlocked = true
-                authenticateAfterBackground = false
+                lockLifecycle.reset()
             }
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 try? dataController.materializeRecurringTransactions()
-                if authenticateAfterBackground {
-                    authenticateAfterBackground = false
+                if lockLifecycle.becameActive(authenticationInProgress: authenticationInProgress) {
                     authenticateIfNeeded()
                 }
             } else if phase == .background, lockEnabled {
                 showingEditor = false
-                unlocked = false
-                authenticateAfterBackground = true
+                if lockLifecycle.enteredBackground() { unlocked = false }
             }
         }
     }
@@ -110,12 +138,14 @@ struct RootView: View {
     private func authenticateIfNeeded() {
         guard lockEnabled, !unlocked, !authenticationInProgress else { return }
         authenticationInProgress = true
+        lockLifecycle.authenticationStarted()
         let reason = AppFormat.localized("settings.lock.reason", language: language)
         Task {
             let success = await DeviceAuthentication.authenticate(reason: reason)
             await MainActor.run {
                 unlocked = success
                 authenticationInProgress = false
+                lockLifecycle.authenticationFinished(sceneIsActive: scenePhase == .active)
             }
         }
     }

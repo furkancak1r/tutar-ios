@@ -36,6 +36,26 @@ final class AppFormatTests: XCTestCase {
     }
 }
 
+final class AppLockLifecycleTests: XCTestCase {
+    func testAuthenticationSceneChangesDoNotRelockOrStartAnotherPrompt() {
+        var lifecycle = AppLockLifecycle()
+
+        lifecycle.authenticationStarted()
+        XCTAssertFalse(lifecycle.enteredBackground())
+        lifecycle.authenticationFinished(sceneIsActive: false)
+        XCTAssertFalse(lifecycle.becameActive(authenticationInProgress: false))
+
+        XCTAssertTrue(lifecycle.enteredBackground())
+        XCTAssertTrue(lifecycle.becameActive(authenticationInProgress: false))
+        XCTAssertFalse(lifecycle.becameActive(authenticationInProgress: false))
+
+        lifecycle.authenticationStarted()
+        XCTAssertFalse(lifecycle.enteredBackground())
+        lifecycle.authenticationFinished(sceneIsActive: true)
+        XCTAssertFalse(lifecycle.becameActive(authenticationInProgress: false))
+    }
+}
+
 final class CSVCodecTests: XCTestCase {
     func testQuotedCSVValuesRoundTrip() throws {
         let rows = [
