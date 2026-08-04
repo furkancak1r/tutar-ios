@@ -1,0 +1,146 @@
+"tab.overview" = "Genel";
+"tab.transactions" = "İşlemler";
+"tab.installments" = "Taksitler";
+"tab.analysis" = "Analiz";
+"tab.settings" = "Ayarlar";
+
+"action.addTransaction" = "İşlem ekle";
+"action.cancel" = "Vazgeç";
+"action.done" = "Bitti";
+"action.delete" = "Sil";
+"action.edit" = "Düzenle";
+"action.ok" = "Tamam";
+"action.save" = "Kaydet";
+"accessibility.totalAmount" = "Toplam tutar";
+"accessibility.expenseAmount" = "Gider tutarı";
+"accessibility.incomeAmount" = "Gelir tutarı";
+
+"dashboard.title" = "Tutar";
+"dashboard.monthEyebrow" = "BU AY HARCANAN";
+"dashboard.monthExpense" = "Bu ayın harcaması";
+"dashboard.nextInstallment" = "Sıradaki taksit";
+"dashboard.recent" = "Bu ay";
+"dashboard.currentMonthOnly" = "İşlem tarihine göre";
+
+"transactions.title" = "İşlemler";
+"transactions.futureInstallments" = "Gelecek taksitler";
+"transactions.history" = "Kaydedilen işlemler";
+
+"installments.title" = "Taksitler";
+"installments.progress" = "Taksit ilerlemesi";
+"installment.position" = "Taksit sırası";
+
+"analysis.title" = "Analiz";
+"analysis.sixMonths" = "Altı aylık harcama ritmi";
+"analysis.categories" = "Bu ay kategorilere göre";
+"analysis.monthAxis" = "Ay";
+"analysis.amountAxis" = "Tutar";
+
+"empty.transactions.title" = "Temiz bir başlangıç";
+"empty.transactions.message" = "Aylık akışını görmek için ilk işlemini ekle.";
+"empty.installments.title" = "Henüz taksit planı yok";
+"empty.installments.message" = "Gider eklerken Taksitli seçeneğini aç. Tutar yalnızca belirlediğin sayıda bağlı ödeme oluşturur.";
+"empty.analysis.title" = "Henüz karşılaştırılacak veri yok";
+"empty.analysis.message" = "Bu ay gider kaydettiğinde analiz burada görünür.";
+
+"editor.new.title" = "Yeni işlem";
+"editor.edit.title" = "İşlemi düzenle";
+"editor.type.section" = "Akış";
+"editor.type.label" = "İşlem türü";
+"editor.expense" = "Gider";
+"editor.income" = "Gelir";
+"editor.details.section" = "Ayrıntılar";
+"editor.note" = "Not";
+"editor.amount" = "Toplam tutar";
+"editor.category" = "Kategori";
+"editor.date" = "Tarih";
+"editor.installment.section" = "Taksit planı";
+"editor.installment.toggle" = "Taksitli";
+"editor.installment.count" = "Taksit sayısı";
+"editor.installment.interval" = "Aylık aralık";
+"editor.installment.remainderNote" = "Kuruş farkı son taksite eklenir; toplam tutar her zaman korunur.";
+"editor.installment.futureNote" = "Gelecek taksitler ayrı gösterilir ve yalnızca ait oldukları ayın harcamasına katılır.";
+"editor.apply.section" = "Değişikliği uygula";
+"editor.apply.label" = "Düzenleme kapsamı";
+"editor.apply.one" = "Yalnız bu";
+"editor.apply.following" = "Bu ve sonrası";
+"editor.apply.totalHint" = "Yukarıdaki tutar, bu ve sonraki taksitlerin yeni toplamıdır.";
+"editor.error.amount" = "En fazla iki ondalık basamak içeren geçerli bir tutar gir.";
+"editor.error.category" = "Bir kategori seç.";
+"editor.error.installmentAmount" = "Toplam, her taksit için en az bir kuruş olmalıdır.";
+"editor.error.duplicate" = "Bu taksit grubu ve sırası zaten var.";
+"editor.error.save" = "İşlem kaydedilemedi. Mevcut verilerin değiştirilmedi.";
+
+"delete.title" = "İşlem silinsin mi?";
+"delete.message" = "Bağlı planın ne kadarının silineceğini seç.";
+"delete.one" = "Yalnız bu taksit";
+"delete.following" = "Bu ve sonraki taksitler";
+"delete.installment.title" = "Taksit silinsin mi?";
+"delete.installment.message" = "Geçmiş taksitler, onları doğrudan seçmediğin sürece korunur.";
+
+"settings.title" = "Ayarlar";
+"settings.language.section" = "Dil";
+"settings.language" = "Uygulama dili";
+"settings.language.footer" = "Sistem, aygıtının dilini izler. Çeviri bulunamazsa İngilizce kullanılır.";
+"language.system" = "Sistem";
+"language.turkish" = "Türkçe";
+"language.english" = "English";
+"settings.appearance.section" = "Görünüm";
+"settings.appearance" = "Görünüm";
+"appearance.system" = "Sistem";
+"appearance.light" = "Açık";
+"appearance.dark" = "Koyu";
+"settings.money.section" = "Para";
+"settings.currency" = "Para birimi";
+"settings.sync.section" = "Eşzamanlama";
+"settings.icloud" = "iCloud eşzamanlama";
+"settings.icloud.footer" = "Kapalıyken veriler bu aygıtta kalır. Eşzamanlama değişikliği Tutar yeniden açıldığında uygulanır.";
+"settings.reminder.section" = "Hatırlatıcı";
+"settings.reminder" = "Günlük kayıt hatırlatıcısı";
+"settings.reminder.hour" = "Saat";
+"settings.info.section" = "Bilgi";
+"settings.about" = "Hakkında ve Lisanslar";
+"settings.support" = "Destek";
+"settings.privacy" = "Gizlilik politikası";
+"settings.erase" = "Tüm yerel verileri sil";
+"settings.erase.footer" = "İşlemleri ve özel verileri bu aygıttan ve eşzamanlanan iCloud alanından kaldırır. Varsayılan kategoriler yeniden oluşturulur.";
+"settings.erase.confirmTitle" = "Tutar verilerin silinsin mi?";
+"settings.erase.confirmMessage" = "iCloud eşzamanlaması tamamlandıktan sonra bu işlem geri alınamaz.";
+"settings.erase.confirm" = "Tüm verileri sil";
+
+"notification.title" = "Kısa bir Tutar kontrolü";
+"notification.body" = "Bugünün harcamalarını aklındayken kaydet.";
+
+"about.title" = "Hakkında ve Lisanslar";
+"about.appName" = "Tutar";
+"about.tagline" = "Günlük para akışı ve taksit planları için sakin, özel bir görünüm.";
+"about.openSource.section" = "Açık kaynak";
+"about.attribution" = "Tutar; Rafael Soh ve katkıda bulunanların oluşturduğu Dime temel alınarak değiştirilmiş bir çalışmadır.";
+"about.modified" = "Değişiklik tarihi";
+"about.gpl" = "Özgün ve türev kaynak kod GNU Genel Kamu Lisansı v3.0 altında dağıtılır. Telif bildirimleri ve Git geçmişi herkese açık repoda korunur.";
+"about.source" = "Tutar kaynak kodu";
+"about.upstream" = "Dime ana kaynak kodu";
+"about.privacy.section" = "Gizlilik";
+"about.privacy" = "Tutar reklam, analitik, izleme, satın alma, abonelik, bağış veya paywall içermez. Finans verileri yerelde ve yalnızca etkinleştirildiğinde özel iCloud hesabında saklanır.";
+"about.version.section" = "Derleme";
+"about.version" = "Sürüm";
+"about.build" = "Build";
+
+"category.market" = "Market";
+"category.food" = "Yemek";
+"category.transport" = "Ulaşım";
+"category.bills" = "Faturalar";
+"category.shopping" = "Alışveriş";
+"category.health" = "Sağlık";
+"category.entertainment" = "Eğlence";
+"category.salary" = "Maaş";
+"category.uncategorized" = "Kategorisiz";
+
+"error.data.title" = "Veriye erişilemiyor";
+"error.data.message" = "Tutar yerel veriyi açamadı. Hiçbir veri silinmedi. Uygulamayı yeniden aç; sorun sürerse destekle iletişime geç.";
+"error.save.title" = "İşlem tamamlanamadı";
+
+"widget.title" = "Bu ay";
+"widget.next" = "Sıradaki taksit";
+"widget.none" = "Yaklaşan taksit yok";
+"widget.open" = "Tutar’ı aç";

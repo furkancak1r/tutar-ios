@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>installments.completed</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key><string>%#@items@</string>
+        <key>items</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key><string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key><string>d</string>
+            <key>other</key><string>%d taksit tamamlandı</string>
+        </dict>
+    </dict>
+    <key>installments.remaining</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key><string>%#@items@</string>
+        <key>items</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key><string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key><string>d</string>
+            <key>other</key><string>%d taksit kaldı</string>
+        </dict>
+    </dict>
+    <key>months.count</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key><string>%#@items@</string>
+        <key>items</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key><string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key><string>d</string>
+            <key>other</key><string>%d ay</string>
+        </dict>
+    </dict>
+</dict>
+</plist>

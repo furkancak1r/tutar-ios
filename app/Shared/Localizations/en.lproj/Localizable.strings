@@ -1,0 +1,146 @@
+"tab.overview" = "Overview";
+"tab.transactions" = "Transactions";
+"tab.installments" = "Installments";
+"tab.analysis" = "Analysis";
+"tab.settings" = "Settings";
+
+"action.addTransaction" = "Add transaction";
+"action.cancel" = "Cancel";
+"action.done" = "Done";
+"action.delete" = "Delete";
+"action.edit" = "Edit";
+"action.ok" = "OK";
+"action.save" = "Save";
+"accessibility.totalAmount" = "Total amount";
+"accessibility.expenseAmount" = "Expense amount";
+"accessibility.incomeAmount" = "Income amount";
+
+"dashboard.title" = "Tutar";
+"dashboard.monthEyebrow" = "SPENT THIS MONTH";
+"dashboard.monthExpense" = "Expense this month";
+"dashboard.nextInstallment" = "Next installment";
+"dashboard.recent" = "This month";
+"dashboard.currentMonthOnly" = "By transaction date";
+
+"transactions.title" = "Transactions";
+"transactions.futureInstallments" = "Future installments";
+"transactions.history" = "Recorded transactions";
+
+"installments.title" = "Installments";
+"installments.progress" = "Installment progress";
+"installment.position" = "Installment position";
+
+"analysis.title" = "Analysis";
+"analysis.sixMonths" = "Six-month spending rhythm";
+"analysis.categories" = "This month by category";
+"analysis.monthAxis" = "Month";
+"analysis.amountAxis" = "Amount";
+
+"empty.transactions.title" = "A clean slate";
+"empty.transactions.message" = "Add your first transaction to see your monthly flow.";
+"empty.installments.title" = "No installment plans yet";
+"empty.installments.message" = "Turn on Installments while adding an expense. Tutar will create only the exact number of linked payments.";
+"empty.analysis.title" = "Nothing to compare yet";
+"empty.analysis.message" = "Analysis appears after you record expenses for this month.";
+
+"editor.new.title" = "New transaction";
+"editor.edit.title" = "Edit transaction";
+"editor.type.section" = "Flow";
+"editor.type.label" = "Transaction type";
+"editor.expense" = "Expense";
+"editor.income" = "Income";
+"editor.details.section" = "Details";
+"editor.note" = "Note";
+"editor.amount" = "Total amount";
+"editor.category" = "Category";
+"editor.date" = "Date";
+"editor.installment.section" = "Installment plan";
+"editor.installment.toggle" = "Installments";
+"editor.installment.count" = "Number of installments";
+"editor.installment.interval" = "Monthly interval";
+"editor.installment.remainderNote" = "Any rounding difference is added to the last installment, so the total always stays exact.";
+"editor.installment.futureNote" = "Future installments are shown separately and count toward spending only in their own month.";
+"editor.apply.section" = "Apply changes";
+"editor.apply.label" = "Edit scope";
+"editor.apply.one" = "This one";
+"editor.apply.following" = "This & next";
+"editor.apply.totalHint" = "The amount above is the new total for this and all following installments.";
+"editor.error.amount" = "Enter a valid amount with no more than two decimal places.";
+"editor.error.category" = "Choose a category.";
+"editor.error.installmentAmount" = "The total must be at least one minor currency unit per installment.";
+"editor.error.duplicate" = "That installment group and position already exist.";
+"editor.error.save" = "The transaction could not be saved. Your existing data was not changed.";
+
+"delete.title" = "Delete transaction?";
+"delete.message" = "Choose how much of this linked plan to remove.";
+"delete.one" = "Only this installment";
+"delete.following" = "This and following installments";
+"delete.installment.title" = "Delete installment?";
+"delete.installment.message" = "Past installments stay untouched unless you select one of them directly.";
+
+"settings.title" = "Settings";
+"settings.language.section" = "Language";
+"settings.language" = "App language";
+"settings.language.footer" = "System follows your device language. English is the fallback when a translation is unavailable.";
+"language.system" = "System";
+"language.turkish" = "Türkçe";
+"language.english" = "English";
+"settings.appearance.section" = "Appearance";
+"settings.appearance" = "Appearance";
+"appearance.system" = "System";
+"appearance.light" = "Light";
+"appearance.dark" = "Dark";
+"settings.money.section" = "Money";
+"settings.currency" = "Currency";
+"settings.sync.section" = "Sync";
+"settings.icloud" = "iCloud sync";
+"settings.icloud.footer" = "Data stays on this device when off. Changes to sync mode take effect after relaunching Tutar.";
+"settings.reminder.section" = "Reminder";
+"settings.reminder" = "Daily entry reminder";
+"settings.reminder.hour" = "Time";
+"settings.info.section" = "Information";
+"settings.about" = "About & Licenses";
+"settings.support" = "Support";
+"settings.privacy" = "Privacy policy";
+"settings.erase" = "Erase all local data";
+"settings.erase.footer" = "This removes transactions and custom data from this device and synced iCloud storage. Default categories are recreated.";
+"settings.erase.confirmTitle" = "Erase your Tutar data?";
+"settings.erase.confirmMessage" = "This cannot be undone after iCloud sync completes.";
+"settings.erase.confirm" = "Erase all data";
+
+"notification.title" = "A quick Tutar check-in";
+"notification.body" = "Record today’s spending while it is still fresh.";
+
+"about.title" = "About & Licenses";
+"about.appName" = "Tutar";
+"about.tagline" = "A calm, private view of everyday money and installment plans.";
+"about.openSource.section" = "Open source";
+"about.attribution" = "Tutar is a modified work based on Dime, originally created by Rafael Soh and its contributors.";
+"about.modified" = "Modification date";
+"about.gpl" = "Original and derivative source code is distributed under the GNU General Public License v3.0. Copyright notices and Git history are preserved in the public repository.";
+"about.source" = "Tutar source code";
+"about.upstream" = "Dime upstream source";
+"about.privacy.section" = "Privacy";
+"about.privacy" = "Tutar contains no ads, analytics, tracking, purchases, subscriptions, donations, or paywalls. Finance data is stored locally and, only when enabled, in your private iCloud account.";
+"about.version.section" = "Build";
+"about.version" = "Version";
+"about.build" = "Build";
+
+"category.market" = "Market";
+"category.food" = "Food";
+"category.transport" = "Transport";
+"category.bills" = "Bills";
+"category.shopping" = "Shopping";
+"category.health" = "Health";
+"category.entertainment" = "Entertainment";
+"category.salary" = "Salary";
+"category.uncategorized" = "Uncategorized";
+
+"error.data.title" = "Data unavailable";
+"error.data.message" = "Tutar could not open its local data. No data was deleted. Relaunch the app and contact support if this continues.";
+"error.save.title" = "Couldn’t complete that";
+
+"widget.title" = "This month";
+"widget.next" = "Next installment";
+"widget.none" = "No upcoming installment";
+"widget.open" = "Open Tutar";

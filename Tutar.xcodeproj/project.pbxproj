@@ -1,0 +1,790 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		2756ADD2D57B1339A42EDD37 /* TutarWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B8D866ABE825AC1F6E5A9DF /* TutarWidget.swift */; };
+		3F4396751BF181439603EAEF /* InstallmentPlannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB0107A3E6CFDED1556D7C3 /* InstallmentPlannerTests.swift */; };
+		69F8144C2EE56E3703F6CF76 /* AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14B4D9D937EF7093AA2A3257 /* AppConstants.swift */; };
+		6A5FB5BE98E7A7B9BD278F9D /* TransactionEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139EB0A1285CEEEB0E06070D /* TransactionEditorView.swift */; };
+		6DC71F94009BA2EDF76549FF /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = E60467E9AF30C22B21645615 /* Localizable.strings */; };
+		7310ED09FC30BABB81626DB5 /* TutarWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AC3AAB8299869AB72CF43C5F /* TutarWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		734EFB1558C61ACD65524840 /* MainModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 8DA7FE410A21360F6CEF9259 /* MainModel.xcdatamodeld */; };
+		743AE9FECAA65CDCCC109A5D /* TutarApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC8530FABA3F64642C4ADA1E /* TutarApp.swift */; };
+		94A38F664B055974E6CD38C0 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = E60467E9AF30C22B21645615 /* Localizable.strings */; };
+		9A7C292EE46A2651C7E210A8 /* TutarUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294FDB7DC412FDF105207E28 /* TutarUITests.swift */; };
+		9AAA301EF32D87DF77159938 /* DataController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E142DDFCCF1285D5D98427 /* DataController.swift */; };
+		A81A88E3D847010E18AD02A2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ECD403C6742FF3E8CCE092D2 /* Assets.xcassets */; };
+		B09132C900080F56DF43CB66 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1EC38EE1A5375A47A788499 /* RootView.swift */; };
+		BE91114C52291D2BD538466B /* InstallmentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29D3CF07E3D1D9B024E4DC8D /* InstallmentsView.swift */; };
+		C9955AA0FDA7AD06D4D440D9 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F16079640051B2058B6BD086 /* PrivacyInfo.xcprivacy */; };
+		D19A300A344CCD1820893491 /* Localizable.stringsdict in Resources */ = {isa = PBXBuildFile; fileRef = F89A593B0C03AF68BD37E85C /* Localizable.stringsdict */; };
+		EA0F74CEC1C7143921662176 /* Localizable.stringsdict in Resources */ = {isa = PBXBuildFile; fileRef = F89A593B0C03AF68BD37E85C /* Localizable.stringsdict */; };
+		EBC837C9F37F93F5EA900B2B /* InstallmentPlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B0EFE5E90A9325CF1D4A9FF /* InstallmentPlanner.swift */; };
+		F608340796BA0DF6BED29BDA /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 508BDE69E94B1DFD1A96C8B6 /* SettingsView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		0AF51990236DAEDA60A12AF8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 22A774299DAF63DC2DA913D1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2C8D874A81B216D17A622045;
+			remoteInfo = Tutar;
+		};
+		2BFA1E76BE8DF41ADDAEEC89 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 22A774299DAF63DC2DA913D1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2C8D874A81B216D17A622045;
+			remoteInfo = Tutar;
+		};
+		665426D7BE6A62746D71B89D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 22A774299DAF63DC2DA913D1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F5BADC30B34F6771E4474426;
+			remoteInfo = TutarWidget;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		C9FF676F866823C9FFEB44B5 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				7310ED09FC30BABB81626DB5 /* TutarWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		0B0EFE5E90A9325CF1D4A9FF /* InstallmentPlanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallmentPlanner.swift; sourceTree = "<group>"; };
+		0DB0107A3E6CFDED1556D7C3 /* InstallmentPlannerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallmentPlannerTests.swift; sourceTree = "<group>"; };
+		139EB0A1285CEEEB0E06070D /* TransactionEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionEditorView.swift; sourceTree = "<group>"; };
+		14B4D9D937EF7093AA2A3257 /* AppConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConstants.swift; sourceTree = "<group>"; };
+		294FDB7DC412FDF105207E28 /* TutarUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TutarUITests.swift; sourceTree = "<group>"; };
+		29D3CF07E3D1D9B024E4DC8D /* InstallmentsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallmentsView.swift; sourceTree = "<group>"; };
+		2A0090F02BF400F1DB783846 /* TutarUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TutarUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		31AB43924B3C3337B5BFE512 /* MainModel 3.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "MainModel 3.xcdatamodel"; sourceTree = "<group>"; };
+		429EEC5780D0307A39445C6C /* Tutar.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Tutar.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		508BDE69E94B1DFD1A96C8B6 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		6B8D866ABE825AC1F6E5A9DF /* TutarWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TutarWidget.swift; sourceTree = "<group>"; };
+		77718213FB560780D40C32B9 /* MainModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = MainModel.xcdatamodel; sourceTree = "<group>"; };
+		7CDCAD36C111B03A77641FCC /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = tr; path = tr.lproj/Localizable.strings; sourceTree = "<group>"; };
+		973393404F492F753E5EB52D /* MainModel 2.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "MainModel 2.xcdatamodel"; sourceTree = "<group>"; };
+		98F8FFA1996DE28EE24FC373 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		9977C7291E7851E4761BDBF1 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = en; path = en.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		A7E142DDFCCF1285D5D98427 /* DataController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataController.swift; sourceTree = "<group>"; };
+		AC3AAB8299869AB72CF43C5F /* TutarWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = TutarWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		BA43D5E60619F8A47B58A074 /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = tr; path = tr.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		C1EC38EE1A5375A47A788499 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		EC8530FABA3F64642C4ADA1E /* TutarApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TutarApp.swift; sourceTree = "<group>"; };
+		ECD403C6742FF3E8CCE092D2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F16079640051B2058B6BD086 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		FD9B2E7A8D9D3DE006AE940C /* TutarTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TutarTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		018E4AF55B33166E8AC7F9F5 /* Localizations */ = {
+			isa = PBXGroup;
+			children = (
+				E60467E9AF30C22B21645615 /* Localizable.strings */,
+				F89A593B0C03AF68BD37E85C /* Localizable.stringsdict */,
+			);
+			path = Localizations;
+			sourceTree = "<group>";
+		};
+		08D29720F9B3DA0CAE504127 /* app */ = {
+			isa = PBXGroup;
+			children = (
+				27E45371B126CB4C7DADB934 /* Shared */,
+				558370AC179B5CBDF284482F /* Tutar */,
+				C264F76D28269ABCFF6C0433 /* TutarTests */,
+				E8907FF1C239B3C71822AE11 /* TutarUITests */,
+				BACEC20FF93E0A6008C521DA /* TutarWidget */,
+			);
+			path = app;
+			sourceTree = "<group>";
+		};
+		27E45371B126CB4C7DADB934 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				018E4AF55B33166E8AC7F9F5 /* Localizations */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		3180726A3FA8DDCBD44F9FEF /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				8DA7FE410A21360F6CEF9259 /* MainModel.xcdatamodeld */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
+		3F31CF432ED25B870C0BF6A9 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				429EEC5780D0307A39445C6C /* Tutar.app */,
+				FD9B2E7A8D9D3DE006AE940C /* TutarTests.xctest */,
+				2A0090F02BF400F1DB783846 /* TutarUITests.xctest */,
+				AC3AAB8299869AB72CF43C5F /* TutarWidget.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		5095A673251073EB5F6E5FD6 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				ECD403C6742FF3E8CCE092D2 /* Assets.xcassets */,
+				F16079640051B2058B6BD086 /* PrivacyInfo.xcprivacy */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		558370AC179B5CBDF284482F /* Tutar */ = {
+			isa = PBXGroup;
+			children = (
+				14B4D9D937EF7093AA2A3257 /* AppConstants.swift */,
+				A7E142DDFCCF1285D5D98427 /* DataController.swift */,
+				0B0EFE5E90A9325CF1D4A9FF /* InstallmentPlanner.swift */,
+				29D3CF07E3D1D9B024E4DC8D /* InstallmentsView.swift */,
+				C1EC38EE1A5375A47A788499 /* RootView.swift */,
+				508BDE69E94B1DFD1A96C8B6 /* SettingsView.swift */,
+				139EB0A1285CEEEB0E06070D /* TransactionEditorView.swift */,
+				EC8530FABA3F64642C4ADA1E /* TutarApp.swift */,
+				3180726A3FA8DDCBD44F9FEF /* Data */,
+				5095A673251073EB5F6E5FD6 /* Resources */,
+			);
+			path = Tutar;
+			sourceTree = "<group>";
+		};
+		BACEC20FF93E0A6008C521DA /* TutarWidget */ = {
+			isa = PBXGroup;
+			children = (
+				6B8D866ABE825AC1F6E5A9DF /* TutarWidget.swift */,
+			);
+			path = TutarWidget;
+			sourceTree = "<group>";
+		};
+		BCA7818A504B84427BC63AA9 = {
+			isa = PBXGroup;
+			children = (
+				08D29720F9B3DA0CAE504127 /* app */,
+				3F31CF432ED25B870C0BF6A9 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		C264F76D28269ABCFF6C0433 /* TutarTests */ = {
+			isa = PBXGroup;
+			children = (
+				0DB0107A3E6CFDED1556D7C3 /* InstallmentPlannerTests.swift */,
+			);
+			path = TutarTests;
+			sourceTree = "<group>";
+		};
+		E8907FF1C239B3C71822AE11 /* TutarUITests */ = {
+			isa = PBXGroup;
+			children = (
+				294FDB7DC412FDF105207E28 /* TutarUITests.swift */,
+			);
+			path = TutarUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		12D6EA7481F8E655C5B25639 /* TutarTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 22D018C53F9097DAF3FF9C99 /* Build configuration list for PBXNativeTarget "TutarTests" */;
+			buildPhases = (
+				A71BDA25E1CB8BB1CB1126F8 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D3A5EB331364C0706F998B26 /* PBXTargetDependency */,
+			);
+			name = TutarTests;
+			packageProductDependencies = (
+			);
+			productName = TutarTests;
+			productReference = FD9B2E7A8D9D3DE006AE940C /* TutarTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		2C8D874A81B216D17A622045 /* Tutar */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 94F8DCC00D84AA52A1DF5D47 /* Build configuration list for PBXNativeTarget "Tutar" */;
+			buildPhases = (
+				334BFD7BCFA9A1CDFC4DB0F5 /* Sources */,
+				CEEE11E3A6D2ACC3A77F46E4 /* Resources */,
+				C9FF676F866823C9FFEB44B5 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8BC86BD5B350DD074FD84BF6 /* PBXTargetDependency */,
+			);
+			name = Tutar;
+			packageProductDependencies = (
+			);
+			productName = Tutar;
+			productReference = 429EEC5780D0307A39445C6C /* Tutar.app */;
+			productType = "com.apple.product-type.application";
+		};
+		8E43FFC1C62B1C7170200FDB /* TutarUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DB0F0B98857FDD4283C298AB /* Build configuration list for PBXNativeTarget "TutarUITests" */;
+			buildPhases = (
+				1A291026D32930F42284F8C8 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				1CA639C3ED84BA84EFC72CBC /* PBXTargetDependency */,
+			);
+			name = TutarUITests;
+			packageProductDependencies = (
+			);
+			productName = TutarUITests;
+			productReference = 2A0090F02BF400F1DB783846 /* TutarUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		F5BADC30B34F6771E4474426 /* TutarWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3A04B77B08A47B3B2371BC43 /* Build configuration list for PBXNativeTarget "TutarWidget" */;
+			buildPhases = (
+				74A40ABF3FD197CAF7BD7DF1 /* Sources */,
+				5DA20B1CED5E4BE8075326EC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TutarWidget;
+			packageProductDependencies = (
+			);
+			productName = TutarWidget;
+			productReference = AC3AAB8299869AB72CF43C5F /* TutarWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		22A774299DAF63DC2DA913D1 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					12D6EA7481F8E655C5B25639 = {
+						DevelopmentTeam = 9LYL5R6LS4;
+						ProvisioningStyle = Automatic;
+					};
+					2C8D874A81B216D17A622045 = {
+						DevelopmentTeam = 9LYL5R6LS4;
+						ProvisioningStyle = Automatic;
+					};
+					8E43FFC1C62B1C7170200FDB = {
+						DevelopmentTeam = 9LYL5R6LS4;
+						ProvisioningStyle = Automatic;
+						TestTargetID = 2C8D874A81B216D17A622045;
+					};
+					F5BADC30B34F6771E4474426 = {
+						DevelopmentTeam = 9LYL5R6LS4;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 55717147A4C75E3B7C718A1C /* Build configuration list for PBXProject "Tutar" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+				tr,
+			);
+			mainGroup = BCA7818A504B84427BC63AA9;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 3F31CF432ED25B870C0BF6A9 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				2C8D874A81B216D17A622045 /* Tutar */,
+				12D6EA7481F8E655C5B25639 /* TutarTests */,
+				8E43FFC1C62B1C7170200FDB /* TutarUITests */,
+				F5BADC30B34F6771E4474426 /* TutarWidget */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		5DA20B1CED5E4BE8075326EC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6DC71F94009BA2EDF76549FF /* Localizable.strings in Resources */,
+				EA0F74CEC1C7143921662176 /* Localizable.stringsdict in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CEEE11E3A6D2ACC3A77F46E4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A81A88E3D847010E18AD02A2 /* Assets.xcassets in Resources */,
+				94A38F664B055974E6CD38C0 /* Localizable.strings in Resources */,
+				D19A300A344CCD1820893491 /* Localizable.stringsdict in Resources */,
+				C9955AA0FDA7AD06D4D440D9 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1A291026D32930F42284F8C8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9A7C292EE46A2651C7E210A8 /* TutarUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		334BFD7BCFA9A1CDFC4DB0F5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				69F8144C2EE56E3703F6CF76 /* AppConstants.swift in Sources */,
+				9AAA301EF32D87DF77159938 /* DataController.swift in Sources */,
+				EBC837C9F37F93F5EA900B2B /* InstallmentPlanner.swift in Sources */,
+				BE91114C52291D2BD538466B /* InstallmentsView.swift in Sources */,
+				734EFB1558C61ACD65524840 /* MainModel.xcdatamodeld in Sources */,
+				B09132C900080F56DF43CB66 /* RootView.swift in Sources */,
+				F608340796BA0DF6BED29BDA /* SettingsView.swift in Sources */,
+				6A5FB5BE98E7A7B9BD278F9D /* TransactionEditorView.swift in Sources */,
+				743AE9FECAA65CDCCC109A5D /* TutarApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		74A40ABF3FD197CAF7BD7DF1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2756ADD2D57B1339A42EDD37 /* TutarWidget.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A71BDA25E1CB8BB1CB1126F8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3F4396751BF181439603EAEF /* InstallmentPlannerTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		1CA639C3ED84BA84EFC72CBC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2C8D874A81B216D17A622045 /* Tutar */;
+			targetProxy = 2BFA1E76BE8DF41ADDAEEC89 /* PBXContainerItemProxy */;
+		};
+		8BC86BD5B350DD074FD84BF6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F5BADC30B34F6771E4474426 /* TutarWidget */;
+			targetProxy = 665426D7BE6A62746D71B89D /* PBXContainerItemProxy */;
+		};
+		D3A5EB331364C0706F998B26 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2C8D874A81B216D17A622045 /* Tutar */;
+			targetProxy = 0AF51990236DAEDA60A12AF8 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		E60467E9AF30C22B21645615 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				98F8FFA1996DE28EE24FC373 /* en */,
+				7CDCAD36C111B03A77641FCC /* tr */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		F89A593B0C03AF68BD37E85C /* Localizable.stringsdict */ = {
+			isa = PBXVariantGroup;
+			children = (
+				9977C7291E7851E4761BDBF1 /* en */,
+				BA43D5E60619F8A47B58A074 /* tr */,
+			);
+			name = Localizable.stringsdict;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		47BCE14FDF685821CF6AB22D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 9LYL5R6LS4;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		4EE86F69A033BA88FA61EDAC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.furkancakir.tutar.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Tutar.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Tutar";
+			};
+			name = Debug;
+		};
+		50CF4587ECEAB032125A8A23 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = app/Tutar/Tutar.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = app/Tutar/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MOMC_NO_DELETE_RULE_WARNINGS = YES;
+				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.furkancakir.tutar;
+				PRODUCT_NAME = Tutar;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		8A1E91C270449FAC52E16024 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = app/TutarWidget/TutarWidget.entitlements;
+				INFOPLIST_FILE = app/TutarWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.furkancakir.tutar.widget;
+				PRODUCT_NAME = TutarWidget;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		8A5EE4D9192FEAD4F66D5F58 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 9LYL5R6LS4;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A6537C50192E4982A2E20706 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				ENABLE_APP_INTENTS_METADATA_EXTRACTION = NO;
+				EXTRACT_APP_INTENTS_METADATA = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.furkancakir.tutar.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Tutar;
+			};
+			name = Debug;
+		};
+		BB44204637C4D34C11634EF5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = app/TutarWidget/TutarWidget.entitlements;
+				INFOPLIST_FILE = app/TutarWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.furkancakir.tutar.widget;
+				PRODUCT_NAME = TutarWidget;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C01CB320EC89AD7B529DB435 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.furkancakir.tutar.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Tutar.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Tutar";
+			};
+			name = Release;
+		};
+		DB190058F559B03DB73330A5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = app/Tutar/Tutar.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = app/Tutar/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MOMC_NO_DELETE_RULE_WARNINGS = YES;
+				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.furkancakir.tutar;
+				PRODUCT_NAME = Tutar;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		E23089071A956B19DC0B85E0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				ENABLE_APP_INTENTS_METADATA_EXTRACTION = NO;
+				EXTRACT_APP_INTENTS_METADATA = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.furkancakir.tutar.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Tutar;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		22D018C53F9097DAF3FF9C99 /* Build configuration list for PBXNativeTarget "TutarTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4EE86F69A033BA88FA61EDAC /* Debug */,
+				C01CB320EC89AD7B529DB435 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		3A04B77B08A47B3B2371BC43 /* Build configuration list for PBXNativeTarget "TutarWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BB44204637C4D34C11634EF5 /* Debug */,
+				8A1E91C270449FAC52E16024 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		55717147A4C75E3B7C718A1C /* Build configuration list for PBXProject "Tutar" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8A5EE4D9192FEAD4F66D5F58 /* Debug */,
+				47BCE14FDF685821CF6AB22D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		94F8DCC00D84AA52A1DF5D47 /* Build configuration list for PBXNativeTarget "Tutar" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				50CF4587ECEAB032125A8A23 /* Debug */,
+				DB190058F559B03DB73330A5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		DB0F0B98857FDD4283C298AB /* Build configuration list for PBXNativeTarget "TutarUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A6537C50192E4982A2E20706 /* Debug */,
+				E23089071A956B19DC0B85E0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		8DA7FE410A21360F6CEF9259 /* MainModel.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				973393404F492F753E5EB52D /* MainModel 2.xcdatamodel */,
+				31AB43924B3C3337B5BFE512 /* MainModel 3.xcdatamodel */,
+				77718213FB560780D40C32B9 /* MainModel.xcdatamodel */,
+			);
+			currentVersion = 31AB43924B3C3337B5BFE512 /* MainModel 3.xcdatamodel */;
+			path = MainModel.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
+	};
+	rootObject = 22A774299DAF63DC2DA913D1 /* Project object */;
+}

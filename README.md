@@ -1,74 +1,69 @@
-# Dime
+# Tutar
 
-<p align="center">
-  <img src="./docs/assets/hero.png" width="451" style="max-width: 100%; height: auto;" />
-</p>
+Tutar, günlük gelir-giderleri ve kredi kartı taksitlerini takip etmek için geliştirilmiş, tamamen ücretsiz ve açık kaynak bir iPhone/iPad uygulamasıdır. Reklam, analitik, izleyici, hesap, satın alma, abonelik, bağış veya paywall içermez.
 
-Dime is a 100% free, open-source personal finance tracker built with iOS design guidelines in mind. [Download Dime on the App Store.](https://apps.apple.com/sg/app/dime-budget-expense-tracker/id1635280255)
+> English documentation follows the Turkish section.
 
-## App Preview
+## Özellikler
 
-<p align="center">
-  <img src="./docs/assets/3.png" height="300" /> 
-  <img src="./docs/assets/4.png" height="300" /> 
-  <img src="./docs/assets/5.png" height="300" />
-  <img src="./docs/assets/6.png" height="300" />
-</p>
-<p align="center">
-  <img src="./docs/assets/7.png" height="300" />
-  <img src="./docs/assets/8.png" height="300" />
-  <img src="./docs/assets/9.png" height="300" />
-</p>
+- Gelir ve gider kaydı; aya ve kategoriye göre özetler
+- Toplam tutarı kuruşu kuruşuna koruyan taksit planları
+- Her taksitte sıra göstergesi (`1/3`, `2/3`, `3/3`)
+- Tek taksiti veya seçili taksit ve sonrasını düzenleme/silme
+- Gelecek taksitleri geçmiş işlemlerden ayrı gösterme
+- Türkçe ve İngilizce; Sistem / Türkçe / English dil seçimi
+- Türkçede TRY, İngilizcede seçilen bölge ve para birimine uygun biçimlendirme
+- Koyu/açık mod, Dynamic Type, VoiceOver etiketleri ve iPhone/iPad düzenleri
+- Yerel Core Data saklama ve isteğe bağlı özel iCloud/CloudKit eşzamanlama
+- Yerelleştirilmiş ana ekran widget’ı ve günlük yerel hatırlatıcı
 
-## Why You’ll Love Dime
+## Kurulum ve geliştirme
 
-- 100% free forever, with no paywall or ads.
-- Beautifully iOS-centric design, with simplicity at its core.
-- Insightful expenditure breakdowns over various time periods.
-- Create budgets based on expense categories and stick to them.
-- Create recurring expenses with custom time frames.
-- Sync your expenses, categories and budgets with other devices via iCloud.
-- Custom reminders to input your expenses.
-- Biometric authentication to protect your data.
-- Home screen quick actions make capturing new expenses a breeze.
-- A gorgeous night theme for dark mode fanatics.
-- Informative home and lock screen widgets keep you updated at a glance.
+Gereksinimler: macOS, Xcode 26 veya daha yeni sürüm ve [XcodeGen](https://github.com/yonaskolb/XcodeGen).
 
-## How to help
+```sh
+git clone https://github.com/furkancak1r/tutar-ios.git
+cd tutar-ios
+xcodegen generate
+open Tutar.xcodeproj
+```
 
-- Please feel free to raise [issues](https://github.com/rarfell/dimeApp/issues) for any inquiries, suggestions for improvements, or bugs you encounter.
-- You're welcome to fork the repository and propose changes through a pull request, although the decision to merge it rests with the project maintainers.
-- To follow along with app updates, follow [@budgetwithdime](https://x.com/budgetwithdime) on X / Twitter
-- If you would like to discuss with the contributors, feel free to drop [Rafael](https://x.com/rarfell) or [Jeffrey](https://x.com/jefcodes) a DM!
+Simülatör derlemesi ve testler:
 
-## How to build
+```sh
+xcodebuild build -project Tutar.xcodeproj -scheme Tutar \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' CODE_SIGNING_ALLOWED=NO
 
-### Required
+xcodebuild test -project Tutar.xcodeproj -scheme Tutar \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' CODE_SIGNING_ALLOWED=NO
+```
 
-- Xcode
+Kendi cihazınızda çalıştırmak için bundle ID, App Group, iCloud container ve geliştirme takımını kendi Apple Developer hesabınızla değiştirin.
 
-### Build Steps
+## Kaynak, atıf ve lisans
 
-- Clone this project either via Xcode or terminal:
-  `git clone https://github.com/rarfell/dimeApp.git`
-- For branch selection use:
-  `--single-branch --branch [branchname]` after `clone`
-- After completion, open `dime.xcodeproj` using Xcode.
-- Please let all dependecies update automatically but we would recommend to run
-  `File > Packages > Resolve Package Versions` to ensure, everything is updated.
+Tutar, [Dime](https://github.com/rafsoh/dimeApp) temel alınarak oluşturulmuş değiştirilmiş bir çalışmadır. Dime’ın özgün yaratıcısı Rafael Soh’tur; önceki katkılar Git geçmişinde kendi yazarlarıyla korunmaktadır. Bu türev ilk kez **4 Ağustos 2026** tarihinde Tutar olarak değiştirilmiştir ve dayandığı upstream revizyonu `0463cb8caba237de781ae02e70a2ec82ae900c67`’dir.
 
-## Third party dependencies
+Kaynak geçmişi yeniden yazılmamıştır. `upstream` uzaktaki özgün projeyi, `origin` ise bu açık kaynak türevi gösterir. Ayrıntılı bildirimler için [NOTICE.md](NOTICE.md) dosyasına bakın.
 
-- [Alamofire](https://github.com/Alamofire/Alamofire)
-- [CloudKitSyncMonitor](https://github.com/ggruen/CloudKitSyncMonitor)
-- [ConfettiSwiftUI](https://github.com/simibac/ConfettiSwiftUI)
-- [CrookedText](https://github.com/duemunk/CrookedText)
-- [SwiftUI Introspect](https://github.com/siteline/swiftui-introspect)
-- [IsScrolling](https://github.com/fatbobman/IsScrolling)
-- [Popovers](https://github.com/aheze/Popovers/)
-- ScrollViewStyle
-- STools
+Tutar ve tüm türev kod GNU General Public License v3.0 altında yayımlanır. Tam metin [LICENSE](LICENSE) dosyasındadır. Önceki katkıların telif hakları kendi sahiplerinde, 2026 Tutar değişikliklerinin telif hakkı Furkan Çakır’dadır. Bu yazılım hiçbir garanti olmadan sunulur.
 
-## Licence
+## Gizlilik ve destek
 
-This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+- [Gizlilik politikası](https://furkancak1r.github.io/tutar-ios/privacy.html)
+- [Destek](https://furkancak1r.github.io/tutar-ios/support.html)
+- E-posta: [furkancakr7@gmail.com](mailto:furkancakr7@gmail.com)
+
+---
+
+## English
+
+Tutar is a completely free and open-source iPhone/iPad app for tracking everyday income, expenses, and card installments. It contains no advertising, analytics, tracking, account system, purchases, subscriptions, donations, or paywalls.
+
+Its distinguishing installment flow creates exactly the selected number of linked transactions, assigns any rounding remainder to the final installment, shows positions such as `1/3`, and supports editing or deleting one installment or the selected installment and all following ones. Future installments are shown separately and count toward spending only in their own calendar month.
+
+Tutar supports complete Turkish and English localization, locale-aware dates and money, Dynamic Type, VoiceOver, dark mode, iPhone/iPad layouts, local Core Data storage, optional private iCloud/CloudKit sync, a localized widget, and local reminders.
+
+Tutar is a modified work based on [Dime](https://github.com/rafsoh/dimeApp), originally created by Rafael Soh with contributions preserved in Git history. It was first modified as Tutar on **4 August 2026**, based on upstream revision `0463cb8caba237de781ae02e70a2ec82ae900c67`. The complete source is available in this repository and remains licensed under GNU GPLv3; see [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md).
+
+Support and privacy pages are linked above. Build instructions are identical to the Turkish section.
