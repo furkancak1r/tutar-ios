@@ -25,6 +25,7 @@
 		D19A300A344CCD1820893491 /* Localizable.stringsdict in Resources */ = {isa = PBXBuildFile; fileRef = F89A593B0C03AF68BD37E85C /* Localizable.stringsdict */; };
 		EA0F74CEC1C7143921662176 /* Localizable.stringsdict in Resources */ = {isa = PBXBuildFile; fileRef = F89A593B0C03AF68BD37E85C /* Localizable.stringsdict */; };
 		EBC837C9F37F93F5EA900B2B /* InstallmentPlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B0EFE5E90A9325CF1D4A9FF /* InstallmentPlanner.swift */; };
+		F1462F3BD72FC6415117C0A7 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F16079640051B2058B6BD086 /* PrivacyInfo.xcprivacy */; };
 		F608340796BA0DF6BED29BDA /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 508BDE69E94B1DFD1A96C8B6 /* SettingsView.swift */; };
 /* End PBXBuildFile section */
 
@@ -335,6 +336,7 @@
 			files = (
 				6DC71F94009BA2EDF76549FF /* Localizable.strings in Resources */,
 				EA0F74CEC1C7143921662176 /* Localizable.stringsdict in Resources */,
+				F1462F3BD72FC6415117C0A7 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

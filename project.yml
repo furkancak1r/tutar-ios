@@ -87,6 +87,8 @@ targets:
         excludes:
           - Info.plist
           - TutarWidget.entitlements
+      - path: app/Tutar/Resources/PrivacyInfo.xcprivacy
+        buildPhase: resources
       - path: app/Shared/Localizations
     info:
       path: app/TutarWidget/Info.plist
