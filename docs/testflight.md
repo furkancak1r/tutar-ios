@@ -1,4 +1,4 @@
-# Tutar 1.0 (9) — TestFlight metadata
+# Tutar 1.0 (10) — TestFlight metadata
 
 ## Beta Description — Turkish
 
@@ -8,26 +8,20 @@ Tutar, Rafael Soh ve katkıda bulunanların oluşturduğu Dime temel alınarak d
 
 ## What to Test — Turkish
 
-Build 9, işlem ve kategori listelerindeki emojileri renkli yuvarlak arka plan olmadan doğrudan gösterir. İşlem CSV’si artık kategori emojisini de dışa ve içe aktarır; eski Dime/Tutar CSV dosyaları geriye uyumlu kalır. Tam JSON yedeği, değiştirilmiş hazır kategori emojilerini de geri yükler.
+Build 10, Apple tasarım ilkeleri doğrultusunda daha sade ve profesyonel bir arayüz sunar. Büyük kartlar azaltıldı, veri hiyerarşisi sıkılaştırıldı, işlem ve bütçe satırları tek satıra uygun hâle getirildi, grafik etiketleri düzeltildi ve iPad içerik genişliği dengelendi. Gradient veya yeni tasarım bağımlılığı eklenmedi.
 
-1. 3.000 TL, 3 taksit ve ilk tarih 18 Ağustos seçerek tam üç işlemin 18 Ağustos, 18 Eylül ve 18 Ekim’e oluşturulduğunu doğrulayın.
-2. Kuruşla tam bölünmeyen bir tutarda farkın yalnız son taksite verildiğini kontrol edin.
-3. Tek taksiti ve “bu ve sonrası” kapsamını ayrı ayrı düzenleyin/silin; mükerrer kayıt oluşmamalı.
-4. Gelecek taksitlerin ayrı bölümde kaldığını ve yalnız ait oldukları ayın analizine girdiğini kontrol edin.
-5. Plan alanında günlük/haftalık/aylık tekrar oluşturun; aynı vade için mükerrer işlem oluşmadığını doğrulayın.
-6. Bütçe ve kategori ekleme/düzenlemeyi; bir kategoriyi silince eski işlemlerin korunmasını deneyin.
-7. Dime CSV içe aktarmayı iki kez yapıp ikinci geçişte mükerrerlerin atlandığını; CSV ve tam JSON yedeğin dışa aktarılabildiğini kontrol edin.
-8. Ayarlar’dan Sistem, Türkçe ve English seçeneklerini; açık/koyu modu; iCloud kapatma/açma sonrası yeniden başlatmayı deneyin.
-9. iPhone ve iPad’de büyük metin/VoiceOver ile taşma veya etiketsiz denetim bildirin.
-10. Ayarlar > Kategoriler > Kategori ekle akışında “Simge veya emoji” alanına dokununca emoji klavyesinin doğrudan açıldığını doğrulayın.
-11. Ay özetini sağa/sola kaydırarak ay değiştirmeyi; uzun kayıtların tek satırda kaldığını ve kırpılan metnin VoiceOver’da tam okunduğunu kontrol edin.
-12. Para birimi listesinden TRY dışında bir ISO para birimi seçin; Türkçe arayüzde seçimin korunduğunu doğrulayın.
-13. Uygulama Kilidi’ni açın, Tutar’ı arka plana gönderip geri dönün ve Face ID sırasında uygulamanın yeniden kilitlenmeden, ikinci istem açmadan tek doğrulamayla açıldığını doğrulayın.
-14. Açık ve koyu görünümde yeni siyah-beyaz temayı; ikon ve widget dahil hiçbir ana vurgu alanında mavi/gradient kalmadığını kontrol edin.
-15. Soğuk açılışta uygulama logosu veya spinner yerine sabit kilit simgesi ve kilit metninin göründüğünü; Face ID penceresi açılırken ekranın yeniden yükleniyormuş gibi değişmediğini doğrulayın.
-16. Face ID penceresi açıkken arka planda iskelet yükleme görünümü yerine kilit ekranının kaldığını; başarılı yüz eşleşmesinden sonra doğrudan Kayıtlar ekranına geçildiğini doğrulayın.
-17. İşlem ve Ayarlar > Kategoriler listelerinde emojilerin yuvarlak renkli bir zemin olmadan doğrudan göründüğünü kontrol edin.
-18. Özel emojili bir kategoriyle işlem oluşturun; CSV ve tam JSON yedeğini dışa aktarıp yeniden içe aldığınızda emojinin korunduğunu doğrulayın.
+1. Kayıtlar ekranında not, kategori, taksit sırası ve tutarın tek satırda kaldığını doğrulayın.
+2. Ay özetini sağa/sola kaydırın; animasyonlu geçişi ve dört sekmenin görünür kaldığını kontrol edin.
+3. Analiz ekranında tek günlük verinin yalnız bir gün etiketi ve dar bir grafik sütunuyla gösterildiğini doğrulayın.
+4. Bütçe satırlarında harcanan ve kalan tutarların kompakt, okunabilir ve taşmasız kaldığını kontrol edin.
+5. İşlem editörünü iPhone ve iPad’de açın; numaratörün dengeli genişlikte ve onay düğmesinin açık/koyu görünümde okunaklı olduğunu doğrulayın.
+6. Türkçe ve English arayüzü, açık/koyu görünümü ve en büyük Dynamic Type boyutunu deneyin.
+7. Uygulama Kilidi’ni etkinleştirin; Face ID sırasında kilit ekranının arkada kaldığını ve tek doğrulama sonrası yeniden kilitlenmediğini kontrol edin.
+8. 3.000 TL, 3 taksit ve 18 Ağustos seçerek 18 Ağustos, 18 Eylül ve 18 Ekim’de tam üç bağlı işlem oluştuğunu doğrulayın.
+9. Plan alanından tekrar oluşturun; aynı vade için mükerrer işlem oluşmadığını kontrol edin.
+10. Özel emojili kategoriyle CSV ve tam JSON yedeğini dışa ve içe aktarın; emojinin korunduğunu doğrulayın.
+11. TRY dışında bir ISO para birimi seçin ve seçimin uygulama yeniden açıldığında korunduğunu doğrulayın.
+12. VoiceOver ile sekmeleri, ay düğmelerini, işlem satırlarını, kilit ekranını ve numaratörü gezin.
 
 ## Beta Description — English
 
@@ -37,26 +31,20 @@ Tutar is a GPLv3 modified work based on Dime, originally created by Rafael Soh a
 
 ## What to Test — English
 
-Build 9 displays emoji directly in transaction and category lists without a colored circular background. Transaction CSV now exports and imports category emoji while remaining compatible with older Dime/Tutar CSV files. Complete JSON backups also restore edited emoji on built-in categories.
+Build 10 introduces a cleaner, more professional interface aligned with Apple design guidance. Large cards were reduced, data hierarchy was tightened, transaction and budget rows were made single-line friendly, chart labels were corrected, and iPad content width was balanced. No gradient or new design dependency was added.
 
-1. Enter a total of 3,000, choose 3 installments and 18 August, then verify exactly three linked entries on 18 August, 18 September, and 18 October.
-2. Use a total that does not divide evenly into cents and confirm only the last installment receives the remainder.
-3. Edit/delete one installment and “this and following”; no duplicate entries should appear.
-4. Confirm future installments are separate and affect only their own calendar month.
-5. Create daily, weekly, and monthly repeats from Schedule and confirm a due date is materialized only once.
-6. Add/edit budgets and categories; deleting a category must preserve its old transactions.
-7. Import a Dime CSV twice and confirm duplicates are skipped, then test transaction CSV and complete JSON backup export.
-8. Test System, Turkish, and English language choices, light/dark appearance, and an iCloud sync change followed by relaunch.
-9. Report clipping or unlabeled controls with large text or VoiceOver on iPhone and iPad.
-10. In Settings > Categories > Add category, tap “Symbol or emoji” and confirm the emoji keyboard opens directly.
-11. Swipe the month summary left/right to change months; confirm long records stay on one line and VoiceOver reads truncated content in full.
-12. Choose a non-default ISO currency and confirm the choice remains active in both English and Turkish.
-13. Enable App Lock, background and reopen Tutar, then confirm one Face ID/device-authentication attempt unlocks it without relocking or showing a second prompt.
-14. Check the new black-and-white theme in light and dark appearance, including the icon and widget; there should be no blue primary accent or gradient.
-15. Cold-launch the app and confirm the fixed lock symbol and text appear instead of the app logo or a spinner, with no refresh-like visual change when the Face ID prompt opens.
-16. While the Face ID prompt is open, confirm the lock screen remains behind it instead of a skeleton loading view, then send a successful match and verify Records appears directly.
-17. In Records and Settings > Categories, confirm emoji appear directly without a colored circular background.
-18. Create a transaction in a category with a custom emoji, export and re-import both CSV and complete JSON backups, and confirm the emoji is preserved.
+1. Confirm note, category, installment position, and amount stay on one line in Records.
+2. Swipe the month summary left and right; verify the animated transition and that all four tabs remain visible.
+3. In Analysis, confirm a single day produces one day label and a narrow chart bar.
+4. Check that spent and remaining values in Budget rows stay compact, readable, and unclipped.
+5. Open the transaction editor on iPhone and iPad; verify the keypad width and submit-button contrast in light and dark appearance.
+6. Test Turkish and English, light and dark appearance, and the largest Dynamic Type size.
+7. Enable App Lock; confirm the lock screen remains behind Face ID and one successful authentication does not relock the app.
+8. Enter 3,000, choose 3 installments and 18 August, then verify exactly three linked entries on 18 August, 18 September, and 18 October.
+9. Create a repeat from Schedule and confirm a due date is materialized only once.
+10. Export and import CSV and complete JSON backup with a custom category emoji; confirm the emoji is preserved.
+11. Choose a non-default ISO currency and confirm the choice persists after relaunch.
+12. Navigate tabs, month controls, transaction rows, the lock screen, and the keypad with VoiceOver.
 
 Feedback email: furkancakr7@gmail.com
 
