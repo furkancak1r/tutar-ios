@@ -45,6 +45,8 @@ targets:
           - tr
         ITSAppUsesNonExemptEncryption: false
         UIApplicationSupportsIndirectInputEvents: true
+        UIBackgroundModes:
+          - remote-notification
         UILaunchScreen: {}
         CFBundleURLTypes:
           - CFBundleTypeRole: Editor
@@ -61,6 +63,7 @@ targets:
     entitlements:
       path: app/Tutar/Tutar.entitlements
       properties:
+        aps-environment: $(APS_ENVIRONMENT)
         com.apple.security.application-groups:
           - group.com.furkancakir.tutar
         com.apple.developer.icloud-container-identifiers:
@@ -79,6 +82,17 @@ targets:
         # ponytail: preserve the immutable upstream v1 migration hash while hiding only its known relationship diagnostics.
         MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS: YES
         MOMC_NO_DELETE_RULE_WARNINGS: YES
+      configs:
+        Debug:
+          APS_ENVIRONMENT: development
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: Apple Development
+          PROVISIONING_PROFILE_SPECIFIER: Tutar Development
+        Release:
+          APS_ENVIRONMENT: production
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: Apple Distribution
+          PROVISIONING_PROFILE_SPECIFIER: Tutar App Store
   TutarWidget:
     type: app-extension
     platform: iOS
@@ -112,6 +126,15 @@ targets:
         PRODUCT_NAME: TutarWidget
         SKIP_INSTALL: YES
         APPLICATION_EXTENSION_API_ONLY: YES
+      configs:
+        Debug:
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: Apple Development
+          PROVISIONING_PROFILE_SPECIFIER: Tutar Widget Development
+        Release:
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: Apple Distribution
+          PROVISIONING_PROFILE_SPECIFIER: Tutar Widget App Store
   TutarTests:
     type: bundle.unit-test
     platform: iOS
