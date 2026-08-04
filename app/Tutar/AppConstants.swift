@@ -85,6 +85,17 @@ enum AppFormat {
         date.formatted(.dateTime.month(.wide).year().locale(language.locale))
     }
 
+    static func dayHeader(_ date: Date, language: AppLanguage) -> String {
+        let calendar = Calendar.current
+        if calendar.isDateInToday(date) {
+            return localized("date.today", language: language)
+        }
+        if calendar.isDateInYesterday(date) {
+            return localized("date.yesterday", language: language)
+        }
+        return date.formatted(.dateTime.weekday(.wide).day().month(.abbreviated).locale(language.locale))
+    }
+
     static func localized(_ key: String, language: AppLanguage) -> String {
         localizedBundle(language: language).localizedString(forKey: key, value: nil, table: nil)
     }
@@ -92,6 +103,14 @@ enum AppFormat {
     static func plural(_ key: String, count: Int, language: AppLanguage) -> String {
         let format = localizedBundle(language: language).localizedString(forKey: key, value: nil, table: nil)
         return String.localizedStringWithFormat(format, count)
+    }
+
+    static func format(_ key: String, language: AppLanguage, _ arguments: CVarArg...) -> String {
+        String(
+            format: localized(key, language: language),
+            locale: language.locale,
+            arguments: arguments
+        )
     }
 
     private static func localizedBundle(language: AppLanguage) -> Bundle {
@@ -112,8 +131,13 @@ enum AppFormat {
 }
 
 extension Color {
-    static let tutarNavy = Color(red: 17 / 255, green: 24 / 255, blue: 39 / 255)
-    static let tutarCoral = Color(red: 1, green: 107 / 255, blue: 94 / 255)
-    static let tutarMint = Color(red: 55 / 255, green: 214 / 255, blue: 192 / 255)
-    static let tutarCream = Color(red: 1, green: 244 / 255, blue: 223 / 255)
+    init(hex: String) {
+        let value = hex.trimmingCharacters(in: CharacterSet(charactersIn: "#"))
+        let number = UInt64(value, radix: 16) ?? 0x5E5CE6
+        self.init(
+            red: Double((number >> 16) & 0xFF) / 255,
+            green: Double((number >> 8) & 0xFF) / 255,
+            blue: Double(number & 0xFF) / 255
+        )
+    }
 }

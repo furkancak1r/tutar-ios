@@ -6,16 +6,24 @@ Tutar, günlük gelir-giderleri ve kredi kartı taksitlerini takip etmek için g
 
 ## Özellikler
 
-- Gelir ve gider kaydı; aya ve kategoriye göre özetler
-- Toplam tutarı kuruşu kuruşuna koruyan taksit planları
+- Yazarken kuruşları otomatik kaydıran hızlı numaratör; istenirse ondalık giriş
+- Not ve kategori önerileriyle hızlı gelir/gider kaydı
+- Haftalık, aylık ve yıllık analiz; arama ve kategori kırılımları
+- Günlük, haftalık, aylık ve yıllık genel/kategori bütçeleri
+- Düzenlenebilir, sıralanabilir gelir ve gider kategorileri
+- Tek sefer, tekrar veya taksit seçeneklerini aynı **Plan** menüsünden ayarlama
+- Toplam tutarı kuruşu kuruşuna koruyan bağlı taksit planları
 - Her taksitte sıra göstergesi (`1/3`, `2/3`, `3/3`)
 - Tek taksiti veya seçili taksit ve sonrasını düzenleme/silme
 - Gelecek taksitleri geçmiş işlemlerden ayrı gösterme
+- Dime/Tutar CSV içe aktarma, işlem CSV dışa aktarma ve tam JSON yedekleme/geri yükleme
 - Türkçe ve İngilizce; Sistem / Türkçe / English dil seçimi
 - Türkçede TRY, İngilizcede seçilen bölge ve para birimine uygun biçimlendirme
 - Koyu/açık mod, Dynamic Type, VoiceOver etiketleri ve iPhone/iPad düzenleri
 - Yerel Core Data saklama ve isteğe bağlı özel iCloud/CloudKit eşzamanlama
-- Yerelleştirilmiş ana ekran widget’ı ve günlük yerel hatırlatıcı
+- İsteğe bağlı aygıt kilidi, yerelleştirilmiş widget ve günlük yerel hatırlatıcı
+
+Taksitler ayrı bir sekme değildir. Yeni veya mevcut bir işlemin **Plan** alanında, “Tek sefer” ve “Tekrar” seçeneklerinin yanında ayarlanır; oluşan taksitler ait oldukları aylardaki normal işlem listesinde görünür.
 
 ## Kurulum ve geliştirme
 
@@ -62,9 +70,11 @@ Tutar ve tüm türev kod GNU General Public License v3.0 altında yayımlanır. 
 
 Tutar is a completely free and open-source iPhone/iPad app for tracking everyday income, expenses, and card installments. It contains no advertising, analytics, tracking, account system, purchases, subscriptions, donations, or paywalls.
 
-Its distinguishing installment flow creates exactly the selected number of linked transactions, assigns any rounding remainder to the final installment, shows positions such as `1/3`, and supports editing or deleting one installment or the selected installment and all following ones. Future installments are shown separately and count toward spending only in their own calendar month.
+The automatic-cents keypad makes amount entry immediate, with an optional decimal mode. Past-entry suggestions, editable categories, search, weekly/monthly/yearly analysis, and general or category budgets cover everyday tracking. Dime/Tutar CSV import, transaction CSV export, and a complete JSON backup provide local data portability.
 
-Tutar supports complete Turkish and English localization, locale-aware dates and money, Dynamic Type, VoiceOver, dark mode, iPhone/iPad layouts, local Core Data storage, optional private iCloud/CloudKit sync, a localized widget, and local reminders.
+Installments are configured inside the transaction **Schedule** menu beside One time and Repeat, not in a separate tab. The flow creates exactly the selected number of linked transactions, assigns any rounding remainder to the final installment, shows positions such as `1/3`, and supports editing or deleting one installment or the selected installment and all following ones. Future installments are shown separately and count toward spending only in their own calendar month.
+
+Tutar supports complete Turkish and English localization, locale-aware dates and money, Dynamic Type, VoiceOver, dark mode, iPhone/iPad layouts, local Core Data storage, optional private iCloud/CloudKit sync, optional device authentication, a localized widget, and local reminders.
 
 Tutar is a modified work based on [Dime](https://github.com/rafsoh/dimeApp), originally created by Rafael Soh with contributions preserved in Git history. It was first modified as Tutar on **4 August 2026**, based on upstream revision `0463cb8caba237de781ae02e70a2ec82ae900c67`. The complete source is available in this repository and remains licensed under GNU GPLv3; see [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md).
 

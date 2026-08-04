@@ -35,5 +35,49 @@
             <key>other</key><string>%d months</string>
         </dict>
     </dict>
+    <key>schedule.every.days</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key><string>Every %#@items@</string>
+        <key>items</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key><string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key><string>d</string>
+            <key>one</key><string>%d day</string>
+            <key>other</key><string>%d days</string>
+        </dict>
+    </dict>
+    <key>schedule.every.weeks</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key><string>Every %#@items@</string>
+        <key>items</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key><string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key><string>d</string>
+            <key>one</key><string>%d week</string>
+            <key>other</key><string>%d weeks</string>
+        </dict>
+    </dict>
+    <key>schedule.every.months</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key><string>Every %#@items@</string>
+        <key>items</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key><string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key><string>d</string>
+            <key>one</key><string>%d month</string>
+            <key>other</key><string>%d months</string>
+        </dict>
+    </dict>
+    <key>schedule.installment.summary</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key><string>%#@items@</string>
+        <key>items</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key><string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key><string>d</string>
+            <key>one</key><string>%d installment</string>
+            <key>other</key><string>%d installments</string>
+        </dict>
+    </dict>
 </dict>
 </plist>

@@ -40,6 +40,8 @@
 	<string>1</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Tutar uses device authentication only to protect the financial data stored on this device.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2026 Furkan Çakır. Dime upstream © Rafael Soh and contributors.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>

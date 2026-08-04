@@ -9,6 +9,21 @@ enum EditScope: Equatable {
     case thisAndFollowing
 }
 
+enum BudgetError: Error, Equatable {
+    case invalidAmount
+    case invalidType
+    case missingCategory
+    case duplicateCategory
+    case duplicateOverall
+}
+
+enum CategoryError: Error, Equatable {
+    case invalidName
+    case invalidEmoji
+    case invalidColour
+    case duplicate
+}
+
 @MainActor
 final class DataController: ObservableObject {
     private static let isTesting = ProcessInfo.processInfo.arguments.contains("-ui-testing")
@@ -62,6 +77,7 @@ final class DataController: ObservableObject {
                     }
                     #endif
                     try self.finishMigrationAndSeed()
+                    try self.materializeRecurringTransactions()
                     if ProcessInfo.processInfo.arguments.contains("-seed-installments") {
                         try self.seedUITestInstallmentsIfNeeded()
                     }
@@ -94,7 +110,9 @@ final class DataController: ObservableObject {
         category: Category?,
         income: Bool,
         amountMinorUnits: Int64,
-        date: Date
+        date: Date,
+        recurringType: Int = 0,
+        recurringCoefficient: Int = 1
     ) throws -> Transaction {
         guard amountMinorUnits > 0 else { throw InstallmentError.invalidAmount }
         let transaction = NSEntityDescription.insertNewObject(
@@ -109,6 +127,12 @@ final class DataController: ObservableObject {
             amountMinorUnits: amountMinorUnits,
             date: date
         )
+        configureRecurrence(
+            transaction,
+            type: recurringType,
+            coefficient: recurringCoefficient
+        )
+        try materializeRecurringTransaction(transaction)
         try save()
         return transaction
     }
@@ -172,6 +196,8 @@ final class DataController: ObservableObject {
         amountMinorUnits: Int64,
         date: Date,
         intervalMonths: Int,
+        recurringType: Int = 0,
+        recurringCoefficient: Int = 1,
         scope: EditScope
     ) throws {
         guard amountMinorUnits > 0 else { throw InstallmentError.invalidAmount }
@@ -189,6 +215,12 @@ final class DataController: ObservableObject {
                 amountMinorUnits: amountMinorUnits,
                 date: date
             )
+            configureRecurrence(
+                transaction,
+                type: recurringType,
+                coefficient: recurringCoefficient
+            )
+            try materializeRecurringTransaction(transaction)
             try save()
             return
         }
@@ -231,6 +263,15 @@ final class DataController: ObservableObject {
         try save()
     }
 
+    func materializeRecurringTransactions() throws {
+        let request = Transaction.fetchRequest()
+        request.predicate = NSPredicate(format: "recurringType > 0")
+        for transaction in try context.fetch(request) {
+            try materializeRecurringTransaction(transaction)
+        }
+        try save()
+    }
+
     func delete(_ transaction: Transaction, scope: EditScope) throws {
         if
             scope == .thisAndFollowing,
@@ -266,6 +307,135 @@ final class DataController: ObservableObject {
         try finishMigrationAndSeed()
     }
 
+    @discardableResult
+    func saveCategoryBudget(
+        _ budget: Budget? = nil,
+        category: Category,
+        amountMinorUnits: Int64,
+        type: Int,
+        startDate: Date
+    ) throws -> Budget {
+        guard amountMinorUnits > 0 else { throw BudgetError.invalidAmount }
+        guard (1 ... 4).contains(type) else { throw BudgetError.invalidType }
+
+        let request = Budget.fetchRequest()
+        request.fetchLimit = 1
+        request.predicate = NSPredicate(format: "category == %@", category)
+        if let existing = try context.fetch(request).first, existing != budget {
+            throw BudgetError.duplicateCategory
+        }
+
+        let item = budget ?? (NSEntityDescription.insertNewObject(
+            forEntityName: "Budget",
+            into: context
+        ) as! Budget)
+        item.id = item.id ?? UUID()
+        item.dateCreated = item.dateCreated ?? .now
+        item.amount = Double(amountMinorUnits) / 100
+        item.type = Int16(type)
+        item.startDate = startDate
+        item.category = category
+        try save()
+        return item
+    }
+
+    @discardableResult
+    func saveOverallBudget(
+        _ budget: MainBudget? = nil,
+        amountMinorUnits: Int64,
+        type: Int,
+        startDate: Date
+    ) throws -> MainBudget {
+        guard amountMinorUnits > 0 else { throw BudgetError.invalidAmount }
+        guard (1 ... 4).contains(type) else { throw BudgetError.invalidType }
+
+        if budget == nil {
+            let request = MainBudget.fetchRequest()
+            request.fetchLimit = 1
+            guard try context.count(for: request) == 0 else { throw BudgetError.duplicateOverall }
+        }
+
+        let item = budget ?? (NSEntityDescription.insertNewObject(
+            forEntityName: "MainBudget",
+            into: context
+        ) as! MainBudget)
+        item.dateCreated = item.dateCreated ?? .now
+        item.amount = Double(amountMinorUnits) / 100
+        item.type = Int16(type)
+        item.startDate = startDate
+        try save()
+        return item
+    }
+
+    func deleteBudget(_ budget: NSManagedObject) throws {
+        context.delete(budget)
+        try save()
+    }
+
+    @discardableResult
+    func saveCategory(
+        _ category: Category? = nil,
+        name: String,
+        emoji: String,
+        colour: String,
+        income: Bool,
+        replacesSystemName: Bool = false
+    ) throws -> Category {
+        let cleanedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleanedEmoji = emoji.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleanedName.isEmpty, cleanedName.count <= 80 else { throw CategoryError.invalidName }
+        guard !cleanedEmoji.isEmpty, cleanedEmoji.count <= 16 else { throw CategoryError.invalidEmoji }
+        guard colour.range(of: "^#[0-9A-Fa-f]{6}$", options: .regularExpression) != nil else {
+            throw CategoryError.invalidColour
+        }
+
+        let request = Category.fetchRequest()
+        request.predicate = NSPredicate(format: "income == %@", NSNumber(value: income))
+        let duplicate = try context.fetch(request).contains {
+            $0 != category && $0.name?.localizedCaseInsensitiveCompare(cleanedName) == .orderedSame
+        }
+        guard !duplicate else { throw CategoryError.duplicate }
+
+        let item = category ?? (NSEntityDescription.insertNewObject(
+            forEntityName: "Category",
+            into: context
+        ) as! Category)
+        item.id = item.id ?? UUID()
+        item.dateCreated = item.dateCreated ?? .now
+        item.name = cleanedName
+        item.emoji = cleanedEmoji
+        item.colour = colour
+        item.income = income
+        if category == nil {
+            item.order = (try context.fetch(request).map(\.order).max() ?? -1) + 1
+        } else if replacesSystemName {
+            item.systemKey = nil
+        }
+        try save()
+        return item
+    }
+
+    func deleteCategory(_ category: Category) throws {
+        let transactions = Transaction.fetchRequest()
+        transactions.predicate = NSPredicate(format: "category == %@", category)
+        try context.fetch(transactions).forEach { $0.category = nil }
+
+        let templates = TemplateTransaction.fetchRequest()
+        templates.predicate = NSPredicate(format: "category == %@", category)
+        try context.fetch(templates).forEach { $0.category = nil }
+
+        if let budget = category.budget { context.delete(budget) }
+        context.delete(category)
+        try save()
+    }
+
+    func reorderCategories(_ categories: [Category]) throws {
+        for (index, category) in categories.enumerated() {
+            category.order = Int64(index)
+        }
+        try save()
+    }
+
     func installments(groupID: UUID) throws -> [Transaction] {
         let request = Transaction.fetchRequest()
         request.sortDescriptors = [NSSortDescriptor(key: "installmentIndex", ascending: true)]
@@ -288,7 +458,7 @@ final class DataController: ObservableObject {
         loadError = nil
     }
 
-    private func configure(
+    func configure(
         _ transaction: Transaction,
         note: String,
         category: Category?,
@@ -308,6 +478,73 @@ final class DataController: ObservableObject {
         transaction.month = calendar.date(from: calendar.dateComponents([.year, .month], from: date))
     }
 
+    private func configureRecurrence(_ transaction: Transaction, type: Int, coefficient: Int) {
+        guard (1 ... 3).contains(type), (1 ... 99).contains(coefficient), !transaction.isInstallment else {
+            transaction.onceRecurring = false
+            transaction.recurringType = 0
+            transaction.recurringCoefficient = 0
+            return
+        }
+        transaction.onceRecurring = true
+        transaction.recurringType = Int16(type)
+        transaction.recurringCoefficient = Int16(coefficient)
+    }
+
+    private func materializeRecurringTransaction(_ transaction: Transaction, through date: Date = .now) throws {
+        let type = Int(transaction.recurringType)
+        let coefficient = Int(transaction.recurringCoefficient)
+        guard (1 ... 3).contains(type), (1 ... 99).contains(coefficient) else { return }
+
+        let calendar = Calendar.current
+        let limit = calendar.startOfDay(for: date)
+        var marker = transaction
+
+        while let nextDate = nextRecurringDate(
+            after: marker.wrappedDate,
+            type: type,
+            coefficient: coefficient,
+            calendar: calendar
+        ), calendar.startOfDay(for: nextDate) <= limit {
+            marker.recurringType = 0
+            marker.recurringCoefficient = 0
+
+            let next = NSEntityDescription.insertNewObject(
+                forEntityName: "Transaction",
+                into: context
+            ) as! Transaction
+            configure(
+                next,
+                note: marker.note ?? "",
+                category: marker.category,
+                income: marker.income,
+                amountMinorUnits: marker.amountMinorUnits,
+                date: nextDate
+            )
+            next.onceRecurring = true
+            next.recurringType = Int16(type)
+            next.recurringCoefficient = Int16(coefficient)
+            marker = next
+        }
+    }
+
+    private func nextRecurringDate(
+        after date: Date,
+        type: Int,
+        coefficient: Int,
+        calendar: Calendar
+    ) -> Date? {
+        switch type {
+        case 1:
+            calendar.date(byAdding: .day, value: coefficient, to: date)
+        case 2:
+            calendar.date(byAdding: .day, value: coefficient * 7, to: date)
+        case 3:
+            calendar.date(byAdding: .month, value: coefficient, to: date)
+        default:
+            nil
+        }
+    }
+
     private func totalMinorUnits(groupID: UUID, beforeIndex: Int) throws -> Int64 {
         let request = Transaction.fetchRequest()
         request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
@@ -325,10 +562,15 @@ final class DataController: ObservableObject {
             $0.createdAt = $0.createdAt ?? $0.date ?? Date.now
         }
 
+        let categoryRequest = Category.fetchRequest()
+        try context.fetch(categoryRequest).forEach { $0.id = $0.id ?? UUID() }
+
+        let budgetRequest = Budget.fetchRequest()
+        try context.fetch(budgetRequest).forEach { $0.id = $0.id ?? UUID() }
+
         try localizeKnownLegacyCategories()
         try deduplicateInstallments()
 
-        let categoryRequest = Category.fetchRequest()
         if try context.count(for: categoryRequest) == 0 {
             let defaults: [(String, String, String, Bool)] = [
                 ("category.market", "🛒", "#FF6B5E", false),
@@ -404,6 +646,7 @@ final class DataController: ObservableObject {
         guard try context.count(for: request) == 0 else { return }
         let categoryRequest = Category.fetchRequest()
         categoryRequest.fetchLimit = 1
+        categoryRequest.predicate = NSPredicate(format: "income == NO")
         let category = try context.fetch(categoryRequest).first
         try createInstallments(
             note: "UI Test",

@@ -16,7 +16,7 @@ Tutar is a modified work based on **Dime**, originally created by **Rafael Soh**
 
 The retained Git history records authorship and dates for every upstream commit. Named upstream contributors in that history include Rafael Soh, Jeffrey Zang, Yumi Izumi, Jigneshkumar Patil, Couti Darius, Nouraiz, chacree, fuji37450, and khaledosama999. Copyright in each contribution remains with its respective copyright holder.
 
-The Tutar name, icon, color system, screen layouts, copy, identifiers, installment implementation, localizations, and current application code are new modifications. No Dime App Store screenshots, icon, store copy, or branding are distributed in the current Tutar product.
+The Tutar name, icon, color system, revised screen layouts and copy, identifiers, installment implementation, and Turkish/English localization work are Tutar-specific modifications. No Dime App Store screenshots, icon, store copy, or branding are distributed in the current Tutar product.
 
 ## Source availability
 

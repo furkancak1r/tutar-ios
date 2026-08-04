@@ -82,8 +82,8 @@ private struct TutarWidgetView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 9) {
             HStack {
-                Image(systemName: "square.stack.3d.up.fill")
-                    .foregroundStyle(Color(red: 1, green: 107 / 255, blue: 94 / 255))
+                Image(systemName: "list.bullet")
+                    .foregroundStyle(Color(red: 47 / 255, green: 107 / 255, blue: 1))
                 Text("widget.title")
                     .font(.caption.bold())
                     .foregroundStyle(.secondary)
@@ -126,11 +126,7 @@ private struct TutarWidgetView: View {
             Spacer(minLength: 0)
         }
         .containerBackground(for: .widget) {
-            LinearGradient(
-                colors: [Color(.systemBackground), Color(red: 55 / 255, green: 214 / 255, blue: 192 / 255).opacity(0.12)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            Color(.systemBackground)
         }
         .environment(\.locale, locale)
         .widgetURL(URL(string: "tutar://add"))

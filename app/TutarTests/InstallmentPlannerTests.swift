@@ -205,6 +205,9 @@ final class InstallmentPersistenceTests: XCTestCase {
         XCTAssertEqual(preserved.amount, 42.75, accuracy: 0.001)
         XCTAssertNil(preserved.installmentGroupID)
         XCTAssertEqual(preserved.installmentIndex, 0)
+        for store in migrated.container.persistentStoreCoordinator.persistentStores {
+            try migrated.container.persistentStoreCoordinator.remove(store)
+        }
     }
 
     private func waitUntilLoaded(_ controller: DataController) async throws {
@@ -221,5 +224,6 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(AppFormat.plural("installments.remaining", count: 1, language: .english), "1 installment remaining")
         XCTAssertEqual(AppFormat.plural("installments.remaining", count: 2, language: .english), "2 installments remaining")
         XCTAssertEqual(AppFormat.plural("installments.remaining", count: 2, language: .turkish), "2 taksit kaldı")
+        XCTAssertEqual(AppFormat.plural("schedule.every.months", count: 2, language: .turkish), "2 ayda bir")
     }
 }

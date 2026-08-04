@@ -90,7 +90,11 @@ enum MoneyInput {
         guard rounded == scaled else { return nil }
 
         let value = NSDecimalNumber(decimal: rounded)
-        guard value != .notANumber, value.compare(NSDecimalNumber.zero) == .orderedDescending else { return nil }
+        guard value != .notANumber,
+              value.compare(NSDecimalNumber.zero) == .orderedDescending,
+              value.compare(NSDecimalNumber(value: MoneyEntry.maximumMinorUnits)) != .orderedDescending else {
+            return nil
+        }
         return value.int64Value
     }
 }

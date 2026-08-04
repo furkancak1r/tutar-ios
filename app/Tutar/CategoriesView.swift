@@ -1,0 +1,232 @@
+// Copyright © 2026 Furkan Çakır. Licensed under GPLv3.
+
+import CoreData
+import SwiftUI
+
+struct CategoriesView: View {
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Category.order, ascending: true)],
+        animation: .default
+    ) private var categories: FetchedResults<Category>
+    @EnvironmentObject private var dataController: DataController
+    @Environment(\.appLanguage) private var language
+    @State private var showingNew = false
+    @State private var editing: Category?
+    @State private var deleting: Category?
+    @State private var errorMessage = ""
+
+    private var expenses: [Category] { categories.filter { !$0.income } }
+    private var income: [Category] { categories.filter(\.income) }
+
+    var body: some View {
+        List {
+            categorySection("editor.expense", items: expenses)
+            categorySection("editor.income", items: income)
+        }
+        .navigationTitle("categories.title")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showingNew = true
+                } label: {
+                    Label("categories.add", systemImage: "plus")
+                }
+            }
+            ToolbarItem(placement: .secondaryAction) {
+                EditButton()
+            }
+        }
+        .sheet(isPresented: $showingNew) {
+            CategoryEditorView()
+        }
+        .sheet(item: $editing) { category in
+            CategoryEditorView(
+                category: category,
+                initialName: category.displayName(language: language)
+            )
+        }
+        .confirmationDialog("categories.delete.title", isPresented: deleteBinding, titleVisibility: .visible) {
+            Button("action.delete", role: .destructive, action: performDelete)
+            Button("action.cancel", role: .cancel) { deleting = nil }
+        } message: {
+            Text("categories.delete.message")
+        }
+        .alert("error.save.title", isPresented: errorBinding) {
+            Button("action.ok") { errorMessage = "" }
+        } message: {
+            Text(verbatim: errorMessage)
+        }
+    }
+
+    private var deleteBinding: Binding<Bool> {
+        Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })
+    }
+
+    private var errorBinding: Binding<Bool> {
+        Binding(get: { !errorMessage.isEmpty }, set: { if !$0 { errorMessage = "" } })
+    }
+
+    private func categorySection(_ title: LocalizedStringKey, items: [Category]) -> some View {
+        Section(title) {
+            ForEach(items) { category in
+                HStack(spacing: 12) {
+                    Text(verbatim: category.wrappedEmoji)
+                        .font(.title3)
+                        .frame(width: 36, height: 36)
+                        .background(Color(hex: category.colour ?? "#5E5CE6").opacity(0.15), in: Circle())
+                    Text(verbatim: category.displayName(language: language))
+                    Spacer()
+                    Circle()
+                        .fill(Color(hex: category.colour ?? "#5E5CE6"))
+                        .frame(width: 12, height: 12)
+                        .accessibilityHidden(true)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture { editing = category }
+                .swipeActions {
+                    Button(role: .destructive) { deleting = category } label: {
+                        Label("action.delete", systemImage: "trash")
+                    }
+                    Button { editing = category } label: {
+                        Label("action.edit", systemImage: "pencil")
+                    }
+                    .tint(.accentColor)
+                }
+            }
+            .onMove { source, destination in
+                var reordered = items
+                reordered.move(fromOffsets: source, toOffset: destination)
+                do {
+                    try dataController.reorderCategories(reordered)
+                } catch {
+                    errorMessage = error.localizedDescription
+                }
+            }
+        }
+    }
+
+    private func performDelete() {
+        guard let deleting else { return }
+        do {
+            try dataController.deleteCategory(deleting)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        self.deleting = nil
+    }
+}
+
+private struct CategoryEditorView: View {
+    @EnvironmentObject private var dataController: DataController
+    @Environment(\.dismiss) private var dismiss
+
+    let category: Category?
+    let initialName: String
+
+    @State private var name: String
+    @State private var emoji: String
+    @State private var colour: String
+    @State private var income: Bool
+    @State private var errorKey: String?
+
+    private let colours = [
+        "#5E5CE6", "#007AFF", "#00A7A0", "#34C759",
+        "#FF9500", "#FF3B30", "#AF52DE", "#8E8E93"
+    ]
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("categories.details.section") {
+                    TextField("categories.name", text: $name)
+                        .textInputAutocapitalization(.words)
+                        .accessibilityIdentifier("categoryNameField")
+                    TextField("categories.emoji", text: $emoji)
+                        .accessibilityIdentifier("categoryEmojiField")
+                    Picker("editor.type.label", selection: $income) {
+                        Text("editor.expense").tag(false)
+                        Text("editor.income").tag(true)
+                    }
+                    .pickerStyle(.segmented)
+                    .disabled(category != nil)
+                }
+
+                Section("categories.colour.section") {
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 16) {
+                        ForEach(colours, id: \.self) { option in
+                            Button {
+                                colour = option
+                            } label: {
+                                Circle()
+                                    .fill(Color(hex: option))
+                                    .frame(width: 36, height: 36)
+                                    .overlay {
+                                        if colour == option {
+                                            Image(systemName: "checkmark")
+                                                .font(.caption.bold())
+                                                .foregroundStyle(.white)
+                                        }
+                                    }
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel(Text("categories.colour"))
+                            .accessibilityValue(Text(verbatim: option))
+                            .accessibilityAddTraits(colour == option ? .isSelected : [])
+                        }
+                    }
+                    .padding(.vertical, 6)
+                }
+
+                if let errorKey {
+                    Section {
+                        Label(LocalizedStringKey(errorKey), systemImage: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.red)
+                    }
+                }
+            }
+            .navigationTitle(category == nil ? "categories.new.title" : "categories.edit.title")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("action.cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("action.save", action: save)
+                        .fontWeight(.semibold)
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+
+    init(category: Category? = nil, initialName: String = "") {
+        self.category = category
+        self.initialName = initialName
+        _name = State(initialValue: initialName)
+        _emoji = State(initialValue: category?.emoji ?? "")
+        _colour = State(initialValue: category?.colour ?? "#5E5CE6")
+        _income = State(initialValue: category?.income ?? false)
+    }
+
+    private func save() {
+        do {
+            try dataController.saveCategory(
+                category,
+                name: name,
+                emoji: emoji,
+                colour: colour,
+                income: income,
+                replacesSystemName: category?.systemKey != nil && name != initialName
+            )
+            dismiss()
+        } catch CategoryError.invalidName {
+            errorKey = "categories.error.name"
+        } catch CategoryError.invalidEmoji {
+            errorKey = "categories.error.emoji"
+        } catch CategoryError.duplicate {
+            errorKey = "categories.error.duplicate"
+        } catch {
+            errorKey = "editor.error.save"
+        }
+    }
+}

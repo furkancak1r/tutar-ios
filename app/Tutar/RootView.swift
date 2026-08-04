@@ -5,63 +5,32 @@ import CoreData
 import SwiftUI
 
 private enum AppTab: Hashable {
-    case overview
-    case transactions
-    case installments
+    case log
     case analysis
+    case budgets
     case settings
 }
 
 struct RootView: View {
     @EnvironmentObject private var dataController: DataController
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.appLanguage) private var language
-    @State private var selectedTab = AppTab.overview
+    @AppStorage("biometricLock", store: .tutar) private var biometricLock = false
+    @State private var selectedTab = AppTab.log
     @State private var showingEditor = false
+    @State private var unlocked = false
+    @State private var authenticationInProgress = false
 
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            TabView(selection: $selectedTab) {
-                NavigationStack { DashboardView(showingEditor: $showingEditor) }
-                    .tabItem { Label("tab.overview", systemImage: "rectangle.3.group.fill") }
-                    .tag(AppTab.overview)
-
-                NavigationStack { TransactionsView() }
-                    .tabItem { Label("tab.transactions", systemImage: "list.bullet.rectangle.portrait") }
-                    .tag(AppTab.transactions)
-
-                NavigationStack { InstallmentsView() }
-                    .tabItem { Label("tab.installments", systemImage: "square.stack.3d.up.fill") }
-                    .tag(AppTab.installments)
-
-                NavigationStack { AnalysisView() }
-                    .tabItem { Label("tab.analysis", systemImage: "chart.bar.xaxis") }
-                    .tag(AppTab.analysis)
-
-                NavigationStack { SettingsView() }
-                    .tabItem { Label("tab.settings", systemImage: "gearshape.fill") }
-                    .tag(AppTab.settings)
+        Group {
+            if lockEnabled, !unlocked {
+                LockedView(
+                    isAuthenticating: authenticationInProgress,
+                    authenticate: authenticateIfNeeded
+                )
+            } else {
+                appContent
             }
-
-            if selectedTab != .settings {
-                Button {
-                    showingEditor = true
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.title2.bold())
-                        .foregroundStyle(.white)
-                        .frame(width: 58, height: 58)
-                        .background(Color.tutarCoral, in: Circle())
-                        .shadow(color: .tutarCoral.opacity(0.35), radius: 14, y: 8)
-                }
-                .accessibilityLabel(Text("action.addTransaction"))
-                .accessibilityIdentifier("addTransactionButton")
-                .padding(.trailing, 20)
-                .padding(.bottom, 72)
-            }
-        }
-        .fontDesign(.rounded)
-        .sheet(isPresented: $showingEditor) {
-            TransactionEditorView()
         }
         .alert("error.data.title", isPresented: loadErrorBinding) {
             Button("action.ok") { dataController.dismissLoadError() }
@@ -69,8 +38,77 @@ struct RootView: View {
             Text("error.data.message")
         }
         .onOpenURL { url in
-            if url.scheme == "tutar", url.host == "add" {
+            if url.scheme == "tutar", url.host == "add", !lockEnabled || unlocked {
                 showingEditor = true
+            }
+        }
+        .task {
+            if lockEnabled { authenticateIfNeeded() } else { unlocked = true }
+        }
+        .onChange(of: biometricLock) { _, enabled in
+            if enabled {
+                showingEditor = false
+                unlocked = false
+                authenticateIfNeeded()
+            } else {
+                unlocked = true
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                try? dataController.materializeRecurringTransactions()
+                authenticateIfNeeded()
+            } else if phase == .background, lockEnabled {
+                showingEditor = false
+                unlocked = false
+            }
+        }
+    }
+
+    private var appContent: some View {
+        TabView(selection: $selectedTab) {
+            NavigationStack {
+                TransactionsView(showingEditor: $showingEditor)
+            }
+            .tabItem { Label("tab.transactions", systemImage: "list.bullet") }
+            .tag(AppTab.log)
+
+            NavigationStack {
+                AnalysisView()
+            }
+            .tabItem { Label("tab.analysis", systemImage: "chart.bar.xaxis") }
+            .tag(AppTab.analysis)
+
+            NavigationStack {
+                BudgetsView()
+            }
+            .tabItem { Label("tab.budgets", systemImage: "gauge.with.dots.needle.50percent") }
+            .tag(AppTab.budgets)
+
+            NavigationStack {
+                SettingsView()
+            }
+            .tabItem { Label("tab.settings", systemImage: "gearshape") }
+            .tag(AppTab.settings)
+        }
+        .fullScreenCover(isPresented: $showingEditor) {
+            TransactionEditorView()
+        }
+    }
+
+    private var lockEnabled: Bool {
+        biometricLock && !ProcessInfo.processInfo.arguments.contains("-ui-testing")
+    }
+
+    private func authenticateIfNeeded() {
+        guard lockEnabled, !unlocked, !authenticationInProgress else { return }
+        authenticationInProgress = true
+        let reason = AppFormat.localized("settings.lock.reason", language: language)
+        Task {
+            let success = await DeviceAuthentication.authenticate(reason: reason)
+            await MainActor.run {
+                unlocked = success
+                authenticationInProgress = false
             }
         }
     }
@@ -83,27 +121,95 @@ struct RootView: View {
     }
 }
 
-struct DashboardView: View {
+private struct LockedView: View {
+    let isAuthenticating: Bool
+    let authenticate: () -> Void
+
+    var body: some View {
+        VStack(spacing: 18) {
+            Image("BrandMark")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 84, height: 84)
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .accessibilityHidden(true)
+
+            Text("settings.lock.title")
+                .font(.title2.bold())
+            Text("settings.lock.message")
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.secondary)
+
+            Button(action: authenticate) {
+                if isAuthenticating {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                } else {
+                    Label("settings.lock.retry", systemImage: "lock.open")
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(isAuthenticating)
+            .frame(maxWidth: 280)
+        }
+        .padding(28)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemBackground))
+        .accessibilityElement(children: .contain)
+    }
+}
+
+struct TransactionsView: View {
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Transaction.date, ascending: false)],
         animation: .default
     ) private var transactions: FetchedResults<Transaction>
+
+    @EnvironmentObject private var dataController: DataController
     @Environment(\.appLanguage) private var language
-    @Environment(\.colorScheme) private var colorScheme
     @AppStorage("currencyCode", store: .tutar) private var preferredCurrency = ""
+    @AppStorage("showUpcoming", store: .tutar) private var showUpcoming = true
     @Binding var showingEditor: Bool
+
+    @State private var selectedMonth = Calendar.current.date(
+        from: Calendar.current.dateComponents([.year, .month], from: .now)
+    ) ?? .now
+    @State private var searchText = ""
+    @State private var editing: Transaction?
+    @State private var deleting: Transaction?
+    @State private var errorMessage = ""
 
     private var currency: String {
         AppFormat.currencyCode(language: language, preferred: preferredCurrency)
     }
 
+    private var monthInterval: DateInterval {
+        Calendar.current.dateInterval(of: .month, for: selectedMonth)
+            ?? DateInterval(start: selectedMonth, duration: 2_592_000)
+    }
+
     private var monthTransactions: [Transaction] {
-        let calendar = Calendar.current
-        guard
-            let start = calendar.date(from: calendar.dateComponents([.year, .month], from: Date.now)),
-            let end = calendar.date(byAdding: .month, value: 1, to: start)
-        else { return [] }
-        return transactions.filter { $0.wrappedDate >= start && $0.wrappedDate < end }
+        transactions.filter {
+            monthInterval.contains($0.wrappedDate) && matchesSearch($0)
+        }
+    }
+
+    private var history: [Transaction] {
+        monthTransactions.filter { $0.wrappedDate <= Date.now }
+    }
+
+    private var upcoming: [Transaction] {
+        guard showUpcoming else { return [] }
+        return monthTransactions
+            .filter { $0.wrappedDate > Date.now }
+            .sorted { $0.wrappedDate < $1.wrappedDate }
+    }
+
+    private var groupedHistory: [(date: Date, items: [Transaction])] {
+        Dictionary(grouping: history) { Calendar.current.startOfDay(for: $0.wrappedDate) }
+            .map { ($0.key, $0.value.sorted { $0.wrappedDate > $1.wrappedDate }) }
+            .sorted { $0.date > $1.date }
     }
 
     private var expenses: Double {
@@ -114,147 +220,71 @@ struct DashboardView: View {
         monthTransactions.filter(\.income).reduce(0) { $0 + $1.amount }
     }
 
-    private var upcoming: [Transaction] {
-        transactions
-            .filter { $0.isInstallment && $0.wrappedDate > Date.now }
-            .sorted { $0.wrappedDate < $1.wrappedDate }
-    }
-
     var body: some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 20) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("dashboard.monthEyebrow")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white.opacity(0.72))
-                    Text(AppFormat.month(.now, language: language))
-                        .font(.title2.bold())
-                        .foregroundStyle(.white)
-                    Text(AppFormat.money(expenses, language: language, currencyCode: currency))
-                        .font(.system(.largeTitle, design: .rounded, weight: .heavy))
-                        .minimumScaleFactor(0.65)
-                        .foregroundStyle(.white)
-                        .accessibilityLabel(Text("dashboard.monthExpense"))
-                        .accessibilityValue(Text(verbatim: AppFormat.money(expenses, language: language, currencyCode: currency)))
-
-                    HStack(spacing: 18) {
-                        Label {
-                            Text(AppFormat.money(income, language: language, currencyCode: currency))
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.7)
-                        } icon: {
-                            Image(systemName: "arrow.down.left")
-                        }
-                        Label {
-                            Text(AppFormat.money(max(income - expenses, 0), language: language, currencyCode: currency))
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.7)
-                        } icon: {
-                            Image(systemName: "equal")
-                        }
-                    }
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.white.opacity(0.85))
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(24)
-                .background(
-                    LinearGradient(
-                        colors: [.tutarNavy, .tutarNavy.opacity(0.86), .tutarCoral.opacity(0.82)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    in: RoundedRectangle(cornerRadius: 30, style: .continuous)
+        List {
+            Section {
+                MonthSummaryView(
+                    month: selectedMonth,
+                    expense: expenses,
+                    income: income,
+                    currency: currency,
+                    previous: { moveMonth(-1) },
+                    next: { moveMonth(1) }
                 )
+                .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
+            }
 
-                if let next = upcoming.first {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Label("dashboard.nextInstallment", systemImage: "calendar.badge.clock")
-                            .font(.headline)
-                            .foregroundStyle(colorScheme == .dark ? Color.tutarMint : Color.tutarNavy)
-                        TransactionRow(transaction: next)
-                    }
-                    .padding(18)
-                    .background(colorScheme == .dark ? Color.tutarNavy : Color.tutarCream, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-                    .accessibilityElement(children: .contain)
-                }
-
-                HStack {
-                    Text("dashboard.recent")
-                        .font(.title3.bold())
-                        .accessibilityAddTraits(.isHeader)
-                    Spacer()
-                    if transactions.isEmpty == false {
-                        Text(AppFormat.localized("dashboard.currentMonthOnly", language: language))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+            if !upcoming.isEmpty {
+                Section("transactions.upcoming") {
+                    ForEach(upcoming) { transaction in
+                        row(transaction)
                     }
                 }
+            }
 
-                if monthTransactions.isEmpty {
+            if groupedHistory.isEmpty, upcoming.isEmpty {
+                Section {
                     ContentUnavailableView {
                         Label("empty.transactions.title", systemImage: "tray")
                     } description: {
-                        Text("empty.transactions.message")
+                        Text(searchText.isEmpty ? "empty.transactions.message" : "empty.search.message")
                     } actions: {
-                        Button("action.addTransaction") { showingEditor = true }
-                            .buttonStyle(.borderedProminent)
+                        if searchText.isEmpty {
+                            Button("action.addTransaction") { showingEditor = true }
+                                .buttonStyle(.borderedProminent)
+                        }
                     }
-                } else {
-                    ForEach(Array(monthTransactions.prefix(5))) { transaction in
-                        TransactionRow(transaction: transaction)
-                            .padding(.vertical, 4)
+                    .frame(maxWidth: .infinity)
+                    .listRowBackground(Color.clear)
+                }
+            } else {
+                ForEach(groupedHistory, id: \.date) { group in
+                    Section {
+                        ForEach(group.items) { transaction in
+                            row(transaction)
+                        }
+                    } header: {
+                        Text(AppFormat.dayHeader(group.date, language: language))
                     }
-                }
-            }
-            .padding(20)
-            .frame(maxWidth: 760)
-            .frame(maxWidth: .infinity)
-        }
-        .background(Color(.systemGroupedBackground))
-        .navigationTitle("dashboard.title")
-    }
-}
-
-struct TransactionsView: View {
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Transaction.date, ascending: false)],
-        animation: .default
-    ) private var transactions: FetchedResults<Transaction>
-    @EnvironmentObject private var dataController: DataController
-    @State private var editing: Transaction?
-    @State private var deleting: Transaction?
-    @State private var errorMessage = ""
-
-    private var posted: [Transaction] {
-        transactions.filter { !$0.isInstallment || $0.wrappedDate <= Date.now }
-    }
-
-    private var future: [Transaction] {
-        transactions
-            .filter { $0.isInstallment && $0.wrappedDate > Date.now }
-            .sorted { $0.wrappedDate < $1.wrappedDate }
-    }
-
-    var body: some View {
-        List {
-            if future.isEmpty == false {
-                Section("transactions.futureInstallments") {
-                    ForEach(future) { transaction in row(transaction) }
-                }
-            }
-
-            Section("transactions.history") {
-                if posted.isEmpty {
-                    Text("empty.transactions.message")
-                        .foregroundStyle(.secondary)
-                } else {
-                    ForEach(posted) { transaction in row(transaction) }
                 }
             }
         }
+        .listStyle(.insetGrouped)
         .navigationTitle("transactions.title")
-        .sheet(item: $editing) { TransactionEditorView(transaction: $0) }
+        .searchable(text: $searchText, prompt: "transactions.search")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showingEditor = true
+                } label: {
+                    Label("action.addTransaction", systemImage: "plus")
+                }
+                .accessibilityIdentifier("addTransactionButton")
+            }
+        }
+        .fullScreenCover(item: $editing) {
+            TransactionEditorView(transaction: $0)
+        }
         .confirmationDialog("delete.title", isPresented: deleteDialogBinding, titleVisibility: .visible) {
             if deleting?.isInstallment == true {
                 Button("delete.one", role: .destructive) { performDelete(.one) }
@@ -266,15 +296,33 @@ struct TransactionsView: View {
         } message: {
             Text("delete.message")
         }
-        .alert("error.save.title", isPresented: .constant(errorMessage.isEmpty == false)) {
+        .alert("error.save.title", isPresented: errorBinding) {
             Button("action.ok") { errorMessage = "" }
         } message: {
             Text(verbatim: errorMessage)
+        }
+        .refreshable {
+            try? dataController.materializeRecurringTransactions()
         }
     }
 
     private var deleteDialogBinding: Binding<Bool> {
         Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })
+    }
+
+    private var errorBinding: Binding<Bool> {
+        Binding(get: { !errorMessage.isEmpty }, set: { if !$0 { errorMessage = "" } })
+    }
+
+    private func matchesSearch(_ transaction: Transaction) -> Bool {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return true }
+        return transaction.displayNote(language: language).localizedCaseInsensitiveContains(query)
+            || (transaction.category?.displayName(language: language).localizedCaseInsensitiveContains(query) ?? false)
+    }
+
+    private func moveMonth(_ value: Int) {
+        selectedMonth = Calendar.current.date(byAdding: .month, value: value, to: selectedMonth) ?? selectedMonth
     }
 
     private func row(_ transaction: Transaction) -> some View {
@@ -288,7 +336,7 @@ struct TransactionsView: View {
                 Button { editing = transaction } label: {
                     Label("action.edit", systemImage: "pencil")
                 }
-                .tint(.tutarMint)
+                .tint(.accentColor)
             }
             .accessibilityAction(named: Text("action.edit")) { editing = transaction }
             .accessibilityAction(named: Text("action.delete")) { deleting = transaction }
@@ -305,9 +353,72 @@ struct TransactionsView: View {
     }
 }
 
+private struct MonthSummaryView: View {
+    @Environment(\.appLanguage) private var language
+    let month: Date
+    let expense: Double
+    let income: Double
+    let currency: String
+    let previous: () -> Void
+    let next: () -> Void
+
+    var body: some View {
+        VStack(spacing: 16) {
+            HStack {
+                Button(action: previous) {
+                    Label("month.previous", systemImage: "chevron.left")
+                        .labelStyle(.iconOnly)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityLabel(Text("month.previous"))
+                .accessibilityIdentifier("previousMonthButton")
+                .buttonStyle(.plain)
+
+                Spacer()
+                Text(AppFormat.month(month, language: language))
+                    .font(.headline)
+                    .accessibilityAddTraits(.isHeader)
+                Spacer()
+
+                Button(action: next) {
+                    Label("month.next", systemImage: "chevron.right")
+                        .labelStyle(.iconOnly)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityLabel(Text("month.next"))
+                .accessibilityIdentifier("nextMonthButton")
+                .buttonStyle(.plain)
+            }
+
+            VStack(spacing: 10) { summaryItems }
+        }
+    }
+
+    @ViewBuilder
+    private var summaryItems: some View {
+        metric("summary.expense", value: expense, color: .primary)
+        metric("summary.income", value: income, color: .green)
+        metric("summary.net", value: income - expense, color: income >= expense ? .green : .red)
+    }
+
+    private func metric(_ key: LocalizedStringKey, value: Double, color: Color) -> some View {
+        let formattedValue = AppFormat.money(value, language: language, currencyCode: currency)
+        return LabeledContent {
+            Text(formattedValue)
+                .font(.headline.monospacedDigit())
+                .foregroundStyle(color)
+                .multilineTextAlignment(.trailing)
+        } label: {
+            Text(key)
+                .foregroundStyle(.secondary)
+        }
+    }
+}
+
 struct TransactionRow: View {
     @Environment(\.appLanguage) private var language
-    @Environment(\.colorScheme) private var colorScheme
     @AppStorage("currencyCode", store: .tutar) private var preferredCurrency = ""
     let transaction: Transaction
 
@@ -320,47 +431,90 @@ struct TransactionRow: View {
     }
 
     var body: some View {
-        HStack(spacing: 13) {
-            Text(verbatim: transaction.category?.wrappedEmoji ?? "•")
-                .font(.title3)
-                .frame(width: 42, height: 42)
-                .background(Color.tutarMint.opacity(0.14), in: RoundedRectangle(cornerRadius: 13))
-                .accessibilityHidden(true)
+        LabeledContent {
+            amountLabel
+        } label: {
+            HStack(alignment: .top, spacing: 12) {
+                categoryIcon
+                details
+            }
+        }
+        .padding(.vertical, 3)
+        .accessibilityElement(children: .combine)
+    }
 
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 6) {
-                    Text(verbatim: transaction.displayNote(language: language))
-                        .font(.body.weight(.semibold))
-                        .lineLimit(2)
-                    if let label = transaction.installmentLabel {
-                        Text(verbatim: label)
-                            .font(.caption2.bold())
-                            .padding(.horizontal, 7)
-                            .padding(.vertical, 3)
-                            .foregroundStyle(colorScheme == .dark ? Color.tutarMint : Color.tutarNavy)
-                            .background(Color.tutarMint.opacity(colorScheme == .dark ? 0.14 : 0.25), in: Capsule())
-                            .accessibilityLabel(Text("installment.position"))
-                            .accessibilityValue(Text(verbatim: label))
-                    }
-                }
-                Text(verbatim: "\(transaction.category?.displayName(language: language) ?? AppFormat.localized("category.uncategorized", language: language)) · \(AppFormat.date(transaction.wrappedDate, language: language))")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
+    private var categoryIcon: some View {
+        Text(transaction.category?.wrappedEmoji ?? "•")
+            .font(.title3)
+            .padding(8)
+            .background(Color(.tertiarySystemFill), in: Circle())
+            .accessibilityIdentifier("transactionCategoryIcon")
+            .accessibilityHidden(true)
+    }
+
+    private var details: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 6) {
+                Text(transaction.displayNote(language: language))
+                    .font(.body.weight(.medium))
+                    .accessibilityIdentifier("transactionTitle")
+                scheduleIndicator
             }
 
-            Spacer(minLength: 8)
+            Text(verbatim: "\(transaction.category?.displayName(language: language) ?? AppFormat.localized("category.uncategorized", language: language)) · \(AppFormat.date(transaction.wrappedDate, language: language))")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier("transactionMetadata")
+        }
+    }
 
-            Text(formattedAmount)
-            .font(.subheadline.monospacedDigit().weight(.bold))
-            .foregroundStyle(transaction.income ? Color.tutarMint : .primary)
-            .lineLimit(1)
-            .minimumScaleFactor(0.65)
+    @ViewBuilder
+    private var scheduleIndicator: some View {
+        if let label = transaction.installmentLabel {
+            badge(label, accessibilityKey: "installment.position")
+        } else if transaction.recurringType > 0 {
+            Image(systemName: "repeat")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .accessibilityLabel(Text("schedule.recurring"))
+        }
+    }
+
+    private var amountLabel: some View {
+        Text(formattedAmount)
+            .font(.subheadline.monospacedDigit().weight(.semibold))
+            .foregroundStyle(transaction.income ? Color.green : .primary)
+            .multilineTextAlignment(.trailing)
+            .accessibilityIdentifier("transactionAmount")
             .accessibilityLabel(Text(transaction.income ? "accessibility.incomeAmount" : "accessibility.expenseAmount"))
             .accessibilityValue(Text(verbatim: formattedAmount))
-        }
-        .padding(.vertical, 5)
     }
+
+    private func badge(_ text: String, accessibilityKey: LocalizedStringKey) -> some View {
+        Text(verbatim: text)
+            .font(.caption2.weight(.semibold).monospacedDigit())
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .foregroundStyle(Color.accentColor)
+            .background(Color.accentColor.opacity(0.12), in: Capsule())
+            .accessibilityLabel(Text(accessibilityKey))
+            .accessibilityValue(Text(verbatim: text))
+    }
+}
+
+private enum AnalysisPeriod: Int, CaseIterable, Identifiable {
+    case week
+    case month
+    case year
+
+    var id: Int { rawValue }
+}
+
+private enum AnalysisKind: Int, CaseIterable, Identifiable {
+    case expense
+    case income
+
+    var id: Int { rawValue }
 }
 
 struct AnalysisView: View {
@@ -368,90 +522,124 @@ struct AnalysisView: View {
     private var transactions: FetchedResults<Transaction>
     @Environment(\.appLanguage) private var language
     @AppStorage("currencyCode", store: .tutar) private var preferredCurrency = ""
+    @State private var period = AnalysisPeriod.month
+    @State private var kind = AnalysisKind.expense
 
-    private var monthlyData: [(date: Date, amount: Double)] {
-        let calendar = Calendar.current
-        guard let currentMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: Date.now)) else {
-            return []
+    private var currency: String {
+        AppFormat.currencyCode(language: language, preferred: preferredCurrency)
+    }
+
+    private var interval: DateInterval {
+        let component: Calendar.Component
+        switch period {
+        case .week: component = .weekOfYear
+        case .month: component = .month
+        case .year: component = .year
         }
-        return (-5 ... 0).compactMap { offset in
-            guard
-                let start = calendar.date(byAdding: .month, value: offset, to: currentMonth),
-                let end = calendar.date(byAdding: .month, value: 1, to: start)
-            else { return nil }
-            let total = transactions
-                .filter { !$0.income && $0.wrappedDate >= start && $0.wrappedDate < end }
-                .reduce(0) { $0 + $1.amount }
-            return (start, total)
+        return Calendar.current.dateInterval(of: component, for: .now)
+            ?? DateInterval(start: .now, duration: 86_400)
+    }
+
+    private var periodTransactions: [Transaction] {
+        transactions.filter { interval.contains($0.wrappedDate) }
+    }
+
+    private var selectedTransactions: [Transaction] {
+        periodTransactions.filter { $0.income == (kind == .income) }
+    }
+
+    private var expense: Double {
+        periodTransactions.filter { !$0.income }.reduce(0) { $0 + $1.amount }
+    }
+
+    private var income: Double {
+        periodTransactions.filter(\.income).reduce(0) { $0 + $1.amount }
+    }
+
+    private var chartData: [(date: Date, amount: Double)] {
+        let component: Calendar.Component = period == .year ? .month : .day
+        return Dictionary(grouping: selectedTransactions) {
+            Calendar.current.dateInterval(of: component, for: $0.wrappedDate)?.start ?? $0.wrappedDate
         }
+        .map { ($0.key, $0.value.reduce(0) { $0 + $1.amount }) }
+        .sorted { $0.date < $1.date }
     }
 
     private var categoryData: [(name: String, amount: Double)] {
-        let calendar = Calendar.current
-        guard
-            let start = calendar.date(from: calendar.dateComponents([.year, .month], from: Date.now)),
-            let end = calendar.date(byAdding: .month, value: 1, to: start)
-        else { return [] }
-
-        let grouped = Dictionary(grouping: transactions.filter {
-            !$0.income && $0.wrappedDate >= start && $0.wrappedDate < end
-        }) { $0.category?.objectID }
-
-        return grouped.map { _, items in
-            (items.first?.category?.displayName(language: language) ?? AppFormat.localized("category.uncategorized", language: language), items.reduce(0) { $0 + $1.amount })
-        }.sorted { $0.amount > $1.amount }
+        Dictionary(grouping: selectedTransactions) { $0.category?.objectID }
+            .map { _, items in
+                (
+                    items.first?.category?.displayName(language: language)
+                        ?? AppFormat.localized("category.uncategorized", language: language),
+                    items.reduce(0) { $0 + $1.amount }
+                )
+            }
+            .sorted { $0.amount > $1.amount }
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 26) {
-                Text("analysis.sixMonths")
-                    .font(.headline)
-                    .accessibilityAddTraits(.isHeader)
-
-                Chart(monthlyData, id: \.date) { point in
-                    BarMark(
-                        x: .value(AppFormat.localized("analysis.monthAxis", language: language), point.date, unit: .month),
-                        y: .value(AppFormat.localized("analysis.amountAxis", language: language), point.amount)
-                    )
-                    .foregroundStyle(Color.tutarCoral.gradient)
-                    .cornerRadius(6)
+        List {
+            Section {
+                Picker("analysis.period", selection: $period) {
+                    Text("analysis.period.week").tag(AnalysisPeriod.week)
+                    Text("analysis.period.month").tag(AnalysisPeriod.month)
+                    Text("analysis.period.year").tag(AnalysisPeriod.year)
                 }
-                .chartXAxis {
-                    AxisMarks(values: .stride(by: .month)) { value in
-                        AxisValueLabel(format: .dateTime.month(.narrow), centered: true)
-                    }
+                .pickerStyle(.segmented)
+
+                LabeledContent("summary.expense", value: AppFormat.money(expense, language: language, currencyCode: currency))
+                LabeledContent("summary.income", value: AppFormat.money(income, language: language, currencyCode: currency))
+                LabeledContent("summary.net", value: AppFormat.money(income - expense, language: language, currencyCode: currency))
+            }
+
+            Section {
+                Picker("analysis.kind", selection: $kind) {
+                    Text("editor.expense").tag(AnalysisKind.expense)
+                    Text("editor.income").tag(AnalysisKind.income)
                 }
-                .frame(height: 220)
-                .accessibilityLabel(Text("analysis.sixMonths"))
+                .pickerStyle(.segmented)
 
-                Text("analysis.categories")
-                    .font(.headline)
-                    .accessibilityAddTraits(.isHeader)
-
-                if categoryData.isEmpty {
+                if chartData.isEmpty {
                     ContentUnavailableView("empty.analysis.title", systemImage: "chart.bar", description: Text("empty.analysis.message"))
+                        .frame(maxWidth: .infinity)
+                } else {
+                    Chart(chartData, id: \.date) { point in
+                        BarMark(
+                            x: .value(AppFormat.localized("analysis.dateAxis", language: language), point.date, unit: period == .year ? .month : .day),
+                            y: .value(AppFormat.localized("analysis.amountAxis", language: language), point.amount)
+                        )
+                        .foregroundStyle(kind == .income ? Color.green : Color.accentColor)
+                        .cornerRadius(4)
+                    }
+                    .chartXAxis {
+                        AxisMarks(values: .automatic(desiredCount: period == .year ? 6 : 7)) { value in
+                            AxisValueLabel(format: period == .year ? .dateTime.month(.narrow) : .dateTime.day())
+                        }
+                    }
+                    .frame(height: 220)
+                    .accessibilityLabel(Text("analysis.chart"))
+                }
+            } header: {
+                Text("analysis.trend")
+            }
+
+            Section("analysis.categories") {
+                if categoryData.isEmpty {
+                    Text("empty.analysis.message")
+                        .foregroundStyle(.secondary)
                 } else {
                     ForEach(categoryData, id: \.name) { item in
-                        HStack {
+                        LabeledContent {
+                            Text(AppFormat.money(item.amount, language: language, currencyCode: currency))
+                                .monospacedDigit()
+                        } label: {
                             Text(verbatim: item.name)
-                            Spacer()
-                            Text(AppFormat.money(
-                                item.amount,
-                                language: language,
-                                currencyCode: AppFormat.currencyCode(language: language, preferred: preferredCurrency)
-                            ))
-                            .monospacedDigit()
                         }
-                        .font(.subheadline.weight(.semibold))
                     }
                 }
             }
-            .padding(20)
-            .frame(maxWidth: 760)
-            .frame(maxWidth: .infinity)
         }
-        .background(Color(.systemGroupedBackground))
+        .listStyle(.insetGrouped)
         .navigationTitle("analysis.title")
     }
 }

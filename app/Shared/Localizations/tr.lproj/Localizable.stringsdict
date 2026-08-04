@@ -32,5 +32,45 @@
             <key>other</key><string>%d ay</string>
         </dict>
     </dict>
+    <key>schedule.every.days</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key><string>%#@items@</string>
+        <key>items</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key><string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key><string>d</string>
+            <key>other</key><string>%d günde bir</string>
+        </dict>
+    </dict>
+    <key>schedule.every.weeks</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key><string>%#@items@</string>
+        <key>items</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key><string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key><string>d</string>
+            <key>other</key><string>%d haftada bir</string>
+        </dict>
+    </dict>
+    <key>schedule.every.months</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key><string>%#@items@</string>
+        <key>items</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key><string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key><string>d</string>
+            <key>other</key><string>%d ayda bir</string>
+        </dict>
+    </dict>
+    <key>schedule.installment.summary</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key><string>%#@items@</string>
+        <key>items</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key><string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key><string>d</string>
+            <key>other</key><string>%d taksit</string>
+        </dict>
+    </dict>
 </dict>
 </plist>

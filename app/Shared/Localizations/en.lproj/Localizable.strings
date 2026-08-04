@@ -2,6 +2,7 @@
 "tab.transactions" = "Transactions";
 "tab.installments" = "Installments";
 "tab.analysis" = "Analysis";
+"tab.budgets" = "Budgets";
 "tab.settings" = "Settings";
 
 "action.addTransaction" = "Add transaction";
@@ -22,9 +23,19 @@
 "dashboard.recent" = "This month";
 "dashboard.currentMonthOnly" = "By transaction date";
 
-"transactions.title" = "Transactions";
+"transactions.title" = "Records";
 "transactions.futureInstallments" = "Future installments";
 "transactions.history" = "Recorded transactions";
+"transactions.upcoming" = "Upcoming";
+"transactions.search" = "Search notes and categories";
+
+"month.previous" = "Previous month";
+"month.next" = "Next month";
+"summary.expense" = "Spent";
+"summary.income" = "Income";
+"summary.net" = "Net";
+"date.today" = "Today";
+"date.yesterday" = "Yesterday";
 
 "installments.title" = "Installments";
 "installments.progress" = "Installment progress";
@@ -32,9 +43,17 @@
 
 "analysis.title" = "Analysis";
 "analysis.sixMonths" = "Six-month spending rhythm";
-"analysis.categories" = "This month by category";
+"analysis.categories" = "By category";
 "analysis.monthAxis" = "Month";
 "analysis.amountAxis" = "Amount";
+"analysis.dateAxis" = "Date";
+"analysis.period" = "Period";
+"analysis.period.week" = "Week";
+"analysis.period.month" = "Month";
+"analysis.period.year" = "Year";
+"analysis.kind" = "Transaction type";
+"analysis.trend" = "Trend";
+"analysis.chart" = "Transaction chart";
 
 "empty.transactions.title" = "A clean slate";
 "empty.transactions.message" = "Add your first transaction to see your monthly flow.";
@@ -42,6 +61,9 @@
 "empty.installments.message" = "Turn on Installments while adding an expense. Tutar will create only the exact number of linked payments.";
 "empty.analysis.title" = "Nothing to compare yet";
 "empty.analysis.message" = "Analysis appears after you record expenses for this month.";
+"empty.search.message" = "No records match your search.";
+"empty.budgets.title" = "No budgets yet";
+"empty.budgets.message" = "Set an overall or category budget to compare spending with your goal.";
 
 "editor.new.title" = "New transaction";
 "editor.edit.title" = "Edit transaction";
@@ -54,6 +76,9 @@
 "editor.amount" = "Total amount";
 "editor.category" = "Category";
 "editor.date" = "Date";
+"editor.category.choose" = "Choose";
+"editor.schedule" = "Schedule";
+"editor.suggestions" = "Suggested transactions";
 "editor.installment.section" = "Installment plan";
 "editor.installment.toggle" = "Installments";
 "editor.installment.count" = "Number of installments";
@@ -70,6 +95,21 @@
 "editor.error.installmentAmount" = "The total must be at least one minor currency unit per installment.";
 "editor.error.duplicate" = "That installment group and position already exist.";
 "editor.error.save" = "The transaction could not be saved. Your existing data was not changed.";
+
+"schedule.type.section" = "Schedule";
+"schedule.once" = "One time";
+"schedule.recurring" = "Repeat";
+"schedule.installments" = "Installments";
+"schedule.recurring.section" = "Repeat interval";
+"schedule.every" = "Every";
+"schedule.unit" = "Unit";
+"schedule.unit.day" = "Day";
+"schedule.unit.week" = "Week";
+"schedule.unit.month" = "Month";
+"schedule.recurring.footer" = "Due repeated entries are created automatically when Tutar opens.";
+
+"keypad.delete" = "Delete last digit";
+"keypad.decimal" = "Decimal separator";
 
 "delete.title" = "Delete transaction?";
 "delete.message" = "Choose how much of this linked plan to remove.";
@@ -92,9 +132,30 @@
 "appearance.dark" = "Dark";
 "settings.money.section" = "Money";
 "settings.currency" = "Currency";
+"settings.entry.section" = "Quick entry";
+"settings.numberEntry" = "Number entry";
+"settings.numberEntry.automatic" = "Auto cents";
+"settings.numberEntry.decimal" = "Decimal";
+"settings.haptics" = "Keypad haptics";
+"settings.suggestions" = "Suggest previous entries";
+"settings.upcoming" = "Show upcoming records";
 "settings.sync.section" = "Sync";
 "settings.icloud" = "iCloud sync";
 "settings.icloud.footer" = "Data stays on this device when off. Changes to sync mode take effect after relaunching Tutar.";
+"settings.privacy.section" = "Privacy & protection";
+"settings.privacy.footer" = "App lock uses Face ID, Touch ID, or the device passcode. Changes to iCloud sync take effect after relaunching Tutar.";
+"settings.lock" = "Lock Tutar";
+"settings.lock.title" = "Tutar is locked";
+"settings.lock.message" = "Authenticate to view your financial records.";
+"settings.lock.retry" = "Unlock";
+"settings.lock.reason" = "Unlock Tutar to view your financial records.";
+"settings.lock.unavailable.title" = "Device authentication unavailable";
+"settings.lock.unavailable.message" = "Set up a device passcode, Face ID, or Touch ID before enabling app lock.";
+"settings.data.section" = "Data";
+"settings.categories" = "Categories";
+"settings.import" = "Import data";
+"settings.export.csv" = "Export transactions as CSV";
+"settings.export.backup" = "Export complete backup";
 "settings.reminder.section" = "Reminder";
 "settings.reminder" = "Daily entry reminder";
 "settings.reminder.hour" = "Time";
@@ -102,18 +163,68 @@
 "settings.about" = "About & Licenses";
 "settings.support" = "Support";
 "settings.privacy" = "Privacy policy";
+"settings.feedback" = "Send feedback";
 "settings.erase" = "Erase all local data";
 "settings.erase.footer" = "This removes transactions and custom data from this device and synced iCloud storage. Default categories are recreated.";
 "settings.erase.confirmTitle" = "Erase your Tutar data?";
 "settings.erase.confirmMessage" = "This cannot be undone after iCloud sync completes.";
 "settings.erase.confirm" = "Erase all data";
 
+"data.import.success.title" = "Import complete";
+"data.import.success.message" = "%d records imported. %d duplicate or existing records were skipped.";
+"data.import.error.title" = "Couldn’t import data";
+"data.import.error.row" = "Row %d contains an invalid date, amount, or installment value. Nothing was imported.";
+"data.import.error.columns" = "The CSV file needs Date and Amount columns.";
+"data.import.error.version" = "This backup was created by a newer unsupported Tutar version.";
+"data.import.error.size" = "The selected file exceeds the 50 MB import limit.";
+"data.import.error.format" = "Choose a valid Tutar JSON backup or UTF-8 CSV file.";
+"data.export.error.title" = "Couldn’t export data";
+
+"budgets.title" = "Budgets";
+"budgets.add" = "Add budget";
+"budgets.overall.section" = "Overall";
+"budgets.categories.section" = "Categories";
+"budgets.overall" = "Overall budget";
+"budgets.category" = "Category budget";
+"budgets.kind" = "Budget type";
+"budgets.period" = "Period";
+"budgets.startDate" = "Start date";
+"budgets.progress" = "Budget progress";
+"budgets.spent.label" = "Spent";
+"budgets.remaining" = "Remaining";
+"budgets.new.title" = "New budget";
+"budgets.edit.title" = "Edit budget";
+"budgets.delete.title" = "Delete budget?";
+"budgets.delete.message" = "Your transactions and categories will be kept.";
+"budgets.error.noCategory" = "Every expense category already has a budget. Add another category first.";
+"budgets.error.duplicateCategory" = "That category already has a budget.";
+"budgets.error.duplicateOverall" = "Only one overall budget can be active.";
+"budget.period.daily" = "Daily";
+"budget.period.weekly" = "Weekly";
+"budget.period.monthly" = "Monthly";
+"budget.period.yearly" = "Yearly";
+
+"categories.title" = "Categories";
+"categories.add" = "Add category";
+"categories.details.section" = "Details";
+"categories.name" = "Name";
+"categories.emoji" = "Symbol or emoji";
+"categories.colour.section" = "Colour";
+"categories.colour" = "Category colour";
+"categories.new.title" = "New category";
+"categories.edit.title" = "Edit category";
+"categories.delete.title" = "Delete category?";
+"categories.delete.message" = "Existing transactions will be kept as uncategorized. A linked budget will be removed.";
+"categories.error.name" = "Enter a category name with no more than 80 characters.";
+"categories.error.emoji" = "Enter a short symbol or emoji.";
+"categories.error.duplicate" = "A category with that name already exists.";
+
 "notification.title" = "A quick Tutar check-in";
 "notification.body" = "Record today’s spending while it is still fresh.";
 
 "about.title" = "About & Licenses";
 "about.appName" = "Tutar";
-"about.tagline" = "A calm, private view of everyday money and installment plans.";
+"about.tagline" = "Fast expense, budget, repeat, and installment tracking.";
 "about.openSource.section" = "Open source";
 "about.attribution" = "Tutar is a modified work based on Dime, originally created by Rafael Soh and its contributors.";
 "about.modified" = "Modification date";

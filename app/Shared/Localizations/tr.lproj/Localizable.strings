@@ -2,6 +2,7 @@
 "tab.transactions" = "İşlemler";
 "tab.installments" = "Taksitler";
 "tab.analysis" = "Analiz";
+"tab.budgets" = "Bütçeler";
 "tab.settings" = "Ayarlar";
 
 "action.addTransaction" = "İşlem ekle";
@@ -22,9 +23,19 @@
 "dashboard.recent" = "Bu ay";
 "dashboard.currentMonthOnly" = "İşlem tarihine göre";
 
-"transactions.title" = "İşlemler";
+"transactions.title" = "Kayıtlar";
 "transactions.futureInstallments" = "Gelecek taksitler";
 "transactions.history" = "Kaydedilen işlemler";
+"transactions.upcoming" = "Yaklaşanlar";
+"transactions.search" = "Notlarda ve kategorilerde ara";
+
+"month.previous" = "Önceki ay";
+"month.next" = "Sonraki ay";
+"summary.expense" = "Harcama";
+"summary.income" = "Gelir";
+"summary.net" = "Net";
+"date.today" = "Bugün";
+"date.yesterday" = "Dün";
 
 "installments.title" = "Taksitler";
 "installments.progress" = "Taksit ilerlemesi";
@@ -32,9 +43,17 @@
 
 "analysis.title" = "Analiz";
 "analysis.sixMonths" = "Altı aylık harcama ritmi";
-"analysis.categories" = "Bu ay kategorilere göre";
+"analysis.categories" = "Kategoriye göre";
 "analysis.monthAxis" = "Ay";
 "analysis.amountAxis" = "Tutar";
+"analysis.dateAxis" = "Tarih";
+"analysis.period" = "Dönem";
+"analysis.period.week" = "Hafta";
+"analysis.period.month" = "Ay";
+"analysis.period.year" = "Yıl";
+"analysis.kind" = "İşlem türü";
+"analysis.trend" = "Değişim";
+"analysis.chart" = "İşlem grafiği";
 
 "empty.transactions.title" = "Temiz bir başlangıç";
 "empty.transactions.message" = "Aylık akışını görmek için ilk işlemini ekle.";
@@ -42,6 +61,9 @@
 "empty.installments.message" = "Gider eklerken Taksitli seçeneğini aç. Tutar yalnızca belirlediğin sayıda bağlı ödeme oluşturur.";
 "empty.analysis.title" = "Henüz karşılaştırılacak veri yok";
 "empty.analysis.message" = "Bu ay gider kaydettiğinde analiz burada görünür.";
+"empty.search.message" = "Aramanla eşleşen kayıt yok.";
+"empty.budgets.title" = "Henüz bütçe yok";
+"empty.budgets.message" = "Harcamalarını hedefinle karşılaştırmak için genel veya kategori bütçesi belirle.";
 
 "editor.new.title" = "Yeni işlem";
 "editor.edit.title" = "İşlemi düzenle";
@@ -54,6 +76,9 @@
 "editor.amount" = "Toplam tutar";
 "editor.category" = "Kategori";
 "editor.date" = "Tarih";
+"editor.category.choose" = "Seç";
+"editor.schedule" = "Plan";
+"editor.suggestions" = "Önerilen işlemler";
 "editor.installment.section" = "Taksit planı";
 "editor.installment.toggle" = "Taksitli";
 "editor.installment.count" = "Taksit sayısı";
@@ -70,6 +95,21 @@
 "editor.error.installmentAmount" = "Toplam, her taksit için en az bir kuruş olmalıdır.";
 "editor.error.duplicate" = "Bu taksit grubu ve sırası zaten var.";
 "editor.error.save" = "İşlem kaydedilemedi. Mevcut verilerin değiştirilmedi.";
+
+"schedule.type.section" = "Plan";
+"schedule.once" = "Tek sefer";
+"schedule.recurring" = "Tekrar";
+"schedule.installments" = "Taksit";
+"schedule.recurring.section" = "Tekrar aralığı";
+"schedule.every" = "Her";
+"schedule.unit" = "Birim";
+"schedule.unit.day" = "Gün";
+"schedule.unit.week" = "Hafta";
+"schedule.unit.month" = "Ay";
+"schedule.recurring.footer" = "Zamanı gelen tekrar kayıtları Tutar açıldığında otomatik oluşturulur.";
+
+"keypad.delete" = "Son rakamı sil";
+"keypad.decimal" = "Ondalık ayırıcı";
 
 "delete.title" = "İşlem silinsin mi?";
 "delete.message" = "Bağlı planın ne kadarının silineceğini seç.";
@@ -92,9 +132,30 @@
 "appearance.dark" = "Koyu";
 "settings.money.section" = "Para";
 "settings.currency" = "Para birimi";
+"settings.entry.section" = "Hızlı giriş";
+"settings.numberEntry" = "Sayı girişi";
+"settings.numberEntry.automatic" = "Otomatik kuruş";
+"settings.numberEntry.decimal" = "Ondalıklı";
+"settings.haptics" = "Tuş titreşimi";
+"settings.suggestions" = "Önceki kayıtları öner";
+"settings.upcoming" = "Yaklaşan kayıtları göster";
 "settings.sync.section" = "Eşzamanlama";
 "settings.icloud" = "iCloud eşzamanlama";
 "settings.icloud.footer" = "Kapalıyken veriler bu aygıtta kalır. Eşzamanlama değişikliği Tutar yeniden açıldığında uygulanır.";
+"settings.privacy.section" = "Gizlilik ve koruma";
+"settings.privacy.footer" = "Uygulama kilidi Face ID, Touch ID veya aygıt parolasını kullanır. iCloud değişikliği Tutar yeniden açıldığında uygulanır.";
+"settings.lock" = "Tutar’ı kilitle";
+"settings.lock.title" = "Tutar kilitli";
+"settings.lock.message" = "Finans kayıtlarını görmek için kimliğini doğrula.";
+"settings.lock.retry" = "Kilidi aç";
+"settings.lock.reason" = "Finans kayıtlarını görmek için Tutar’ın kilidini aç.";
+"settings.lock.unavailable.title" = "Aygıt doğrulaması kullanılamıyor";
+"settings.lock.unavailable.message" = "Uygulama kilidini açmadan önce aygıt parolası, Face ID veya Touch ID ayarla.";
+"settings.data.section" = "Veri";
+"settings.categories" = "Kategoriler";
+"settings.import" = "Veri içe aktar";
+"settings.export.csv" = "İşlemleri CSV olarak dışa aktar";
+"settings.export.backup" = "Tam yedeği dışa aktar";
 "settings.reminder.section" = "Hatırlatıcı";
 "settings.reminder" = "Günlük kayıt hatırlatıcısı";
 "settings.reminder.hour" = "Saat";
@@ -102,18 +163,68 @@
 "settings.about" = "Hakkında ve Lisanslar";
 "settings.support" = "Destek";
 "settings.privacy" = "Gizlilik politikası";
+"settings.feedback" = "Geri bildirim gönder";
 "settings.erase" = "Tüm yerel verileri sil";
 "settings.erase.footer" = "İşlemleri ve özel verileri bu aygıttan ve eşzamanlanan iCloud alanından kaldırır. Varsayılan kategoriler yeniden oluşturulur.";
 "settings.erase.confirmTitle" = "Tutar verilerin silinsin mi?";
 "settings.erase.confirmMessage" = "iCloud eşzamanlaması tamamlandıktan sonra bu işlem geri alınamaz.";
 "settings.erase.confirm" = "Tüm verileri sil";
 
+"data.import.success.title" = "İçe aktarma tamamlandı";
+"data.import.success.message" = "%d kayıt içe aktarıldı. Yinelenen veya mevcut %d kayıt atlandı.";
+"data.import.error.title" = "Veri içe aktarılamadı";
+"data.import.error.row" = "%d. satırda geçersiz tarih, tutar veya taksit değeri var. Hiçbir veri içe aktarılmadı.";
+"data.import.error.columns" = "CSV dosyasında Date ve Amount sütunları bulunmalıdır.";
+"data.import.error.version" = "Bu yedek, Tutar’ın desteklenmeyen daha yeni bir sürümüyle oluşturulmuş.";
+"data.import.error.size" = "Seçilen dosya 50 MB içe aktarma sınırını aşıyor.";
+"data.import.error.format" = "Geçerli bir Tutar JSON yedeği veya UTF-8 CSV dosyası seç.";
+"data.export.error.title" = "Veri dışa aktarılamadı";
+
+"budgets.title" = "Bütçeler";
+"budgets.add" = "Bütçe ekle";
+"budgets.overall.section" = "Genel";
+"budgets.categories.section" = "Kategoriler";
+"budgets.overall" = "Genel bütçe";
+"budgets.category" = "Kategori bütçesi";
+"budgets.kind" = "Bütçe türü";
+"budgets.period" = "Dönem";
+"budgets.startDate" = "Başlangıç tarihi";
+"budgets.progress" = "Bütçe ilerlemesi";
+"budgets.spent.label" = "Harcanan";
+"budgets.remaining" = "Kalan";
+"budgets.new.title" = "Yeni bütçe";
+"budgets.edit.title" = "Bütçeyi düzenle";
+"budgets.delete.title" = "Bütçe silinsin mi?";
+"budgets.delete.message" = "İşlemlerin ve kategorilerin korunur.";
+"budgets.error.noCategory" = "Her gider kategorisinin zaten bir bütçesi var. Önce yeni kategori ekle.";
+"budgets.error.duplicateCategory" = "Bu kategorinin zaten bir bütçesi var.";
+"budgets.error.duplicateOverall" = "Yalnızca bir genel bütçe etkin olabilir.";
+"budget.period.daily" = "Günlük";
+"budget.period.weekly" = "Haftalık";
+"budget.period.monthly" = "Aylık";
+"budget.period.yearly" = "Yıllık";
+
+"categories.title" = "Kategoriler";
+"categories.add" = "Kategori ekle";
+"categories.details.section" = "Ayrıntılar";
+"categories.name" = "Ad";
+"categories.emoji" = "Simge veya emoji";
+"categories.colour.section" = "Renk";
+"categories.colour" = "Kategori rengi";
+"categories.new.title" = "Yeni kategori";
+"categories.edit.title" = "Kategoriyi düzenle";
+"categories.delete.title" = "Kategori silinsin mi?";
+"categories.delete.message" = "Mevcut işlemler kategorisiz olarak korunur. Bağlı bütçe silinir.";
+"categories.error.name" = "En fazla 80 karakterlik bir kategori adı gir.";
+"categories.error.emoji" = "Kısa bir simge veya emoji gir.";
+"categories.error.duplicate" = "Bu ada sahip bir kategori zaten var.";
+
 "notification.title" = "Kısa bir Tutar kontrolü";
 "notification.body" = "Bugünün harcamalarını aklındayken kaydet.";
 
 "about.title" = "Hakkında ve Lisanslar";
 "about.appName" = "Tutar";
-"about.tagline" = "Günlük para akışı ve taksit planları için sakin, özel bir görünüm.";
+"about.tagline" = "Hızlı gider, bütçe, tekrar ve taksit takibi.";
 "about.openSource.section" = "Açık kaynak";
 "about.attribution" = "Tutar; Rafael Soh ve katkıda bulunanların oluşturduğu Dime temel alınarak değiştirilmiş bir çalışmadır.";
 "about.modified" = "Değişiklik tarihi";
