@@ -612,7 +612,6 @@ struct TransactionRow: View {
         Text(transaction.category?.wrappedEmoji ?? "•")
             .font(.body)
             .frame(width: 34, height: 34)
-            .background(Color(.tertiarySystemFill), in: Circle())
             .accessibilityIdentifier("transactionCategoryIcon")
             .accessibilityHidden(true)
     }

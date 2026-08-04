@@ -74,7 +74,6 @@ struct CategoriesView: View {
                     Text(verbatim: category.wrappedEmoji)
                         .font(.title3)
                         .frame(width: 36, height: 36)
-                        .background(Color(hex: category.colour ?? "#232326").opacity(0.15), in: Circle())
                     Text(verbatim: category.displayName(language: language))
                     Spacer()
                     Circle()

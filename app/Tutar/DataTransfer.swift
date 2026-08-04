@@ -170,7 +170,7 @@ extension DataController {
         let request = Transaction.fetchRequest()
         request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: false)]
         let header = [
-            "Date", "Note", "Amount", "Category", "Type", "ID", "CategoryID",
+            "Date", "Note", "Amount", "Category", "CategoryEmoji", "Type", "ID", "CategoryID",
             "InstallmentGroupID", "InstallmentIndex", "InstallmentCount",
             "InstallmentIntervalMonths", "InstallmentOriginalTotalMinorUnits",
             "RecurringType", "RecurringCoefficient"
@@ -182,6 +182,7 @@ extension DataController {
                 transaction.note ?? "",
                 String(format: "%.2f", locale: Locale(identifier: "en_US_POSIX"), transaction.amount),
                 transaction.category?.displayName(language: language) ?? "",
+                transaction.category?.emoji ?? "",
                 transaction.income ? "Income" : "Expense",
                 transaction.id?.uuidString ?? "",
                 transaction.category?.id?.uuidString ?? "",
@@ -314,17 +315,19 @@ extension DataController {
         var skipped = 0
 
         for record in backup.categories {
-            if categoriesByID[record.id] != nil {
+            guard record.name.count <= 80, record.emoji.count <= 16, Self.validHex(record.colour) else {
+                throw DataTransferError.invalidFormat
+            }
+            if let existing = categoriesByID[record.id] {
+                if !record.emoji.isEmpty { existing.emoji = record.emoji }
                 skipped += 1
                 continue
             }
             if let key = record.systemKey, let existing = categoriesBySystemKey[key] {
+                if !record.emoji.isEmpty { existing.emoji = record.emoji }
                 categoriesByID[record.id] = existing
                 skipped += 1
                 continue
-            }
-            guard record.name.count <= 80, record.emoji.count <= 16, Self.validHex(record.colour) else {
-                throw DataTransferError.invalidFormat
             }
             let category = NSEntityDescription.insertNewObject(forEntityName: "Category", into: context) as! Category
             category.id = record.id
@@ -502,6 +505,7 @@ extension DataController {
         }
         let noteColumn = headers.firstIndex(of: "note")
         let categoryColumn = headers.firstIndex(of: "category")
+        let categoryEmojiColumn = headers.firstIndex(of: "categoryemoji")
         let typeColumn = headers.firstIndex(of: "type")
         let idColumn = headers.firstIndex(of: "id")
         let categoryIDColumn = headers.firstIndex(of: "categoryid")
@@ -586,10 +590,12 @@ extension DataController {
             }
 
             let categoryName = categoryColumn.flatMap { row[safe: $0] }?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let categoryEmoji = categoryEmojiColumn.flatMap { row[safe: $0] }?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             let categoryID = categoryIDColumn.flatMap { row[safe: $0] }.flatMap(UUID.init(uuidString:))
             let category = try categoryForImport(
                 id: categoryID,
                 name: categoryName,
+                emoji: categoryEmoji,
                 income: income,
                 language: language,
                 categories: &categories
@@ -632,11 +638,16 @@ extension DataController {
     private func categoryForImport(
         id: UUID?,
         name: String,
+        emoji: String,
         income: Bool,
         language: AppLanguage,
         categories: inout [Category]
     ) throws -> Category? {
-        if let id, let match = categories.first(where: { $0.id == id }) { return match }
+        guard emoji.count <= 16 else { throw DataTransferError.invalidFormat }
+        if let id, let match = categories.first(where: { $0.id == id }) {
+            if !emoji.isEmpty { match.emoji = emoji }
+            return match
+        }
         guard !name.isEmpty else { return nil }
         guard name.count <= 80 else { throw DataTransferError.invalidFormat }
         if let match = categories.first(where: {
@@ -644,13 +655,14 @@ extension DataController {
                 && ($0.name?.localizedCaseInsensitiveCompare(name) == .orderedSame
                     || $0.displayName(language: language).localizedCaseInsensitiveCompare(name) == .orderedSame)
         }) {
+            if !emoji.isEmpty { match.emoji = emoji }
             return match
         }
 
         let category = NSEntityDescription.insertNewObject(forEntityName: "Category", into: context) as! Category
         category.id = id ?? UUID()
         category.name = name
-        category.emoji = "🗂️"
+        category.emoji = emoji.isEmpty ? "🗂️" : emoji
         category.colour = "#232326"
         category.income = income
         category.order = (categories.filter { $0.income == income }.map(\.order).max() ?? -1) + 1

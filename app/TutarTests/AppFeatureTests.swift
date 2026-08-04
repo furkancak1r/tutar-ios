@@ -212,10 +212,50 @@ final class DataFeatureTests: XCTestCase {
         XCTAssertEqual(try controller.context.count(for: Transaction.fetchRequest()), 0)
     }
 
+    func testCSVRestoresCategoryEmoji() async throws {
+        let source = DataController(inMemory: true, cloudEnabled: false)
+        try await waitUntilLoaded(source)
+        let category = try source.saveCategory(
+            name: "Bookshelf",
+            emoji: "📚",
+            colour: "#232326",
+            income: false
+        )
+        _ = try source.createTransaction(
+            note: "Novel",
+            category: category,
+            income: false,
+            amountMinorUnits: 2_500,
+            date: .now
+        )
+
+        let destination = DataController(inMemory: true, cloudEnabled: false)
+        try await waitUntilLoaded(destination)
+        _ = try destination.importData(
+            source.exportCSV(language: .english),
+            fileExtension: "csv",
+            language: .english
+        )
+
+        let transaction = try XCTUnwrap(
+            try destination.context.fetch(Transaction.fetchRequest()).first { $0.note == "Novel" }
+        )
+        XCTAssertEqual(transaction.category?.emoji, "📚")
+    }
+
     func testCompleteBackupRestoresInstallmentsAndBudget() async throws {
         let source = DataController(inMemory: true, cloudEnabled: false)
         try await waitUntilLoaded(source)
-        let category = try XCTUnwrap(try source.context.fetch(Category.fetchRequest()).first { !$0.income })
+        let category = try XCTUnwrap(
+            try source.context.fetch(Category.fetchRequest()).first { $0.systemKey == "category.market" }
+        )
+        _ = try source.saveCategory(
+            category,
+            name: category.displayName(language: .english),
+            emoji: "🧺",
+            colour: category.colour ?? "#232326",
+            income: false
+        )
         try source.createInstallments(
             note: "Computer",
             category: category,
@@ -247,6 +287,10 @@ final class DataFeatureTests: XCTestCase {
         XCTAssertEqual(
             try destination.context.fetch(Category.fetchRequest()).filter { $0.systemKey == "category.market" }.count,
             1
+        )
+        XCTAssertEqual(
+            try destination.context.fetch(Category.fetchRequest()).first { $0.systemKey == "category.market" }?.emoji,
+            "🧺"
         )
     }
 
