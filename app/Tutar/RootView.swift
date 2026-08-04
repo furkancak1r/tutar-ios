@@ -318,6 +318,7 @@ struct TransactionsView: View {
 
     @EnvironmentObject private var dataController: DataController
     @Environment(\.appLanguage) private var language
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage("currencyCode", store: .tutar) private var preferredCurrency = ""
     @AppStorage("showUpcoming", store: .tutar) private var showUpcoming = true
     @Binding var showingEditor: Bool
@@ -325,6 +326,7 @@ struct TransactionsView: View {
     @State private var selectedMonth = Calendar.current.date(
         from: Calendar.current.dateComponents([.year, .month], from: .now)
     ) ?? .now
+    @State private var monthTransitionEdge: Edge = .trailing
     @State private var searchText = ""
     @State private var editing: Transaction?
     @State private var deleting: Transaction?
@@ -423,6 +425,8 @@ struct TransactionsView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .id(selectedMonth)
+        .transition(.push(from: monthTransitionEdge))
         .navigationTitle("transactions.title")
         .searchable(text: $searchText, prompt: "transactions.search")
         .toolbar {
@@ -475,7 +479,11 @@ struct TransactionsView: View {
     }
 
     private func moveMonth(_ value: Int) {
-        selectedMonth = Calendar.current.date(byAdding: .month, value: value, to: selectedMonth) ?? selectedMonth
+        guard let month = Calendar.current.date(byAdding: .month, value: value, to: selectedMonth) else { return }
+        monthTransitionEdge = value > 0 ? .trailing : .leading
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.28)) {
+            selectedMonth = month
+        }
     }
 
     private func row(_ transaction: Transaction) -> some View {

@@ -165,6 +165,8 @@ final class TutarUITests: XCTestCase {
         XCTAssertTrue(monthSummary.waitForExistence(timeout: 5))
         monthSummary.swipeLeft()
         XCTAssertTrue(app.staticTexts["2/3"].waitForExistence(timeout: 5))
+        monthSummary.swipeRight()
+        XCTAssertTrue(app.staticTexts["1/3"].waitForExistence(timeout: 5))
     }
 
     @MainActor

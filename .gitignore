@@ -1,9 +1,27 @@
-## User settings
-xcuserdata/
+# macOS
+.DS_Store
 
-## Xcode 8 and earlier
+# Xcode user state and generated products
+xcuserdata/
+DerivedData/
+build/
+*.xcuserstate
 *.xcscmblueprint
 *.xccheckout
+*.xcresult
+*.xcarchive
+*.ipa
+*.dSYM
+*.dSYM.zip
 
-## MacOS
-.DS_Store
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# Local environment and signing credentials
+.env
+.env.*
+!.env.example
+*.p8
+*.p12
+*.mobileprovision
