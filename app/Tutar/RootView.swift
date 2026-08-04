@@ -239,6 +239,7 @@ struct RootView: View {
         .fullScreenCover(isPresented: $showingEditor) {
             TransactionEditorView()
         }
+        .privacySensitive(biometricLock)
     }
 
     private var lockEnabled: Bool {
@@ -247,7 +248,9 @@ struct RootView: View {
 
     private var lockAllowedInCurrentProcess: Bool {
         let arguments = ProcessInfo.processInfo.arguments
-        return !arguments.contains("-ui-testing") || arguments.contains("-ui-test-app-lock")
+        return !arguments.contains("-ui-testing")
+            || arguments.contains("-ui-test-app-lock")
+            || arguments.contains("-ui-test-real-app-lock")
     }
 
     private var authenticationReason: String {

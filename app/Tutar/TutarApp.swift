@@ -8,7 +8,6 @@ struct TutarApp: App {
     @StateObject private var appLockController: AppLockController
     @AppStorage("appLanguage", store: .tutar) private var languageRaw = AppLanguage.system.rawValue
     @AppStorage("appearance", store: .tutar) private var appearance = 0
-    @AppStorage("biometricLock", store: .tutar) private var biometricLock = false
 
     private var language: AppLanguage {
         AppLanguage(rawValue: languageRaw) ?? .system
@@ -45,7 +44,7 @@ struct TutarApp: App {
         if arguments.contains("-ui-testing") {
             UserDefaults.tutar.set("", forKey: "currencyCode")
         }
-        if arguments.contains("-ui-test-app-lock") {
+        if arguments.contains("-ui-test-app-lock") || arguments.contains("-ui-test-real-app-lock") {
             UserDefaults.tutar.set(true, forKey: "biometricLock")
         }
         #endif
@@ -61,7 +60,6 @@ struct TutarApp: App {
                 .environment(\.locale, language.locale)
                 .preferredColorScheme(appearance == 1 ? .light : appearance == 2 ? .dark : nil)
                 .tint(.accentColor)
-                .privacySensitive(biometricLock)
         }
     }
 

@@ -1,4 +1,4 @@
-# Tutar 1.0 (7) — TestFlight metadata
+# Tutar 1.0 (8) — TestFlight metadata
 
 ## Beta Description — Turkish
 
@@ -8,7 +8,7 @@ Tutar, Rafael Soh ve katkıda bulunanların oluşturduğu Dime temel alınarak d
 
 ## What to Test — Turkish
 
-Build 7, uygulama açılırken logo veya hareketli yüklenme göstergesi yerine sabit bir kilit ekranı gösterir. Kilit simgesi, “Uygulama kilitli” başlığı ve aygıt doğrulama açıklaması Face ID isteminden önce ve istem sırasında yer değiştirmemelidir. İptal veya başarısızlıktan sonra yalnız “Kilidi aç” düğmesi görünmeli; otomatik istem döngüsü başlamamalıdır. Build 6’daki tek-istem Face ID düzeltmesi ve açık/koyu görünüm kontrastı korunur.
+Build 8, Face ID sistem penceresi açıkken arka planda görünen iskelet/redacted ekranı kaldırır. Kilit simgesi, “Uygulama kilitli” başlığı ve aygıt doğrulama açıklaması Face ID boyunca görünür kalmalıdır. Başarılı doğrulamadan sonra kilit ekranı doğrudan uygulama içeriğine geçmeli; iptal veya başarısızlıkta aynı kilit ekranı ve “Kilidi aç” düğmesi kalmalıdır. Tek-istem doğrulama ve açık/koyu görünüm kontrastı korunur.
 
 1. 3.000 TL, 3 taksit ve ilk tarih 18 Ağustos seçerek tam üç işlemin 18 Ağustos, 18 Eylül ve 18 Ekim’e oluşturulduğunu doğrulayın.
 2. Kuruşla tam bölünmeyen bir tutarda farkın yalnız son taksite verildiğini kontrol edin.
@@ -25,6 +25,7 @@ Build 7, uygulama açılırken logo veya hareketli yüklenme göstergesi yerine 
 13. Uygulama Kilidi’ni açın, Tutar’ı arka plana gönderip geri dönün ve Face ID sırasında uygulamanın yeniden kilitlenmeden, ikinci istem açmadan tek doğrulamayla açıldığını doğrulayın.
 14. Açık ve koyu görünümde yeni siyah-beyaz temayı; ikon ve widget dahil hiçbir ana vurgu alanında mavi/gradient kalmadığını kontrol edin.
 15. Soğuk açılışta uygulama logosu veya spinner yerine sabit kilit simgesi ve kilit metninin göründüğünü; Face ID penceresi açılırken ekranın yeniden yükleniyormuş gibi değişmediğini doğrulayın.
+16. Face ID penceresi açıkken arka planda iskelet yükleme görünümü yerine kilit ekranının kaldığını; başarılı yüz eşleşmesinden sonra doğrudan Kayıtlar ekranına geçildiğini doğrulayın.
 
 ## Beta Description — English
 
@@ -34,7 +35,7 @@ Tutar is a GPLv3 modified work based on Dime, originally created by Rafael Soh a
 
 ## What to Test — English
 
-Build 7 presents one stable lock screen at launch instead of flashing the app logo or an animated progress indicator. The lock symbol, “App locked” title, and device-authentication message must stay in place before and during the Face ID prompt. Only the Unlock button should appear after cancellation or failure, with no automatic prompt loop. Build 6’s single-request authentication and light/dark contrast fixes remain intact.
+Build 8 removes the skeleton/redacted background previously shown behind the system Face ID prompt. The lock symbol, “App locked” title, and device-authentication message must remain visible throughout Face ID. After successful authentication the lock screen should transition directly to app content; after cancellation or failure the same lock screen and Unlock button should remain. Single-request authentication and light/dark contrast remain intact.
 
 1. Enter a total of 3,000, choose 3 installments and 18 August, then verify exactly three linked entries on 18 August, 18 September, and 18 October.
 2. Use a total that does not divide evenly into cents and confirm only the last installment receives the remainder.
@@ -51,6 +52,7 @@ Build 7 presents one stable lock screen at launch instead of flashing the app lo
 13. Enable App Lock, background and reopen Tutar, then confirm one Face ID/device-authentication attempt unlocks it without relocking or showing a second prompt.
 14. Check the new black-and-white theme in light and dark appearance, including the icon and widget; there should be no blue primary accent or gradient.
 15. Cold-launch the app and confirm the fixed lock symbol and text appear instead of the app logo or a spinner, with no refresh-like visual change when the Face ID prompt opens.
+16. While the Face ID prompt is open, confirm the lock screen remains behind it instead of a skeleton loading view, then send a successful match and verify Records appears directly.
 
 Feedback email: furkancakr7@gmail.com
 
