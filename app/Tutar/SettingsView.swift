@@ -63,20 +63,31 @@ struct SettingsView: View {
                 Toggle("settings.upcoming", isOn: $showUpcoming)
             }
 
-            Section("settings.money.section") {
-                if language.isEffectivelyTurkish {
-                    LabeledContent("settings.currency", value: "TRY")
-                } else {
-                    Picker("settings.currency", selection: $currencyCode) {
-                        ForEach(["TRY", "USD", "EUR", "GBP", "CAD", "AUD", "JPY"], id: \.self) { code in
-                            Text(verbatim: code).tag(code)
-                        }
-                    }
+            Section {
+                NavigationLink {
+                    CurrencyPickerView(selection: $currencyCode)
+                } label: {
+                    LabeledContent(
+                        "settings.currency",
+                        value: AppFormat.currencyCode(language: language, preferred: currencyCode)
+                    )
                 }
+                .accessibilityIdentifier("currencyPicker")
+            } header: {
+                Text("settings.money.section")
+            } footer: {
+                Text("settings.currency.footer")
             }
 
             Section {
-                Toggle("settings.lock", isOn: biometricBinding)
+                Toggle(isOn: biometricBinding) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("settings.lock")
+                        Text("settings.lock.detail")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
                     .accessibilityIdentifier("biometricLockToggle")
                 Toggle("settings.icloud", isOn: $iCloudSync)
                     .accessibilityIdentifier("icloudToggle")
@@ -328,6 +339,82 @@ struct SettingsView: View {
     }()
 }
 
+private struct CurrencyPickerView: View {
+    @Binding var selection: String
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.appLanguage) private var language
+    @State private var searchText = ""
+
+    private var codes: [String] {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return AppFormat.currencyCodes }
+        return AppFormat.currencyCodes.filter {
+            $0.localizedCaseInsensitiveContains(query)
+                || AppFormat.currencyName($0, language: language).localizedCaseInsensitiveContains(query)
+        }
+    }
+
+    var body: some View {
+        List {
+            Button {
+                selection = ""
+                dismiss()
+            } label: {
+                currencyRow(
+                    code: AppFormat.currencyCode(language: language, preferred: ""),
+                    name: AppFormat.localized("settings.currency.automatic", language: language),
+                    selected: selection.isEmpty
+                )
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("currencyOption-automatic")
+
+            ForEach(codes, id: \.self) { code in
+                Button {
+                    selection = code
+                    dismiss()
+                } label: {
+                    currencyRow(
+                        code: code,
+                        name: AppFormat.currencyName(code, language: language),
+                        selected: selection == code
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("currencyOption-\(code)")
+            }
+        }
+        .navigationTitle("settings.currency")
+        .navigationBarTitleDisplayMode(.inline)
+        .searchable(
+            text: $searchText,
+            placement: .navigationBarDrawer(displayMode: .always),
+            prompt: "settings.currency.search"
+        )
+    }
+
+    private func currencyRow(code: String, name: String, selected: Bool) -> some View {
+        HStack(spacing: 12) {
+            Text(verbatim: code)
+                .font(.body.monospaced().weight(.semibold))
+                .frame(width: 42, alignment: .leading)
+            Text(verbatim: name)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+            Spacer(minLength: 8)
+            if selected {
+                Image(systemName: "checkmark")
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Color.accentColor)
+                    .accessibilityHidden(true)
+            }
+        }
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}
+
 enum DeviceAuthentication {
     static var isAvailable: Bool {
         let context = LAContext()
@@ -416,7 +503,7 @@ struct AboutView: View {
                 )
                 LabeledContent(
                     "about.build",
-                    value: Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "3"
+                    value: Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "4"
                 )
             }
         }

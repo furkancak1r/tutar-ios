@@ -62,9 +62,15 @@ extension EnvironmentValues {
 }
 
 enum AppFormat {
+    static let currencyCodes = Array(Set(Locale.Currency.isoCurrencies.map(\.identifier))).sorted()
+
     static func currencyCode(language: AppLanguage, preferred: String) -> String {
-        if language.isEffectivelyTurkish { return "TRY" }
-        return preferred.isEmpty ? (Locale.autoupdatingCurrent.currency?.identifier ?? "USD") : preferred
+        guard preferred.isEmpty else { return preferred }
+        return language.isEffectivelyTurkish ? "TRY" : (Locale.autoupdatingCurrent.currency?.identifier ?? "USD")
+    }
+
+    static func currencyName(_ code: String, language: AppLanguage) -> String {
+        language.locale.localizedString(forCurrencyCode: code) ?? code
     }
 
     static func money(_ amount: Double, language: AppLanguage, currencyCode: String) -> String {
@@ -133,7 +139,7 @@ enum AppFormat {
 extension Color {
     init(hex: String) {
         let value = hex.trimmingCharacters(in: CharacterSet(charactersIn: "#"))
-        let number = UInt64(value, radix: 16) ?? 0x5E5CE6
+        let number = UInt64(value, radix: 16) ?? 0x232326
         self.init(
             red: Double((number >> 16) & 0xFF) / 255,
             green: Double((number >> 8) & 0xFF) / 255,

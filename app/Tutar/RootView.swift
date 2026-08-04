@@ -20,6 +20,7 @@ struct RootView: View {
     @State private var showingEditor = false
     @State private var unlocked = false
     @State private var authenticationInProgress = false
+    @State private var authenticateAfterBackground = false
 
     var body: some View {
         Group {
@@ -49,18 +50,24 @@ struct RootView: View {
             if enabled {
                 showingEditor = false
                 unlocked = false
+                authenticateAfterBackground = false
                 authenticateIfNeeded()
             } else {
                 unlocked = true
+                authenticateAfterBackground = false
             }
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 try? dataController.materializeRecurringTransactions()
-                authenticateIfNeeded()
+                if authenticateAfterBackground {
+                    authenticateAfterBackground = false
+                    authenticateIfNeeded()
+                }
             } else if phase == .background, lockEnabled {
                 showingEditor = false
                 unlocked = false
+                authenticateAfterBackground = true
             }
         }
     }
@@ -232,6 +239,7 @@ struct TransactionsView: View {
                     next: { moveMonth(1) }
                 )
                 .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
+                .listRowBackground(Color.clear)
             }
 
             if !upcoming.isEmpty {
@@ -394,6 +402,19 @@ private struct MonthSummaryView: View {
 
             VStack(spacing: 10) { summaryItems }
         }
+        .contentShape(Rectangle())
+        .gesture(
+            DragGesture(minimumDistance: 30)
+                .onEnded { value in
+                    let horizontal = value.translation.width
+                    let vertical = value.translation.height
+                    guard abs(horizontal) > 60, abs(horizontal) > abs(vertical) * 1.25 else { return }
+                    horizontal < 0 ? next() : previous()
+                }
+        )
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("monthSummary")
+        .accessibilityHint(Text("month.swipeHint"))
     }
 
     @ViewBuilder
@@ -431,41 +452,39 @@ struct TransactionRow: View {
     }
 
     var body: some View {
-        LabeledContent {
+        HStack(spacing: 10) {
+            categoryIcon
+            details
+            Spacer(minLength: 4)
             amountLabel
-        } label: {
-            HStack(alignment: .top, spacing: 12) {
-                categoryIcon
-                details
-            }
         }
-        .padding(.vertical, 3)
-        .accessibilityElement(children: .combine)
+        .frame(minHeight: 44)
+        .accessibilityIdentifier("transactionRow")
+        .accessibilityElement(children: .contain)
     }
 
     private var categoryIcon: some View {
         Text(transaction.category?.wrappedEmoji ?? "•")
-            .font(.title3)
-            .padding(8)
+            .font(.body)
+            .frame(width: 34, height: 34)
             .background(Color(.tertiarySystemFill), in: Circle())
             .accessibilityIdentifier("transactionCategoryIcon")
             .accessibilityHidden(true)
     }
 
     private var details: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            HStack(spacing: 6) {
-                Text(transaction.displayNote(language: language))
-                    .font(.body.weight(.medium))
-                    .accessibilityIdentifier("transactionTitle")
-                scheduleIndicator
-            }
-
-            Text(verbatim: "\(transaction.category?.displayName(language: language) ?? AppFormat.localized("category.uncategorized", language: language)) · \(AppFormat.date(transaction.wrappedDate, language: language))")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .accessibilityIdentifier("transactionMetadata")
+        HStack(spacing: 6) {
+            Text(verbatim: "\(transaction.displayNote(language: language)) · \(transaction.category?.displayName(language: language) ?? AppFormat.localized("category.uncategorized", language: language)) · \(AppFormat.date(transaction.wrappedDate, language: language))")
+                .font(.body.weight(.medium))
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .minimumScaleFactor(0.82)
+                .allowsTightening(true)
+                .accessibilityIdentifier("transactionTitle")
+            scheduleIndicator
         }
+        .lineLimit(1)
+        .layoutPriority(1)
     }
 
     @ViewBuilder
@@ -485,14 +504,19 @@ struct TransactionRow: View {
             .font(.subheadline.monospacedDigit().weight(.semibold))
             .foregroundStyle(transaction.income ? Color.green : .primary)
             .multilineTextAlignment(.trailing)
+            .lineLimit(1)
+            .minimumScaleFactor(0.65)
+            .allowsTightening(true)
+            .layoutPriority(2)
             .accessibilityIdentifier("transactionAmount")
-            .accessibilityLabel(Text(transaction.income ? "accessibility.incomeAmount" : "accessibility.expenseAmount"))
-            .accessibilityValue(Text(verbatim: formattedAmount))
+            .accessibilityLabel(Text(verbatim: "\(AppFormat.localized(transaction.income ? "accessibility.incomeAmount" : "accessibility.expenseAmount", language: language)): \(formattedAmount)"))
     }
 
     private func badge(_ text: String, accessibilityKey: LocalizedStringKey) -> some View {
         Text(verbatim: text)
             .font(.caption2.weight(.semibold).monospacedDigit())
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .foregroundStyle(Color.accentColor)

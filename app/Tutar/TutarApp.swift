@@ -7,7 +7,6 @@ struct TutarApp: App {
     @StateObject private var dataController = DataController.shared
     @AppStorage("appLanguage", store: .tutar) private var languageRaw = AppLanguage.system.rawValue
     @AppStorage("appearance", store: .tutar) private var appearance = 0
-    @AppStorage("currencyCode", store: .tutar) private var currencyCode = ""
     @AppStorage("biometricLock", store: .tutar) private var biometricLock = false
 
     private var language: AppLanguage {
@@ -19,13 +18,18 @@ struct TutarApp: App {
             "appLanguage": AppLanguage.system.rawValue,
             "appearance": 0,
             "icloudSync": true,
-            "currencyCode": Locale.autoupdatingCurrent.currency?.identifier ?? "USD",
+            "currencyCode": "",
             "numberEntryType": 1,
             "haptics": true,
             "showSuggestions": true,
             "showUpcoming": true,
             "biometricLock": false
         ])
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-ui-testing") {
+            UserDefaults.tutar.set("", forKey: "currencyCode")
+        }
+        #endif
     }
 
     var body: some Scene {

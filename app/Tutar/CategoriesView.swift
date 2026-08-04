@@ -74,11 +74,11 @@ struct CategoriesView: View {
                     Text(verbatim: category.wrappedEmoji)
                         .font(.title3)
                         .frame(width: 36, height: 36)
-                        .background(Color(hex: category.colour ?? "#5E5CE6").opacity(0.15), in: Circle())
+                        .background(Color(hex: category.colour ?? "#232326").opacity(0.15), in: Circle())
                     Text(verbatim: category.displayName(language: language))
                     Spacer()
                     Circle()
-                        .fill(Color(hex: category.colour ?? "#5E5CE6"))
+                        .fill(Color(hex: category.colour ?? "#232326"))
                         .frame(width: 12, height: 12)
                         .accessibilityHidden(true)
                 }
@@ -132,8 +132,8 @@ private struct CategoryEditorView: View {
     @State private var errorKey: String?
 
     private let colours = [
-        "#5E5CE6", "#007AFF", "#00A7A0", "#34C759",
-        "#FF9500", "#FF3B30", "#AF52DE", "#8E8E93"
+        "#232326", "#5C5A57", "#736A62", "#5F6B5C",
+        "#9A7B4F", "#9B554D", "#7A6068", "#8E8E93"
     ]
 
     var body: some View {
@@ -208,7 +208,7 @@ private struct CategoryEditorView: View {
         self.initialName = initialName
         _name = State(initialValue: initialName)
         _emoji = State(initialValue: category?.emoji ?? "")
-        _colour = State(initialValue: category?.colour ?? "#5E5CE6")
+        _colour = State(initialValue: category?.colour ?? "#232326")
         _income = State(initialValue: category?.income ?? false)
     }
 

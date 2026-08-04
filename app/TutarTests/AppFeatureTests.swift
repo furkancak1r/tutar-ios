@@ -24,6 +24,18 @@ final class MoneyEntryTests: XCTestCase {
     }
 }
 
+final class AppFormatTests: XCTestCase {
+    func testCurrencySelectionOverridesLanguageDefault() {
+        XCTAssertEqual(AppFormat.currencyCode(language: .turkish, preferred: "USD"), "USD")
+        XCTAssertEqual(AppFormat.currencyCode(language: .turkish, preferred: ""), "TRY")
+    }
+
+    func testAllISOCurrenciesAreAvailable() {
+        XCTAssertGreaterThan(AppFormat.currencyCodes.count, 100)
+        XCTAssertTrue(["TRY", "USD", "EUR", "JPY"].allSatisfy(AppFormat.currencyCodes.contains))
+    }
+}
+
 final class CSVCodecTests: XCTestCase {
     func testQuotedCSVValuesRoundTrip() throws {
         let rows = [

@@ -31,6 +31,7 @@
 
 "month.previous" = "Previous month";
 "month.next" = "Next month";
+"month.swipeHint" = "Swipe left or right to move between months.";
 "summary.expense" = "Spent";
 "summary.income" = "Income";
 "summary.net" = "Net";
@@ -132,6 +133,9 @@
 "appearance.dark" = "Dark";
 "settings.money.section" = "Money";
 "settings.currency" = "Currency";
+"settings.currency.automatic" = "Automatic";
+"settings.currency.search" = "Search currency or code";
+"settings.currency.footer" = "All ISO currencies are available. This changes display only; amounts are not converted using exchange rates.";
 "settings.entry.section" = "Quick entry";
 "settings.numberEntry" = "Number entry";
 "settings.numberEntry.automatic" = "Auto cents";
@@ -144,11 +148,12 @@
 "settings.icloud.footer" = "Data stays on this device when off. Changes to sync mode take effect after relaunching Tutar.";
 "settings.privacy.section" = "Privacy & protection";
 "settings.privacy.footer" = "App lock uses Face ID, Touch ID, or the device passcode. Changes to iCloud sync take effect after relaunching Tutar.";
-"settings.lock" = "Lock Tutar";
-"settings.lock.title" = "Tutar is locked";
+"settings.lock" = "App Lock";
+"settings.lock.detail" = "Protects your records with device authentication after Tutar enters the background.";
+"settings.lock.title" = "App locked";
 "settings.lock.message" = "Authenticate to view your financial records.";
 "settings.lock.retry" = "Unlock";
-"settings.lock.reason" = "Unlock Tutar to view your financial records.";
+"settings.lock.reason" = "Unlock the app to view your financial records.";
 "settings.lock.unavailable.title" = "Device authentication unavailable";
 "settings.lock.unavailable.message" = "Set up a device passcode, Face ID, or Touch ID before enabling app lock.";
 "settings.data.section" = "Data";

@@ -31,6 +31,7 @@
 
 "month.previous" = "Önceki ay";
 "month.next" = "Sonraki ay";
+"month.swipeHint" = "Aylar arasında geçmek için sağa veya sola kaydır.";
 "summary.expense" = "Harcama";
 "summary.income" = "Gelir";
 "summary.net" = "Net";
@@ -132,6 +133,9 @@
 "appearance.dark" = "Koyu";
 "settings.money.section" = "Para";
 "settings.currency" = "Para birimi";
+"settings.currency.automatic" = "Otomatik";
+"settings.currency.search" = "Para birimi veya kod ara";
+"settings.currency.footer" = "Tüm ISO para birimleri kullanılabilir. Seçim yalnız gösterimi değiştirir; tutarlar kurla dönüştürülmez.";
 "settings.entry.section" = "Hızlı giriş";
 "settings.numberEntry" = "Sayı girişi";
 "settings.numberEntry.automatic" = "Otomatik kuruş";
@@ -144,11 +148,12 @@
 "settings.icloud.footer" = "Kapalıyken veriler bu aygıtta kalır. Eşzamanlama değişikliği Tutar yeniden açıldığında uygulanır.";
 "settings.privacy.section" = "Gizlilik ve koruma";
 "settings.privacy.footer" = "Uygulama kilidi Face ID, Touch ID veya aygıt parolasını kullanır. iCloud değişikliği Tutar yeniden açıldığında uygulanır.";
-"settings.lock" = "Tutar’ı kilitle";
-"settings.lock.title" = "Tutar kilitli";
+"settings.lock" = "Uygulama kilidi";
+"settings.lock.detail" = "Arka plana geçtiğinde kayıtlarını aygıt doğrulamasıyla korur.";
+"settings.lock.title" = "Uygulama kilitli";
 "settings.lock.message" = "Finans kayıtlarını görmek için kimliğini doğrula.";
 "settings.lock.retry" = "Kilidi aç";
-"settings.lock.reason" = "Finans kayıtlarını görmek için Tutar’ın kilidini aç.";
+"settings.lock.reason" = "Finans kayıtlarını görmek için uygulama kilidini aç.";
 "settings.lock.unavailable.title" = "Aygıt doğrulaması kullanılamıyor";
 "settings.lock.unavailable.message" = "Uygulama kilidini açmadan önce aygıt parolası, Face ID veya Touch ID ayarla.";
 "settings.data.section" = "Veri";

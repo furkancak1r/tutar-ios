@@ -208,7 +208,7 @@ extension DataController {
                 systemKey: category.systemKey,
                 name: category.name ?? "",
                 emoji: category.emoji ?? "",
-                colour: category.colour ?? "#5E5CE6",
+                colour: category.colour ?? "#232326",
                 income: category.income,
                 order: category.order,
                 dateCreated: category.dateCreated
@@ -651,7 +651,7 @@ extension DataController {
         category.id = id ?? UUID()
         category.name = name
         category.emoji = "🗂️"
-        category.colour = "#5E5CE6"
+        category.colour = "#232326"
         category.income = income
         category.order = (categories.filter { $0.income == income }.map(\.order).max() ?? -1) + 1
         category.dateCreated = .now

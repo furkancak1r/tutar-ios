@@ -9,6 +9,7 @@ Tutar, günlük gelir-giderleri ve kredi kartı taksitlerini takip etmek için g
 - Yazarken kuruşları otomatik kaydıran hızlı numaratör; istenirse ondalık giriş
 - Not ve kategori önerileriyle hızlı gelir/gider kaydı
 - Haftalık, aylık ve yıllık analiz; arama ve kategori kırılımları
+- Ay özetini sağa/sola kaydırarak veya oklarla ay değiştirme
 - Günlük, haftalık, aylık ve yıllık genel/kategori bütçeleri
 - Düzenlenebilir, sıralanabilir gelir ve gider kategorileri
 - Tek sefer, tekrar veya taksit seçeneklerini aynı **Plan** menüsünden ayarlama
@@ -18,7 +19,8 @@ Tutar, günlük gelir-giderleri ve kredi kartı taksitlerini takip etmek için g
 - Gelecek taksitleri geçmiş işlemlerden ayrı gösterme
 - Dime/Tutar CSV içe aktarma, işlem CSV dışa aktarma ve tam JSON yedekleme/geri yükleme
 - Türkçe ve İngilizce; Sistem / Türkçe / English dil seçimi
-- Türkçede TRY, İngilizcede seçilen bölge ve para birimine uygun biçimlendirme
+- Tüm ISO para birimleri; Türkçede varsayılan TRY ve seçimi koruyan yerel biçimlendirme
+- Düz siyah-beyaz vurgu sistemi; gradient içermeyen açık/koyu görünüm
 - Koyu/açık mod, Dynamic Type, VoiceOver etiketleri ve iPhone/iPad düzenleri
 - Yerel Core Data saklama ve isteğe bağlı özel iCloud/CloudKit eşzamanlama
 - İsteğe bağlı aygıt kilidi, yerelleştirilmiş widget ve günlük yerel hatırlatıcı
@@ -70,7 +72,7 @@ Tutar ve tüm türev kod GNU General Public License v3.0 altında yayımlanır. 
 
 Tutar is a completely free and open-source iPhone/iPad app for tracking everyday income, expenses, and card installments. It contains no advertising, analytics, tracking, account system, purchases, subscriptions, donations, or paywalls.
 
-The automatic-cents keypad makes amount entry immediate, with an optional decimal mode. Past-entry suggestions, editable categories, search, weekly/monthly/yearly analysis, and general or category budgets cover everyday tracking. Dime/Tutar CSV import, transaction CSV export, and a complete JSON backup provide local data portability.
+The automatic-cents keypad makes amount entry immediate, with an optional decimal mode. Past-entry suggestions, editable categories, swipeable months, search, weekly/monthly/yearly analysis, all ISO currencies, and general or category budgets cover everyday tracking. Dime/Tutar CSV import, transaction CSV export, and a complete JSON backup provide local data portability. The interface uses a flat monochrome accent system with no gradients.
 
 Installments are configured inside the transaction **Schedule** menu beside One time and Repeat, not in a separate tab. The flow creates exactly the selected number of linked transactions, assigns any rounding remainder to the final installment, shows positions such as `1/3`, and supports editing or deleting one installment or the selected installment and all following ones. Future installments are shown separately and count toward spending only in their own calendar month.
 

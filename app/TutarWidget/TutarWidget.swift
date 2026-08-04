@@ -83,7 +83,7 @@ private struct TutarWidgetView: View {
         VStack(alignment: .leading, spacing: 9) {
             HStack {
                 Image(systemName: "list.bullet")
-                    .foregroundStyle(Color(red: 47 / 255, green: 107 / 255, blue: 1))
+                    .foregroundStyle(.primary)
                 Text("widget.title")
                     .font(.caption.bold())
                     .foregroundStyle(.secondary)

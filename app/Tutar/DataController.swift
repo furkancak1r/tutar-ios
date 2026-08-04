@@ -573,14 +573,14 @@ final class DataController: ObservableObject {
 
         if try context.count(for: categoryRequest) == 0 {
             let defaults: [(String, String, String, Bool)] = [
-                ("category.market", "🛒", "#FF6B5E", false),
-                ("category.food", "🍽️", "#FF9F43", false),
-                ("category.transport", "🚇", "#37D6C0", false),
-                ("category.bills", "🧾", "#5B8DEF", false),
-                ("category.shopping", "🛍️", "#A66CFF", false),
-                ("category.health", "🩺", "#EF5DA8", false),
-                ("category.entertainment", "🎟️", "#F5C451", false),
-                ("category.salary", "💼", "#20B26B", true)
+                ("category.market", "🛒", "#9B554D", false),
+                ("category.food", "🍽️", "#9A7B4F", false),
+                ("category.transport", "🚇", "#5F6B5C", false),
+                ("category.bills", "🧾", "#5C5A57", false),
+                ("category.shopping", "🛍️", "#7A6068", false),
+                ("category.health", "🩺", "#87504D", false),
+                ("category.entertainment", "🎟️", "#736A62", false),
+                ("category.salary", "💼", "#4F705F", true)
             ]
 
             for (index, item) in defaults.enumerated() {
