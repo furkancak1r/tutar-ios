@@ -36,7 +36,9 @@ final class AppLockController: ObservableObject {
     }
 
     var isUnlocked: Bool { state == .unlocked }
-    var isAuthenticating: Bool { state == .authenticating }
+    var canRetryAuthentication: Bool {
+        state == .locked && didHandleStartup && !shouldAuthenticateWhenActive
+    }
 
     func start(enabled: Bool, reason: String, scenePhase: ScenePhase) {
         self.scenePhase = scenePhase
@@ -163,7 +165,7 @@ struct RootView: View {
         ZStack {
             if lockEnabled, !appLockController.isUnlocked {
                 LockedView(
-                    isAuthenticating: appLockController.isAuthenticating,
+                    canRetry: appLockController.canRetryAuthentication,
                     authenticate: requestAuthentication
                 )
             } else {
@@ -265,16 +267,15 @@ struct RootView: View {
 }
 
 private struct LockedView: View {
-    let isAuthenticating: Bool
+    let canRetry: Bool
     let authenticate: () -> Void
 
     var body: some View {
         VStack(spacing: 18) {
-            Image("BrandMark")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 84, height: 84)
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            Image(systemName: "lock.fill")
+                .font(.system(size: 32, weight: .semibold))
+                .frame(width: 72, height: 72)
+                .background(Color.primary.opacity(0.08), in: Circle())
                 .accessibilityHidden(true)
 
             Text("settings.lock.title")
@@ -283,21 +284,21 @@ private struct LockedView: View {
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
 
-            Button(action: authenticate) {
-                if isAuthenticating {
-                    ProgressView()
-                        .tint(.primary)
-                        .frame(maxWidth: .infinity)
+            Group {
+                if canRetry {
+                    Button(action: authenticate) {
+                        Label("settings.lock.retry", systemImage: "lock.open")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.large)
+                    .accessibilityIdentifier("unlockButton")
                 } else {
-                    Label("settings.lock.retry", systemImage: "lock.open")
-                        .frame(maxWidth: .infinity)
+                    Color.clear
                 }
             }
-            .buttonStyle(.bordered)
-            .controlSize(.large)
-            .disabled(isAuthenticating)
             .frame(maxWidth: 280)
-            .accessibilityIdentifier("unlockButton")
+            .frame(height: 50)
         }
         .padding(28)
         .frame(maxWidth: .infinity, maxHeight: .infinity)

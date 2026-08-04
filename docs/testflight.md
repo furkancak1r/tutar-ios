@@ -1,4 +1,4 @@
-# Tutar 1.0 (6) — TestFlight metadata
+# Tutar 1.0 (7) — TestFlight metadata
 
 ## Beta Description — Turkish
 
@@ -8,7 +8,7 @@ Tutar, Rafael Soh ve katkıda bulunanların oluşturduğu Dime temel alınarak d
 
 ## What to Test — Turkish
 
-Build 6, Face ID/Touch ID/aygıt parolası doğrulamasını tek istemle kararlı hâle getirir. Başarılı doğrulamadan sonra uygulama yeniden kilitlenmemeli; iptal veya başarısızlıkta otomatik istem döngüsü başlamamalıdır. Kilit, boş işlem, boş bütçe ve numaratör onay düğmelerinin açık/koyu görünüm kontrastı da düzeltildi.
+Build 7, uygulama açılırken logo veya hareketli yüklenme göstergesi yerine sabit bir kilit ekranı gösterir. Kilit simgesi, “Uygulama kilitli” başlığı ve aygıt doğrulama açıklaması Face ID isteminden önce ve istem sırasında yer değiştirmemelidir. İptal veya başarısızlıktan sonra yalnız “Kilidi aç” düğmesi görünmeli; otomatik istem döngüsü başlamamalıdır. Build 6’daki tek-istem Face ID düzeltmesi ve açık/koyu görünüm kontrastı korunur.
 
 1. 3.000 TL, 3 taksit ve ilk tarih 18 Ağustos seçerek tam üç işlemin 18 Ağustos, 18 Eylül ve 18 Ekim’e oluşturulduğunu doğrulayın.
 2. Kuruşla tam bölünmeyen bir tutarda farkın yalnız son taksite verildiğini kontrol edin.
@@ -24,6 +24,7 @@ Build 6, Face ID/Touch ID/aygıt parolası doğrulamasını tek istemle kararlı
 12. Para birimi listesinden TRY dışında bir ISO para birimi seçin; Türkçe arayüzde seçimin korunduğunu doğrulayın.
 13. Uygulama Kilidi’ni açın, Tutar’ı arka plana gönderip geri dönün ve Face ID sırasında uygulamanın yeniden kilitlenmeden, ikinci istem açmadan tek doğrulamayla açıldığını doğrulayın.
 14. Açık ve koyu görünümde yeni siyah-beyaz temayı; ikon ve widget dahil hiçbir ana vurgu alanında mavi/gradient kalmadığını kontrol edin.
+15. Soğuk açılışta uygulama logosu veya spinner yerine sabit kilit simgesi ve kilit metninin göründüğünü; Face ID penceresi açılırken ekranın yeniden yükleniyormuş gibi değişmediğini doğrulayın.
 
 ## Beta Description — English
 
@@ -33,7 +34,7 @@ Tutar is a GPLv3 modified work based on Dime, originally created by Rafael Soh a
 
 ## What to Test — English
 
-Build 6 makes Face ID, Touch ID, and device-passcode authentication stable with one request. The app must not relock after success, and cancellation or failure must not start an automatic prompt loop. Button contrast was also fixed on the lock screen, empty transaction and budget screens, and the keypad submit control in light and dark appearances.
+Build 7 presents one stable lock screen at launch instead of flashing the app logo or an animated progress indicator. The lock symbol, “App locked” title, and device-authentication message must stay in place before and during the Face ID prompt. Only the Unlock button should appear after cancellation or failure, with no automatic prompt loop. Build 6’s single-request authentication and light/dark contrast fixes remain intact.
 
 1. Enter a total of 3,000, choose 3 installments and 18 August, then verify exactly three linked entries on 18 August, 18 September, and 18 October.
 2. Use a total that does not divide evenly into cents and confirm only the last installment receives the remainder.
@@ -49,6 +50,7 @@ Build 6 makes Face ID, Touch ID, and device-passcode authentication stable with 
 12. Choose a non-default ISO currency and confirm the choice remains active in both English and Turkish.
 13. Enable App Lock, background and reopen Tutar, then confirm one Face ID/device-authentication attempt unlocks it without relocking or showing a second prompt.
 14. Check the new black-and-white theme in light and dark appearance, including the icon and widget; there should be no blue primary accent or gradient.
+15. Cold-launch the app and confirm the fixed lock symbol and text appear instead of the app logo or a spinner, with no refresh-like visual change when the Face ID prompt opens.
 
 Feedback email: furkancakr7@gmail.com
 

@@ -151,7 +151,7 @@
 "settings.lock" = "Uygulama kilidi";
 "settings.lock.detail" = "Arka plana geçtiğinde kayıtlarını aygıt doğrulamasıyla korur.";
 "settings.lock.title" = "Uygulama kilitli";
-"settings.lock.message" = "Finans kayıtlarını görmek için kimliğini doğrula.";
+"settings.lock.message" = "Face ID, Touch ID veya aygıt parolasıyla kilidi aç.";
 "settings.lock.retry" = "Kilidi aç";
 "settings.lock.reason" = "Finans kayıtlarını görmek için uygulama kilidini aç.";
 "settings.lock.unavailable.title" = "Aygıt doğrulaması kullanılamıyor";

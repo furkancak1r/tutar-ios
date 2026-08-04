@@ -32,6 +32,7 @@ final class TutarUITests: XCTestCase {
             lockAuthenticationSucceeds: false
         )
         XCTAssertTrue(turkish.staticTexts["Uygulama kilitli"].waitForExistence(timeout: 8))
+        XCTAssertTrue(turkish.staticTexts["Face ID, Touch ID veya aygıt parolasıyla kilidi aç."].exists)
         XCTAssertTrue(turkish.buttons["Kilidi aç"].waitForExistence(timeout: 3))
         Thread.sleep(forTimeInterval: 2)
         XCTAssertTrue(turkish.buttons["Kilidi aç"].exists)
@@ -44,6 +45,7 @@ final class TutarUITests: XCTestCase {
             lockAuthenticationSucceeds: false
         )
         XCTAssertTrue(english.staticTexts["App locked"].waitForExistence(timeout: 8))
+        XCTAssertTrue(english.staticTexts["Unlock with Face ID, Touch ID, or your device passcode."].exists)
         XCTAssertTrue(english.buttons["Unlock"].waitForExistence(timeout: 3))
         Thread.sleep(forTimeInterval: 2)
         XCTAssertTrue(english.buttons["Unlock"].exists)

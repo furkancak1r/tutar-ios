@@ -151,7 +151,7 @@
 "settings.lock" = "App Lock";
 "settings.lock.detail" = "Protects your records with device authentication after Tutar enters the background.";
 "settings.lock.title" = "App locked";
-"settings.lock.message" = "Authenticate to view your financial records.";
+"settings.lock.message" = "Unlock with Face ID, Touch ID, or your device passcode.";
 "settings.lock.retry" = "Unlock";
 "settings.lock.reason" = "Unlock the app to view your financial records.";
 "settings.lock.unavailable.title" = "Device authentication unavailable";

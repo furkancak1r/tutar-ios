@@ -98,11 +98,14 @@ final class AppLockControllerTests: XCTestCase {
     func testFailureStaysLockedWithoutAutomaticRetry() async {
         let probe = AuthenticationProbe()
         let controller = makeController(probe)
+        XCTAssertFalse(controller.canRetryAuthentication)
         controller.start(enabled: true, reason: "Test", scenePhase: .active)
         await waitUntil { probe.callCount == 1 }
+        XCTAssertFalse(controller.canRetryAuthentication)
 
         probe.complete(false)
         await waitUntil { controller.state == .locked }
+        XCTAssertTrue(controller.canRetryAuthentication)
         controller.scenePhaseChanged(to: .active, lockEnabled: true, reason: "Test")
         controller.scenePhaseChanged(to: .active, lockEnabled: true, reason: "Test")
         await Task.yield()
@@ -120,6 +123,7 @@ final class AppLockControllerTests: XCTestCase {
 
         controller.scenePhaseChanged(to: .background, lockEnabled: true, reason: "Test")
         XCTAssertEqual(controller.state, .locked)
+        XCTAssertFalse(controller.canRetryAuthentication)
         controller.scenePhaseChanged(to: .active, lockEnabled: true, reason: "Test")
         controller.scenePhaseChanged(to: .active, lockEnabled: true, reason: "Test")
 
