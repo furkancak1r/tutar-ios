@@ -41,6 +41,8 @@ targets:
       properties:
         CFBundleDisplayName: Tutar
         CFBundleName: Tutar
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSHumanReadableCopyright: Copyright © 2026 Furkan Çakır. Dime upstream © Rafael Soh and contributors.
         NSFaceIDUsageDescription: Tutar uses device authentication only to protect the financial data stored on this device.
         CFBundleLocalizations:
@@ -112,6 +114,8 @@ targets:
       properties:
         CFBundleDisplayName: Tutar Widget
         CFBundleName: TutarWidget
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSHumanReadableCopyright: Copyright © 2026 Furkan Çakır. Dime upstream © Rafael Soh and contributors.
         CFBundleLocalizations:
           - en
