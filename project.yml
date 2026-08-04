@@ -46,8 +46,6 @@ targets:
         ITSAppUsesNonExemptEncryption: false
         UIApplicationSupportsIndirectInputEvents: true
         UILaunchScreen: {}
-        UIBackgroundModes:
-          - remote-notification
         CFBundleURLTypes:
           - CFBundleTypeRole: Editor
             CFBundleURLName: com.furkancakir.tutar
@@ -69,7 +67,6 @@ targets:
           - iCloud.com.furkancakir.tutar
         com.apple.developer.icloud-services:
           - CloudKit
-        aps-environment: development
     dependencies:
       - target: TutarWidget
         embed: true
