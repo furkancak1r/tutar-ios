@@ -131,7 +131,7 @@ final class AppLockController: ObservableObject {
 
     private func authenticationFinished(_ success: Bool, requestID: Int) {
         guard activeRequestID == requestID, state == .authenticating else { return }
-        if scenePhase == .active {
+        if scenePhase == .active || (success && scenePhase == .inactive) {
             apply(success)
         } else {
             pendingResult = success
@@ -388,6 +388,7 @@ struct TransactionsView: View {
                     month: selectedMonth,
                     expense: expenses,
                     income: income,
+                    transactions: monthTransactions,
                     currency: currency,
                     previous: { moveMonth(-1) },
                     next: { moveMonth(1) }
@@ -397,10 +398,15 @@ struct TransactionsView: View {
             }
 
             if !upcoming.isEmpty {
-                Section("transactions.upcoming") {
+                Section {
                     ForEach(upcoming) { transaction in
-                        row(transaction, showsDate: true)
+                        row(transaction)
                     }
+                } header: {
+                    Text("transactions.upcoming")
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                        .textCase(nil)
                 }
             }
 
@@ -410,13 +416,6 @@ struct TransactionsView: View {
                         Label("empty.transactions.title", systemImage: "tray")
                     } description: {
                         Text(searchText.isEmpty ? "empty.transactions.message" : "empty.search.message")
-                    } actions: {
-                        if searchText.isEmpty {
-                            Button("action.addTransaction") { showingEditor = true }
-                                .buttonStyle(.bordered)
-                                .controlSize(.large)
-                                .accessibilityIdentifier("emptyTransactionAddButton")
-                        }
                     }
                     .frame(maxWidth: .infinity)
                     .listRowBackground(Color.clear)
@@ -430,11 +429,15 @@ struct TransactionsView: View {
                         }
                     } header: {
                         Text(AppFormat.dayHeader(group.date, language: language))
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.primary)
+                            .textCase(nil)
                     }
                 }
             }
         }
         .listStyle(.plain)
+        .headerProminence(.increased)
         .scrollContentBackground(.hidden)
         .background(Color(.systemBackground))
         .frame(maxWidth: 760)
@@ -448,15 +451,28 @@ struct TransactionsView: View {
             placement: .navigationBarDrawer(displayMode: .automatic),
             prompt: "transactions.search"
         )
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            HStack {
+                Spacer()
                 Button {
                     showingEditor = true
                 } label: {
-                    Label("action.addTransaction", systemImage: "plus")
+                    Image(systemName: "plus")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundStyle(Color(.systemBackground))
+                        .frame(width: 56, height: 56)
+                        .background(Color.primary, in: Circle())
+                        .overlay {
+                            Circle().stroke(Color(.separator), lineWidth: 0.5)
+                        }
+                        .shadow(color: .black.opacity(0.18), radius: 8, y: 4)
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("action.addTransaction"))
                 .accessibilityIdentifier("addTransactionButton")
             }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
         }
         .fullScreenCover(item: $editing) {
             TransactionEditorView(transaction: $0)
@@ -505,18 +521,19 @@ struct TransactionsView: View {
         }
     }
 
-    private func row(_ transaction: Transaction, showsDate: Bool = false) -> some View {
-        TransactionRow(transaction: transaction, showsDate: showsDate)
+    private func row(_ transaction: Transaction) -> some View {
+        TransactionRow(transaction: transaction)
             .contentShape(Rectangle())
             .onTapGesture { editing = transaction }
             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                 Button(role: .destructive) { deleting = transaction } label: {
                     Label("action.delete", systemImage: "trash")
                 }
+                .tint(.red)
                 Button { editing = transaction } label: {
                     Label("action.edit", systemImage: "pencil")
                 }
-                .tint(.accentColor)
+                .tint(Color(white: 0.22))
             }
             .accessibilityAction(named: Text("action.edit")) { editing = transaction }
             .accessibilityAction(named: Text("action.delete")) { deleting = transaction }
@@ -535,15 +552,20 @@ struct TransactionsView: View {
 
 private struct MonthSummaryView: View {
     @Environment(\.appLanguage) private var language
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @ScaledMetric(relativeTo: .largeTitle) private var netAmountSize = 42
     let month: Date
     let expense: Double
     let income: Double
+    let transactions: [Transaction]
     let currency: String
     let previous: () -> Void
     let next: () -> Void
 
+    private var net: Double { income - expense }
+
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 14) {
             HStack {
                 Button(action: previous) {
                     Label("month.previous", systemImage: "chevron.left")
@@ -556,9 +578,23 @@ private struct MonthSummaryView: View {
                 .buttonStyle(.plain)
 
                 Spacer()
-                Text(AppFormat.month(month, language: language))
-                    .font(.headline)
-                    .accessibilityAddTraits(.isHeader)
+                Group {
+                    if dynamicTypeSize.isAccessibilitySize {
+                        VStack(spacing: 4) {
+                            Text("summary.netTotal")
+                            monthPill
+                        }
+                    } else {
+                        HStack(spacing: 8) {
+                            Text("summary.netTotal")
+                            monthPill
+                        }
+                    }
+                }
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.secondary)
+                .accessibilityElement(children: .combine)
+                .accessibilityAddTraits(.isHeader)
                 Spacer()
 
                 Button(action: next) {
@@ -572,12 +608,34 @@ private struct MonthSummaryView: View {
                 .buttonStyle(.plain)
             }
 
-            HStack(spacing: 8) {
-                metric("summary.expense", value: expense)
-                Divider().frame(height: 34)
-                metric("summary.income", value: income)
-                Divider().frame(height: 34)
-                metric("summary.net", value: income - expense, isNegative: income < expense)
+            Text(AppFormat.money(net, language: language, currencyCode: currency))
+                .font(
+                    dynamicTypeSize.isAccessibilitySize
+                        ? .title.monospacedDigit().weight(.medium)
+                        : .system(size: netAmountSize, weight: .regular, design: .default).monospacedDigit()
+                )
+                .lineLimit(1)
+                .minimumScaleFactor(0.68)
+                .allowsTightening(true)
+                .accessibilityIdentifier("monthNetAmount")
+                .accessibilityLabel(Text("summary.net"))
+                .accessibilityValue(Text(verbatim: AppFormat.money(net, language: language, currencyCode: currency)))
+
+            if !dynamicTypeSize.isAccessibilitySize, !transactions.isEmpty {
+                trendChart
+            }
+
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(spacing: 8) {
+                    metricRow("summary.expense", value: expense)
+                    metricRow("summary.income", value: income)
+                }
+            } else {
+                HStack(spacing: 16) {
+                    metric("summary.expense", value: expense, identifier: "monthExpenseAmount")
+                    Divider().frame(height: 30)
+                    metric("summary.income", value: income, identifier: "monthIncomeAmount")
+                }
             }
         }
         .contentShape(Rectangle())
@@ -595,7 +653,71 @@ private struct MonthSummaryView: View {
         .accessibilityHint(Text("month.swipeHint"))
     }
 
-    private func metric(_ key: LocalizedStringKey, value: Double, isNegative: Bool = false) -> some View {
+    private var monthPill: some View {
+        Text(AppFormat.month(month, language: language))
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.primary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.78)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 5)
+            .background(Color(.tertiarySystemFill), in: Capsule())
+    }
+
+    private var trendChart: some View {
+        Chart {
+            ForEach(Array(balancePoints.enumerated()), id: \.offset) { _, point in
+                LineMark(
+                    x: .value("Date", point.date),
+                    y: .value("Balance", point.balance)
+                )
+                .interpolationMethod(.stepEnd)
+                .lineStyle(StrokeStyle(lineWidth: 1.6, lineCap: .round, lineJoin: .round))
+                .foregroundStyle(Color.primary.opacity(0.58))
+            }
+        }
+        .chartXAxis(.hidden)
+        .chartYAxis(.hidden)
+        .chartYScale(domain: trendDomain)
+        .frame(height: 44)
+        .accessibilityHidden(true)
+        .accessibilityIdentifier("monthTrendChart")
+    }
+
+    private var balancePoints: [(date: Date, balance: Double)] {
+        let calendar = Calendar.current
+        guard let interval = calendar.dateInterval(of: .month, for: month) else { return [] }
+        let transactionsByDay = Dictionary(grouping: transactions) {
+            calendar.startOfDay(for: $0.wrappedDate)
+        }
+        var runningBalance = 0.0
+        var points = [(date: interval.start, balance: runningBalance)]
+
+        for date in transactionsByDay.keys.sorted() {
+            runningBalance += transactionsByDay[date, default: []].reduce(0) {
+                $0 + ($1.income ? $1.amount : -$1.amount)
+            }
+            points.append((date: date, balance: runningBalance))
+        }
+
+        points.append((date: interval.end.addingTimeInterval(-1), balance: runningBalance))
+        return points
+    }
+
+    private var trendDomain: ClosedRange<Double> {
+        let balances = balancePoints.map(\.balance)
+        let low = balances.min() ?? 0
+        let high = balances.max() ?? 0
+        let spread = max(high - low, max(abs(low), abs(high)) * 0.1, 1)
+        let padding = spread * 0.12
+        return (low - padding)...(high + padding)
+    }
+
+    private func metric(
+        _ key: LocalizedStringKey,
+        value: Double,
+        identifier: String
+    ) -> some View {
         let formattedValue = AppFormat.money(value, language: language, currencyCode: currency)
         return VStack(spacing: 3) {
             Text(key)
@@ -603,25 +725,35 @@ private struct MonthSummaryView: View {
                 .foregroundStyle(.secondary)
             Text(formattedValue)
                 .font(.subheadline.monospacedDigit().weight(.semibold))
-                .foregroundStyle(isNegative ? Color.red : .primary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
+                .accessibilityIdentifier(identifier)
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityIdentifier(identifier)
+        .accessibilityElement(children: .combine)
+    }
+
+    private func metricRow(_ key: LocalizedStringKey, value: Double) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(key)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Spacer(minLength: 12)
+            Text(AppFormat.money(value, language: language, currencyCode: currency))
+                .font(.subheadline.monospacedDigit().weight(.semibold))
                 .lineLimit(1)
                 .minimumScaleFactor(0.72)
         }
-        .frame(maxWidth: .infinity)
         .accessibilityElement(children: .combine)
     }
 }
 
 struct TransactionRow: View {
     @Environment(\.appLanguage) private var language
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage("currencyCode", store: .tutar) private var preferredCurrency = ""
     let transaction: Transaction
-    let showsDate: Bool
-
-    init(transaction: Transaction, showsDate: Bool = false) {
-        self.transaction = transaction
-        self.showsDate = showsDate
-    }
 
     private var formattedAmount: String {
         AppFormat.money(
@@ -632,15 +764,28 @@ struct TransactionRow: View {
     }
 
     var body: some View {
-        HStack(spacing: 10) {
-            categoryIcon
-            details
-            Spacer(minLength: 4)
-            amountLabel
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                HStack(alignment: .top, spacing: 10) {
+                    categoryIcon
+                    VStack(alignment: .leading, spacing: 6) {
+                        details
+                        amountLabel
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                    }
+                }
+            } else {
+                HStack(spacing: 10) {
+                    categoryIcon
+                    details
+                    Spacer(minLength: 4)
+                    amountLabel
+                }
+            }
         }
-        .frame(minHeight: 48)
-        .accessibilityIdentifier("transactionRow")
+        .frame(minHeight: 56)
         .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("transactionRow")
     }
 
     private var categoryIcon: some View {
@@ -652,16 +797,26 @@ struct TransactionRow: View {
     }
 
     private var details: some View {
-        HStack(spacing: 6) {
-            Text(verbatim: rowTitle)
+        VStack(alignment: .leading, spacing: 2) {
+            Text(verbatim: primaryText)
                 .font(.body.weight(.medium))
                 .lineLimit(1)
                 .truncationMode(.tail)
                 .allowsTightening(true)
                 .accessibilityIdentifier("transactionTitle")
-            scheduleIndicator
+
+            HStack(spacing: 5) {
+                Text(verbatim: metadataText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .allowsTightening(true)
+                    .accessibilityIdentifier("transactionMetadata")
+                scheduleIndicator
+            }
+            .lineLimit(1)
         }
-        .lineLimit(1)
         .layoutPriority(1)
     }
 
@@ -703,13 +858,19 @@ struct TransactionRow: View {
             .accessibilityValue(Text(verbatim: text))
     }
 
-    private var rowTitle: String {
+    private var primaryText: String {
         let category = transaction.category?.displayName(language: language)
             ?? AppFormat.localized("category.uncategorized", language: language)
         let note = transaction.note?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        var parts = note.isEmpty ? [category] : [note, category]
-        if showsDate { parts.append(AppFormat.date(transaction.wrappedDate, language: language)) }
-        return parts.joined(separator: " · ")
+        return note.isEmpty ? category : note
+    }
+
+    private var metadataText: String {
+        let category = transaction.category?.displayName(language: language)
+            ?? AppFormat.localized("category.uncategorized", language: language)
+        let note = transaction.note?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let date = AppFormat.date(transaction.wrappedDate, language: language)
+        return note.isEmpty ? date : "\(category) · \(date)"
     }
 }
 

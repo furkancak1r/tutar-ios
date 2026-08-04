@@ -35,6 +35,7 @@
 "summary.expense" = "Spent";
 "summary.income" = "Income";
 "summary.net" = "Net";
+"summary.netTotal" = "Net total";
 "date.today" = "Today";
 "date.yesterday" = "Yesterday";
 

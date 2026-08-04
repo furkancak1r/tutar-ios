@@ -84,7 +84,7 @@ enum AppFormat {
     }
 
     static func date(_ date: Date, language: AppLanguage) -> String {
-        date.formatted(.dateTime.day().month(.abbreviated).year().locale(language.locale))
+        date.formatted(.dateTime.day().month(.abbreviated).locale(language.locale))
     }
 
     static func month(_ date: Date, language: AppLanguage) -> String {

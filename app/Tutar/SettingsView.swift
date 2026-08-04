@@ -58,18 +58,25 @@ struct SettingsView: View {
                     Text("settings.numberEntry.decimal").tag(2)
                 }
                 Toggle("settings.haptics", isOn: $haptics)
+                    .tint(Color(.systemGray))
+                    .accessibilityIdentifier("hapticsToggle")
                 Toggle("settings.suggestions", isOn: $showSuggestions)
+                    .tint(Color(.systemGray))
                 Toggle("settings.upcoming", isOn: $showUpcoming)
+                    .tint(Color(.systemGray))
             }
 
             Section {
                 NavigationLink {
                     CurrencyPickerView(selection: $currencyCode)
                 } label: {
-                    LabeledContent(
-                        "settings.currency",
-                        value: AppFormat.currencyCode(language: language, preferred: currencyCode)
-                    )
+                    HStack {
+                        Text("settings.currency")
+                        Spacer()
+                        Text(verbatim: AppFormat.currencyCode(language: language, preferred: currencyCode))
+                            .font(.body.monospaced())
+                            .foregroundStyle(.primary)
+                    }
                 }
                 .accessibilityIdentifier("currencyPicker")
             } header: {
@@ -87,8 +94,10 @@ struct SettingsView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                    .accessibilityIdentifier("biometricLockToggle")
+                .tint(Color(.systemGray))
+                .accessibilityIdentifier("biometricLockToggle")
                 Toggle("settings.icloud", isOn: $iCloudSync)
+                    .tint(Color(.systemGray))
                     .accessibilityIdentifier("icloudToggle")
             } header: {
                 Text("settings.privacy.section")
@@ -124,6 +133,7 @@ struct SettingsView: View {
 
             Section("settings.reminder.section") {
                 Toggle("settings.reminder", isOn: $dailyReminder)
+                    .tint(Color(.systemGray))
                     .onChange(of: dailyReminder) { _, enabled in
                         Task { await updateReminder(enabled: enabled) }
                     }
@@ -169,6 +179,7 @@ struct SettingsView: View {
                 Text("settings.erase.footer")
             }
         }
+        .headerProminence(.increased)
         .navigationTitle("settings.title")
         .navigationBarTitleDisplayMode(.inline)
         .frame(maxWidth: 760)

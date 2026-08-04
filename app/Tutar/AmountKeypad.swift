@@ -1,7 +1,6 @@
 // Copyright © 2026 Furkan Çakır. Licensed under GPLv3.
 
 import SwiftUI
-import UIKit
 
 struct MoneyEntry: Equatable {
     enum Mode: Int {
@@ -96,6 +95,7 @@ struct AmountKeypad: View {
 
     @Environment(\.appLanguage) private var language
     @AppStorage("haptics", store: .tutar) private var haptics = true
+    @State private var hapticTrigger = 0
 
     private let rows = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
 
@@ -144,6 +144,9 @@ struct AmountKeypad: View {
         }
         .frame(maxWidth: .infinity)
         .background(Color(.systemBackground))
+        .sensoryFeedback(.impact(weight: .light, intensity: 0.8), trigger: hapticTrigger) { _, _ in
+            haptics
+        }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("amountKeypad")
     }
@@ -166,7 +169,7 @@ struct AmountKeypad: View {
         action: @escaping () -> Void
     ) -> some View {
         Button {
-            if haptics { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
+            hapticTrigger &+= 1
             action()
         } label: {
             Group {

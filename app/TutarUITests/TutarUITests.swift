@@ -71,10 +71,10 @@ final class TutarUITests: XCTestCase {
                 seed: false,
                 appearance: appearance
             )
-            XCTAssertTrue(app.buttons["emptyTransactionAddButton"].waitForExistence(timeout: 8))
+            XCTAssertTrue(app.buttons["addTransactionButton"].waitForExistence(timeout: 8))
             try app.performAccessibilityAudit(for: [.contrast]) { self.contrastFalsePositive($0) }
 
-            app.buttons["emptyTransactionAddButton"].tap()
+            app.buttons["addTransactionButton"].tap()
             XCTAssertTrue(app.buttons["keypadSubmit"].waitForExistence(timeout: 5))
             try app.performAccessibilityAudit(for: [.contrast]) { self.contrastFalsePositive($0) }
             app.terminate()
@@ -122,7 +122,7 @@ final class TutarUITests: XCTestCase {
 
         try app.performAccessibilityAudit(for: [.dynamicType]) { issue in
             // ponytail: iOS 26.2–26.5 misreports semantic SwiftUI text; compare real sizes below.
-            let falsePositives = ["transactionCategoryIcon", "transactionTitle", "transactionRow"]
+            let falsePositives = ["transactionCategoryIcon", "transactionTitle", "transactionMetadata", "transactionRow"]
             return issue.element == nil || falsePositives.contains(issue.element?.identifier ?? "")
         }
 
@@ -131,9 +131,62 @@ final class TutarUITests: XCTestCase {
         XCTAssertTrue(largeApp.navigationBars["Kayıtlar"].waitForExistence(timeout: 8))
         largeApp.swipeUp()
         let largeRow = largeApp.descendants(matching: .any).matching(identifier: "transactionRow").firstMatch
+        let largeTitle = largeApp.descendants(matching: .any).matching(identifier: "transactionTitle").firstMatch
+        let largeMetadata = largeApp.descendants(matching: .any).matching(identifier: "transactionMetadata").firstMatch
+        let largeAmount = largeApp.descendants(matching: .any).matching(identifier: "transactionAmount").firstMatch
         XCTAssertTrue(largeRow.waitForExistence(timeout: 8))
+        XCTAssertTrue(largeTitle.waitForExistence(timeout: 5))
+        XCTAssertTrue(largeMetadata.waitForExistence(timeout: 5))
+        XCTAssertTrue(largeAmount.waitForExistence(timeout: 5))
         XCTAssertGreaterThan(largeRow.frame.height, standardRowHeight)
-        XCTAssertLessThan(largeRow.frame.height, 70, "Transaction row wrapped instead of staying on one line")
+        XCTAssertGreaterThanOrEqual(largeTitle.frame.minY, largeRow.frame.minY)
+        XCTAssertLessThanOrEqual(largeTitle.frame.maxY, largeMetadata.frame.minY + 2)
+        XCTAssertLessThanOrEqual(largeMetadata.frame.maxY, largeAmount.frame.minY + 2)
+        XCTAssertLessThanOrEqual(largeAmount.frame.maxY, largeRow.frame.maxY)
+        attachScreenshot("04-records-largest-text", in: largeApp)
+    }
+
+    @MainActor
+    func testDarkRecordsAndSettingsUseReadableTwoLineLayout() throws {
+        let app = launch(language: "tr", locale: "tr_TR", appearance: "Dark")
+        XCTAssertTrue(app.navigationBars["Kayıtlar"].waitForExistence(timeout: 8))
+
+        let add = app.buttons["addTransactionButton"]
+        let window = app.windows.firstMatch
+        XCTAssertTrue(add.waitForExistence(timeout: 5))
+        XCTAssertGreaterThan(add.frame.midX, window.frame.midX)
+        XCTAssertGreaterThan(add.frame.midY, window.frame.midY)
+
+        let netAmount = app.staticTexts["monthNetAmount"]
+        let expenseAmount = app.descendants(matching: .any).matching(identifier: "monthExpenseAmount").firstMatch
+        let incomeAmount = app.descendants(matching: .any).matching(identifier: "monthIncomeAmount").firstMatch
+        XCTAssertTrue(netAmount.waitForExistence(timeout: 5))
+        XCTAssertTrue(expenseAmount.exists)
+        XCTAssertTrue(incomeAmount.exists)
+        XCTAssertGreaterThan(netAmount.frame.height, expenseAmount.frame.height)
+
+        let row = app.descendants(matching: .any).matching(identifier: "transactionRow").firstMatch
+        let title = app.descendants(matching: .any).matching(identifier: "transactionTitle").firstMatch
+        let metadata = app.descendants(matching: .any).matching(identifier: "transactionMetadata").firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        XCTAssertTrue(metadata.waitForExistence(timeout: 5))
+        XCTAssertLessThan(title.frame.midY, metadata.frame.midY)
+        XCTAssertFalse(metadata.label.contains("2026"))
+        attachScreenshot("01-records-dark", in: app)
+
+        row.swipeLeft()
+        XCTAssertTrue(app.buttons["Düzenle"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons["Sil"].exists)
+        attachScreenshot("02-record-actions-dark", in: app)
+        try app.performAccessibilityAudit(for: [.contrast]) { self.contrastFalsePositive($0) }
+
+        openTab("Ayarlar", in: app)
+        XCTAssertTrue(app.navigationBars["Ayarlar"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.switches.matching(identifier: "hapticsToggle").firstMatch.exists)
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "currencyPicker").firstMatch.exists)
+        attachScreenshot("03-settings-dark", in: app)
+        try app.performAccessibilityAudit(for: [.contrast]) { self.contrastFalsePositive($0) }
     }
 
     @MainActor
@@ -293,6 +346,13 @@ final class TutarUITests: XCTestCase {
             .firstMatch
         XCTAssertTrue(tab.waitForExistence(timeout: 5))
         tab.tap()
+    }
+
+    private func attachScreenshot(_ name: String, in app: XCUIApplication) {
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
     }
 
     private func contrastFalsePositive(_ issue: XCUIAccessibilityAuditIssue) -> Bool {

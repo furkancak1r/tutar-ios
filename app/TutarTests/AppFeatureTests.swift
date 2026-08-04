@@ -34,6 +34,29 @@ final class AppFormatTests: XCTestCase {
         XCTAssertGreaterThan(AppFormat.currencyCodes.count, 100)
         XCTAssertTrue(["TRY", "USD", "EUR", "JPY"].allSatisfy(AppFormat.currencyCodes.contains))
     }
+
+    func testNetTotalLabelIsLocalized() {
+        XCTAssertEqual(AppFormat.localized("summary.netTotal", language: .turkish), "Net toplam")
+        XCTAssertEqual(AppFormat.localized("summary.netTotal", language: .english), "Net total")
+    }
+
+    func testTransactionDateUsesDayAndAbbreviatedMonthWithoutYear() throws {
+        var components = DateComponents()
+        components.calendar = Calendar(identifier: .gregorian)
+        components.timeZone = TimeZone(secondsFromGMT: 0)
+        components.year = 2026
+        components.month = 8
+        components.day = 6
+        let date = try XCTUnwrap(components.date)
+
+        let turkish = AppFormat.date(date, language: .turkish)
+        let english = AppFormat.date(date, language: .english)
+        XCTAssertTrue(turkish.contains("6"))
+        XCTAssertTrue(turkish.localizedCaseInsensitiveContains("Ağu"))
+        XCTAssertFalse(turkish.contains("2026"))
+        XCTAssertTrue(english.contains("6"))
+        XCTAssertFalse(english.contains("2026"))
+    }
 }
 
 @MainActor
@@ -65,13 +88,28 @@ final class AppLockControllerTests: XCTestCase {
         await waitUntil { controller.state == .unlocked }
     }
 
-    func testResultWhileInactiveIsAppliedOnceWhenActive() async {
+    func testSuccessWhileInactiveUnlocksBeforeActive() async {
         let probe = AuthenticationProbe()
         let controller = makeController(probe)
         controller.start(enabled: true, reason: "Test", scenePhase: .active)
         await waitUntil { probe.callCount == 1 }
 
         controller.scenePhaseChanged(to: .inactive, lockEnabled: true, reason: "Test")
+        probe.complete(true)
+        await waitUntil { controller.state == .unlocked }
+
+        controller.scenePhaseChanged(to: .active, lockEnabled: true, reason: "Test")
+        XCTAssertEqual(controller.state, .unlocked)
+        XCTAssertEqual(probe.callCount, 1)
+    }
+
+    func testSuccessWhileBackgroundWaitsUntilActive() async {
+        let probe = AuthenticationProbe()
+        let controller = makeController(probe)
+        controller.start(enabled: true, reason: "Test", scenePhase: .active)
+        await waitUntil { probe.callCount == 1 }
+
+        controller.scenePhaseChanged(to: .background, lockEnabled: true, reason: "Test")
         probe.complete(true)
         await Task.yield()
         XCTAssertEqual(controller.state, .authenticating)

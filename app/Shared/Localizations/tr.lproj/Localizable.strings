@@ -35,6 +35,7 @@
 "summary.expense" = "Harcama";
 "summary.income" = "Gelir";
 "summary.net" = "Net";
+"summary.netTotal" = "Net toplam";
 "date.today" = "Bugün";
 "date.yesterday" = "Dün";
 
