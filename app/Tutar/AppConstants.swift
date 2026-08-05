@@ -147,3 +147,15 @@ extension Color {
         )
     }
 }
+
+extension View {
+    func tutarDeleteSwipeAction(_ delete: @escaping () -> Void) -> some View {
+        swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button(role: .destructive, action: delete) {
+                Label("action.delete", systemImage: "trash")
+                    .foregroundStyle(.white)
+            }
+            .tint(.red)
+        }
+    }
+}

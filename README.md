@@ -48,6 +48,18 @@ xcodebuild test -project Tutar.xcodeproj -scheme Tutar \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' CODE_SIGNING_ALLOWED=NO
 ```
 
+### Zorunlu UI renk kuralları
+
+- `AccentColor` yalnız ön plan/navigation vurgusudur; düğme, swipe action veya başka bir etkileşimli dolgu olamaz.
+- Düzenleme satıra dokunarak yapılır; tüm silme swipe eylemleri açık ve koyu modda denetlenen `tutarDeleteSwipeAction` üzerinden geçer. Doğrudan `.swipeActions` kullanımı yasaktır.
+- Sabit siyah/beyaz kontrol dolguları ve `.borderedProminent` yasaktır. Dinamik sistem renkleri kullanılmalı; yeni kontroller açık/koyu kontrast UI testinden geçmelidir.
+
+Bu kurallar her push ve pull request'te çalışır. Yerelde aynı kontrol:
+
+```sh
+sh scripts/check-ui-colors.sh
+```
+
 Kendi cihazınızda çalıştırmak için bundle ID, App Group, iCloud container ve geliştirme takımını kendi Apple Developer hesabınızla değiştirin.
 
 CloudKit development şemasını oluşturmak için Debug çalıştırmasına `-initialize-cloudkit-schema` argümanını bir kez ekleyin; TestFlight veya App Store dağıtımından önce CloudKit Console’daki şema değişikliklerini production’a dağıtın.

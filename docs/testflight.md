@@ -1,23 +1,23 @@
-# Tutar 1.0 (13) — TestFlight metadata
+# Tutar 1.0 (14) — TestFlight metadata
 
 ## Beta Description — Turkish
 
 Tutar; gelir, gider, bütçe, tekrar ve taksitleri takip etmek için tamamen ücretsiz, reklamsız ve açık kaynak bir iOS uygulamasıdır. Otomatik kuruşlu numaratör hızlı veri girişi sağlar. Taksitler ayrı bir sekme yerine işlemdeki Plan alanından, Tek sefer ve Tekrar seçeneklerinin yanında ayarlanır. Bağlı işlemler toplamı tam korur, 1/3 gibi sıra bilgisini gösterir ve tek taksit ya da bu ve sonrasını düzenleme/silme seçenekleri sunar. Dime/Tutar CSV içe aktarma, CSV dışa aktarma, tam JSON yedekleme, yerel saklama ve isteğe bağlı özel iCloud eşzamanlaması bulunur.
 
-Tutar, Rafael Soh ve katkıda bulunanların oluşturduğu Dime temel alınarak değiştirilmiş GPLv3 çalışmasıdır. Değişiklik tarihi: 4 Ağustos 2026. Tam kaynak: https://github.com/furkancak1r/tutar-ios
+Tutar, Rafael Soh ve katkıda bulunanların oluşturduğu Dime temel alınarak değiştirilmiş GPLv3 çalışmasıdır. Bu buildin değişiklik tarihi: 5 Ağustos 2026. Tam kaynak: https://github.com/furkancak1r/tutar-ios
 
 ## What to Test — Turkish
 
-Build 13, Kategoriler ekranını Gider ve Gelir olarak iki sade görünüme ayırır. Konut, eğitim, seyahat, sigorta, serbest çalışma, prim, yatırım ve diğer yaygın öneriler tek dokunuşla kullanıcının listesine eklenir; eklenen sistem kategorileri Türkçe/English arasında doğru adla değişir. Mevcut özel kategoriler ve veriler korunur. Gradient veya yeni tasarım bağımlılığı eklenmedi.
+Build 14, açık ve koyu modda swipe eylemlerinin renk/etiket kontrastını düzeltir. Düzenleme satıra dokunarak yapılır; sola kaydırmada yalnız okunaklı kırmızı Sil eylemi gösterilir. Aynı hata sınıfının geri dönmesini önlemek için Kayıtlar, Kategoriler ve Bütçeler tek ortak swipe bileşenine bağlandı; doğrudan swipe kullanımı, etkileşimli dolgularda AccentColor, sabit siyah/beyaz dolgular ve `.borderedProminent` CI kuralıyla engellendi. Yeni bağımlılık veya gradient eklenmedi.
 
 1. Ayarlar → Kategoriler ekranında Gider/Gelir seçiminin listeleri doğru ayırdığını doğrulayın.
 2. Önerilenler bölümünden Konut ve Serbest Çalışma kategorilerini ekleyin; tek dokunuşla Kategorilerin bölümüne taşındıklarını ve önerilerden kaybolduklarını doğrulayın.
 3. Uygulama dilini Türkçe ve English arasında değiştirin; öneriden eklenen kategori adlarının çevrildiğini doğrulayın.
-4. Kategori ekranını açık/koyu modda, büyük metinde, VoiceOver ile ve iPhone/iPad üzerinde kontrol edin.
+4. Kategori ekranını açık/koyu modda, büyük metinde, VoiceOver ile ve iPhone/iPad üzerinde kontrol edin; satıra dokunmanın düzenleyiciyi açtığını doğrulayın.
 5. Kayıtlar ekranında net toplamın birincil odak olduğunu; seçili ay rozetinin, monokrom eğilim çizgisinin ve ikincil harcama/gelir değerlerinin açık ve koyu modda okunabildiğini doğrulayın.
 6. Yeni kayıt düğmesinin sağ altta, sekme çubuğunun üstünde ve kolay erişilebilir kaldığını doğrulayın.
 7. İşlem satırında notun üstte; kategori, kısa gün/ay tarihi ve taksit sırasının altta; tutarın sağda okunaklı göründüğünü kontrol edin. Tarihte yıl görünmemeli.
-8. Bir satırı sola kaydırın; Düzenle ve Sil eylemlerinin koyu modda belirgin ve okunaklı olduğunu doğrulayın.
+8. Kayıt, kategori ve bütçe satırlarını sola kaydırın; yalnız kırmızı Sil eyleminin hem açık hem koyu modda belirgin ve okunaklı olduğunu doğrulayın.
 9. Ay özetini sağa/sola kaydırın; özet verilerinin ve çizginin seçilen aya güncellendiğini, animasyonlu geçişi ve dört sekmenin görünür kaldığını kontrol edin.
 10. Ayarlar ekranını koyu modda inceleyin; başlıkların, seçimlerin, anahtarların ve para birimi kodunun okunaklı olduğunu doğrulayın.
 11. İşlem editöründe Tuş titreşimi açıkken rakam ve silme tuşlarına basın; her dokunuşta hafif dokunsal geri bildirim gelmeli.
@@ -33,20 +33,20 @@ Build 13, Kategoriler ekranını Gider ve Gelir olarak iki sade görünüme ayı
 
 Tutar is a completely free, ad-free, open-source iOS app for tracking income, expenses, budgets, repeats, and installments. Its automatic-cents keypad makes entry fast. Installments live in the transaction Schedule field beside One time and Repeat, rather than in a separate tab. Linked entries preserve the exact total, show positions such as 1/3, and support editing or deleting one installment or the selected installment and all following ones. Dime/Tutar CSV import, CSV export, complete JSON backup, local storage, and optional private iCloud sync are included.
 
-Tutar is a GPLv3 modified work based on Dime, originally created by Rafael Soh and contributors. Modification date: 4 August 2026. Complete source: https://github.com/furkancak1r/tutar-ios
+Tutar is a GPLv3 modified work based on Dime, originally created by Rafael Soh and contributors. This build was modified on 5 August 2026. Complete source: https://github.com/furkancak1r/tutar-ios
 
 ## What to Test — English
 
-Build 13 separates Categories into two focused Expense and Income views. Common suggestions including Housing, Education, Travel, Insurance, Freelance, Bonus, Investment, and more can be added to the user's list with one tap; added system categories keep the correct name when switching between Turkish and English. Existing custom categories and data remain intact. No gradient or new design dependency was added.
+Build 14 fixes swipe-action colour and label contrast in both light and dark appearance. Editing remains available by tapping a row; swiping left now shows only a readable red Delete action. Records, Categories, and Budgets share one audited swipe component, while CI rejects direct swipe implementations, AccentColor interaction fills, fixed black/white fills, and `.borderedProminent`. No dependency or gradient was added.
 
 1. In Settings → Categories, confirm the Expense/Income control separates the lists correctly.
 2. Add Housing and Freelance from Suggested; confirm each moves into Your categories with one tap and disappears from Suggested.
 3. Switch the app between Turkish and English; confirm suggested categories that were added change to the correct localized name.
-4. Check Categories in light/dark appearance, large text, VoiceOver, and iPhone/iPad layouts.
+4. Check Categories in light/dark appearance, large text, VoiceOver, and iPhone/iPad layouts; confirm tapping a row opens its editor.
 5. Confirm net total is the primary focus and that the selected-month pill, monochrome trend, and secondary spent/income values remain readable in light and dark appearance.
 6. Confirm the add button stays at the bottom-right above the tab bar and remains easy to reach.
 7. In each record, verify the note is on top; category, abbreviated day/month date, and installment position are below; and the amount is readable on the right. The date must not include a year.
-8. Swipe a record left and confirm Edit and Delete remain distinct and readable in dark mode.
+8. Swipe record, category, and budget rows left; confirm the single red Delete action is distinct and readable in both light and dark appearance.
 9. Swipe the month summary left and right; confirm the values and trend update for the selected month, the transition animates, and all four tabs remain visible.
 10. Inspect Settings in dark mode and confirm headings, picker values, switches, and the currency code are readable.
 11. With Key haptics enabled, press number and delete keys in the editor; each tap should produce light haptic feedback.

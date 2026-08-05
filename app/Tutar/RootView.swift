@@ -525,16 +525,7 @@ struct TransactionsView: View {
         TransactionRow(transaction: transaction)
             .contentShape(Rectangle())
             .onTapGesture { editing = transaction }
-            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                Button(role: .destructive) { deleting = transaction } label: {
-                    Label("action.delete", systemImage: "trash")
-                }
-                .tint(.red)
-                Button { editing = transaction } label: {
-                    Label("action.edit", systemImage: "pencil")
-                }
-                .tint(Color(white: 0.22))
-            }
+            .tutarDeleteSwipeAction { deleting = transaction }
             .accessibilityAction(named: Text("action.edit")) { editing = transaction }
             .accessibilityAction(named: Text("action.delete")) { deleting = transaction }
     }

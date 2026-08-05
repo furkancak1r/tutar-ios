@@ -175,9 +175,13 @@ final class TutarUITests: XCTestCase {
         XCTAssertFalse(metadata.label.contains("2026"))
         attachScreenshot("01-records-dark", in: app)
 
+        row.tap()
+        XCTAssertTrue(app.textFields["noteField"].waitForExistence(timeout: 5))
+        app.buttons["Vazgeç"].tap()
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
         row.swipeLeft()
-        XCTAssertTrue(app.buttons["Düzenle"].waitForExistence(timeout: 3))
-        XCTAssertTrue(app.buttons["Sil"].exists)
+        XCTAssertTrue(app.buttons["Sil"].waitForExistence(timeout: 3))
+        XCTAssertFalse(app.buttons["Düzenle"].exists)
         attachScreenshot("02-record-actions-dark", in: app)
         try app.performAccessibilityAudit(for: [.contrast]) { self.contrastFalsePositive($0) }
 
@@ -307,6 +311,42 @@ final class TutarUITests: XCTestCase {
         XCTAssertEqual(housingTurkish.label, "Konut kategorisini ekle")
         XCTAssertTrue(turkish.buttons["Gelir"].exists)
         attachScreenshot("07-categories-expense-turkish", in: turkish)
+    }
+
+    @MainActor
+    func testCategoryDeleteActionPassesContrastInLightAndDark() throws {
+        for (language, locale, appearance, settings, categories, delete, edit) in [
+            ("en", "en_US", "Light", "Settings", "Categories", "Delete", "Edit"),
+            ("tr", "tr_TR", "Dark", "Ayarlar", "Kategoriler", "Sil", "Düzenle")
+        ] {
+            let app = launch(language: language, locale: locale, seed: false, appearance: appearance)
+            openTab(settings, in: app)
+            for _ in 0 ..< 4 where !app.buttons[categories].exists { app.swipeUp() }
+            app.buttons[categories].tap()
+
+            let row = app.descendants(matching: .any)
+                .matching(identifier: "categoryRow-category.market").firstMatch
+            XCTAssertTrue(row.waitForExistence(timeout: 5))
+            let window = app.windows.firstMatch
+            let rowY = row.frame.midY / window.frame.height
+            window.coordinate(withNormalizedOffset: CGVector(dx: 0.88, dy: rowY))
+                .press(
+                    forDuration: 0.1,
+                    thenDragTo: window.coordinate(withNormalizedOffset: CGVector(dx: 0.22, dy: rowY))
+                )
+            XCTAssertTrue(app.buttons[delete].waitForExistence(timeout: 3))
+            XCTAssertFalse(app.buttons[edit].exists)
+            Thread.sleep(forTimeInterval: 0.5)
+            attachScreenshot("category-delete-\(appearance.lowercased())", in: app)
+
+            try app.performAccessibilityAudit(for: [.contrast]) { issue in
+                let label = issue.element?.label ?? ""
+                return issue.element == nil
+                    || (issue.element?.elementType == .staticText
+                        && label != delete)
+            }
+            app.terminate()
+        }
     }
 
     @MainActor

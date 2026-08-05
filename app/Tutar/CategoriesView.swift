@@ -148,16 +148,8 @@ struct CategoriesView: View {
                 }
                 .contentShape(Rectangle())
                 .onTapGesture { editing = category }
+                .tutarDeleteSwipeAction { deleting = category }
                 .accessibilityIdentifier("categoryRow-\(category.systemKey ?? category.objectID.uriRepresentation().absoluteString)")
-                .swipeActions {
-                    Button(role: .destructive) { deleting = category } label: {
-                        Label("action.delete", systemImage: "trash")
-                    }
-                    Button { editing = category } label: {
-                        Label("action.edit", systemImage: "pencil")
-                    }
-                    .tint(.accentColor)
-                }
             }
             .onMove { source, destination in
                 var reordered = items

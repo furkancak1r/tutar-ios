@@ -69,15 +69,7 @@ struct BudgetsView: View {
                     )
                     .contentShape(Rectangle())
                     .onTapGesture { editorTarget = .overall(overall) }
-                    .swipeActions {
-                        Button(role: .destructive) { deleting = .overall(overall) } label: {
-                            Label("action.delete", systemImage: "trash")
-                        }
-                        Button { editorTarget = .overall(overall) } label: {
-                            Label("action.edit", systemImage: "pencil")
-                        }
-                        .tint(.accentColor)
-                    }
+                    .tutarDeleteSwipeAction { deleting = .overall(overall) }
                 }
             }
 
@@ -95,15 +87,7 @@ struct BudgetsView: View {
                         )
                         .contentShape(Rectangle())
                         .onTapGesture { editorTarget = .category(budget) }
-                        .swipeActions {
-                            Button(role: .destructive) { deleting = .category(budget) } label: {
-                                Label("action.delete", systemImage: "trash")
-                            }
-                            Button { editorTarget = .category(budget) } label: {
-                                Label("action.edit", systemImage: "pencil")
-                            }
-                            .tint(.accentColor)
-                        }
+                        .tutarDeleteSwipeAction { deleting = .category(budget) }
                     }
                 }
             }
