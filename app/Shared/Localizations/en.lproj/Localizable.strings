@@ -198,6 +198,9 @@
 "budgets.progress" = "Budget progress";
 "budgets.spent.label" = "Spent";
 "budgets.remaining" = "Remaining";
+"budgets.target" = "Target";
+"budgets.explanation" = "Budgets do not create transactions. Enter salary and other income only as income records. Overall budgets compare all expenses with a target; category budgets compare only that expense category. Income never consumes a budget.";
+"budgets.editorHint" = "A budget is a comparison target; it does not add income or expense records.";
 "budgets.new.title" = "New budget";
 "budgets.edit.title" = "Edit budget";
 "budgets.delete.title" = "Delete budget?";
@@ -223,6 +226,7 @@
 "categories.details.section" = "Details";
 "categories.name" = "Name";
 "categories.emoji" = "Symbol or emoji";
+"categories.type.lockedHint" = "The type cannot be changed later because existing transactions and budget relationships must be preserved.";
 "categories.new.title" = "New category";
 "categories.edit.title" = "Edit category";
 "categories.delete.title" = "Delete category?";
@@ -232,6 +236,18 @@
 "categories.error.duplicate" = "A category with that name already exists.";
 "categories.error.duplicateEmoji" = "This emoji is already used by another category.";
 "categories.error.add" = "The category could not be added.";
+
+"transactions.filter.title" = "Filter records";
+"transactions.filter.all" = "All records";
+"transactions.filter.expense" = "Expenses";
+"transactions.filter.income" = "Income";
+"transactions.filter.category" = "By category";
+"transactions.filter.uncategorized" = "Uncategorized";
+"transactions.filter.recurring" = "Recurring";
+"transactions.filter.installments" = "Installments";
+"transactions.filter.upcoming" = "Upcoming";
+"transactions.filter.empty" = "No records match this filter.";
+"transactions.filter.clear" = "Clear filter";
 
 "notification.title" = "A quick Tutar check-in";
 "notification.body" = "Record today’s spending while it is still fresh.";

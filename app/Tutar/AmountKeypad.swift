@@ -125,21 +125,11 @@ struct AmountKeypad: View {
 
                     digitButton(0)
 
-                    keypadButton(systemImage: "delete.left", identifier: "keypadDelete") {
-                        entry.deleteLast()
+                    keypadButton(systemImage: "arrow.right", identifier: "keypadSubmit", prominent: true) {
+                        submit()
                     }
-                    .accessibilityLabel(Text("keypad.delete"))
+                    .accessibilityLabel(Text("action.save"))
                 }
-
-                Button(action: submit) {
-                    Label("action.save", systemImage: "checkmark")
-                        .font(.body.weight(.semibold))
-                        .frame(maxWidth: .infinity, minHeight: 48)
-                        .foregroundStyle(Color(.systemBackground))
-                        .background(Color.primary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("keypadSubmit")
             }
             .frame(maxWidth: 620)
             .padding(.horizontal, 16)
@@ -169,6 +159,7 @@ struct AmountKeypad: View {
         title: String? = nil,
         systemImage: String? = nil,
         identifier: String,
+        prominent: Bool = false,
         action: @escaping () -> Void
     ) -> some View {
         Button {
@@ -185,10 +176,31 @@ struct AmountKeypad: View {
                 }
             }
             .frame(maxWidth: .infinity, minHeight: 48)
-            .foregroundStyle(.primary)
-            .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .foregroundStyle(prominent ? Color(.systemBackground) : .primary)
+            .background(prominent ? Color.primary : Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier(identifier)
+    }
+}
+
+struct AmountDeleteButton: View {
+    @Binding var entry: MoneyEntry
+    @AppStorage("haptics", store: .tutar) private var haptics = true
+    @State private var hapticTrigger = 0
+
+    var body: some View {
+        Button {
+            hapticTrigger &+= 1
+            entry.deleteLast()
+        } label: {
+            Image(systemName: "delete.left")
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text("keypad.delete"))
+        .accessibilityIdentifier("amountDeleteButton")
+        .sensoryFeedback(.impact(weight: .light, intensity: 0.8), trigger: hapticTrigger) { _, _ in haptics }
     }
 }

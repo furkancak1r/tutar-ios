@@ -46,6 +46,7 @@ struct BudgetsView: View {
 
     @EnvironmentObject private var dataController: DataController
     @Environment(\.appLanguage) private var language
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage("currencyCode", store: .tutar) private var preferredCurrency = ""
     @State private var editorTarget: BudgetEditorTarget?
     @State private var deleting: BudgetDeletion?
@@ -57,6 +58,14 @@ struct BudgetsView: View {
 
     var body: some View {
         List {
+            Section {
+                Label("budgets.explanation", systemImage: "info.circle")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .listRowSeparator(.hidden)
+                    .accessibilityIdentifier("budgetExplanation")
+            }
+
             if let overall = overallBudgets.first {
                 Section("budgets.overall.section") {
                     row(
@@ -184,43 +193,60 @@ struct BudgetsView: View {
         type: Int
     ) -> some View {
         let progress = amount > 0 ? spent / amount : 0
-        return VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
+        let details = VStack(alignment: .leading, spacing: 5) {
+            HStack(spacing: 6) {
                 Text(verbatim: emoji)
-                    .font(.title3)
+                    .font(.body)
                     .accessibilityHidden(true)
                 Text(verbatim: title)
-                    .font(.headline)
+                    .font(.subheadline.weight(.semibold))
                     .lineLimit(1)
                 Text(budgetPeriodLabel(type))
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Spacer()
-                Text(AppFormat.money(amount, language: language, currencyCode: currency))
-                    .font(.subheadline.monospacedDigit().weight(.semibold))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
             }
-
-            ProgressView(value: min(max(progress, 0), 1))
-                .tint(progress > 1 ? .red : .primary)
-                .accessibilityLabel(Text("budgets.progress"))
-                .accessibilityValue(Text(verbatim: "\(Int((progress * 100).rounded()))%"))
-
-            HStack(spacing: 8) {
-                Text(verbatim: "\(AppFormat.localized("budgets.spent.label", language: language)) \(AppFormat.money(spent, language: language, currencyCode: currency))")
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-                Spacer()
-                Text(verbatim: "\(AppFormat.localized("budgets.remaining", language: language)) \(AppFormat.money(amount - spent, language: language, currencyCode: currency))")
-                    .foregroundStyle(spent > amount ? .red : .secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-            }
-            .font(.caption)
+            Text(verbatim: "\(AppFormat.localized("budgets.target", language: language)) \(AppFormat.money(amount, language: language, currencyCode: currency))")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text(verbatim: "\(AppFormat.localized("budgets.spent.label", language: language)) \(AppFormat.money(spent, language: language, currencyCode: currency))")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text(verbatim: "\(AppFormat.localized("budgets.remaining", language: language)) \(AppFormat.money(amount - spent, language: language, currencyCode: currency))")
+                .font(.caption)
+                .foregroundStyle(spent > amount ? .red : .secondary)
         }
-        .padding(.vertical, 4)
+
+        let gauge = Gauge(value: min(max(progress, 0), 1), in: 0 ... 1) {
+            Text("budgets.progress")
+        } currentValueLabel: {
+            Text(verbatim: "\(Int((progress * 100).rounded()))%")
+                .font(.caption2.monospacedDigit().weight(.semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.4)
+                .frame(width: 48)
+        }
+        .gaugeStyle(.accessoryCircularCapacity)
+        .tint(progress > 1 ? .red : .primary)
+        .frame(width: 64, height: 64)
+        .accessibilityLabel(Text("budgets.progress"))
+        .accessibilityValue(Text(verbatim: "\(Int((progress * 100).rounded()))%"))
+        .accessibilityIdentifier("budgetGauge")
+
+        return Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 10) {
+                    details
+                    gauge.frame(maxWidth: .infinity, alignment: .leading)
+                }
+            } else {
+                HStack(spacing: 14) {
+                    details
+                    Spacer(minLength: 8)
+                    gauge
+                }
+            }
+        }
+        .padding(.vertical, 5)
         .accessibilityElement(children: .contain)
     }
 
@@ -313,16 +339,24 @@ private struct BudgetEditorView: View {
                                 Text("budgets.category").tag(BudgetKind.category)
                             }
                             .pickerStyle(.segmented)
+
+                            Label("budgets.editorHint", systemImage: "info.circle")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
 
-                        Text(amountText)
-                            .font(.largeTitle.weight(.semibold).monospacedDigit())
-                            .minimumScaleFactor(0.45)
-                            .lineLimit(1)
-                            .frame(maxWidth: .infinity)
-                            .accessibilityLabel(Text("editor.amount"))
-                            .accessibilityValue(Text(verbatim: amountText))
-                            .accessibilityIdentifier("budgetAmountDisplay")
+                        HStack(spacing: 8) {
+                            Text(amountText)
+                                .font(.largeTitle.weight(.semibold).monospacedDigit())
+                                .minimumScaleFactor(0.45)
+                                .lineLimit(1)
+                                .frame(maxWidth: .infinity)
+                                .accessibilityLabel(Text("editor.amount"))
+                                .accessibilityValue(Text(verbatim: amountText))
+                                .accessibilityIdentifier("budgetAmountDisplay")
+                            AmountDeleteButton(entry: $amountEntry)
+                        }
 
                         VStack(spacing: 0) {
                             if kind == .category {
@@ -353,8 +387,7 @@ private struct BudgetEditorView: View {
                             Divider()
 
                             LabeledContent("budgets.startDate") {
-                                DatePicker("budgets.startDate", selection: $startDate, displayedComponents: .date)
-                                    .labelsHidden()
+                                AutoDismissDatePicker(selection: $startDate, title: "budgets.startDate", identifier: "budgetDatePicker")
                             }
                             .padding(.vertical, 10)
                         }

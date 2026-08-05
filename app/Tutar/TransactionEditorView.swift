@@ -103,7 +103,7 @@ struct TransactionEditorView: View {
                                 .accessibilityLabel(Text("editor.amount"))
                                 .accessibilityValue(Text(verbatim: amountText))
                                 .accessibilityIdentifier("amountDisplay")
-
+                            AmountDeleteButton(entry: $amountEntry)
                         }
                         .padding(.vertical, 8)
 
@@ -175,13 +175,7 @@ struct TransactionEditorView: View {
                             Divider()
 
                             LabeledContent("editor.date") {
-                                DatePicker(
-                                    "editor.date",
-                                    selection: $date,
-                                    displayedComponents: .date
-                                )
-                                .labelsHidden()
-                                .accessibilityIdentifier("datePicker")
+                                AutoDismissDatePicker(selection: $date, title: "editor.date", identifier: "datePicker")
                             }
                             .padding(.vertical, 10)
 

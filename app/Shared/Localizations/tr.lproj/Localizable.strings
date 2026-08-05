@@ -198,6 +198,9 @@
 "budgets.progress" = "Bütçe ilerlemesi";
 "budgets.spent.label" = "Harcanan";
 "budgets.remaining" = "Kalan";
+"budgets.target" = "Hedef";
+"budgets.explanation" = "Bütçeler işlem oluşturmaz. Maaş ve diğer gelirleri yalnız gelir kaydı olarak gir. Genel bütçe tüm giderleri, kategori bütçesi yalnız bağlı gider kategorisini hedefle karşılaştırır. Gelirler bütçeyi tüketmez.";
+"budgets.editorHint" = "Bütçe yalnız bir karşılaştırma hedefidir; gelir veya gider kaydı oluşturmaz.";
 "budgets.new.title" = "Yeni bütçe";
 "budgets.edit.title" = "Bütçeyi düzenle";
 "budgets.delete.title" = "Bütçe silinsin mi?";
@@ -223,6 +226,7 @@
 "categories.details.section" = "Ayrıntılar";
 "categories.name" = "Ad";
 "categories.emoji" = "Simge veya emoji";
+"categories.type.lockedHint" = "Mevcut işlem ve bütçe ilişkilerini korumak için kategori türü sonradan değiştirilemez.";
 "categories.new.title" = "Yeni kategori";
 "categories.edit.title" = "Kategoriyi düzenle";
 "categories.delete.title" = "Kategori silinsin mi?";
@@ -232,6 +236,18 @@
 "categories.error.duplicate" = "Bu ada sahip bir kategori zaten var.";
 "categories.error.duplicateEmoji" = "Bu emoji başka bir kategoride zaten kullanılıyor.";
 "categories.error.add" = "Kategori eklenemedi.";
+
+"transactions.filter.title" = "Kayıtları filtrele";
+"transactions.filter.all" = "Tüm kayıtlar";
+"transactions.filter.expense" = "Giderler";
+"transactions.filter.income" = "Gelirler";
+"transactions.filter.category" = "Kategoriye göre";
+"transactions.filter.uncategorized" = "Kategorisiz";
+"transactions.filter.recurring" = "Tekrarlayanlar";
+"transactions.filter.installments" = "Taksitler";
+"transactions.filter.upcoming" = "Yaklaşanlar";
+"transactions.filter.empty" = "Bu filtreyle eşleşen kayıt yok.";
+"transactions.filter.clear" = "Filtreyi temizle";
 
 "notification.title" = "Kısa bir Tutar kontrolü";
 "notification.body" = "Bugünün harcamalarını aklındayken kaydet.";

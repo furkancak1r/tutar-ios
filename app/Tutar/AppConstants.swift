@@ -11,7 +11,7 @@ enum AppConstants {
     static let supportURL = URL(string: "https://furkancak1r.github.io/tutar-ios/support.html")!
     static let privacyURL = URL(string: "https://furkancak1r.github.io/tutar-ios/privacy.html")!
     static let feedbackEmail = "furkancakr7@gmail.com"
-    static let modificationDate = "2026-08-04"
+    static let modificationDate = "2026-08-05"
 }
 
 extension UserDefaults {
@@ -156,6 +156,43 @@ extension View {
                     .foregroundStyle(.white)
             }
             .tint(.red)
+        }
+    }
+}
+
+struct AutoDismissDatePicker: View {
+    @Binding var selection: Date
+    let title: LocalizedStringKey
+    let identifier: String
+
+    @Environment(\.appLanguage) private var language
+    @State private var isPresented = false
+
+    var body: some View {
+        Button {
+            isPresented = true
+        } label: {
+            Text(selection.formatted(.dateTime.day().month(.abbreviated).year().locale(language.locale)))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text(title))
+        .accessibilityIdentifier(identifier)
+        .popover(isPresented: $isPresented) {
+            DatePicker(
+                title,
+                selection: Binding(
+                    get: { selection },
+                    set: {
+                        selection = $0
+                        isPresented = false
+                    }
+                ),
+                displayedComponents: .date
+            )
+            .datePickerStyle(.graphical)
+            .labelsHidden()
+            .padding()
+            .presentationCompactAdaptation(.sheet)
         }
     }
 }

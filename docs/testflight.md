@@ -1,4 +1,4 @@
-# Tutar 1.0 (18) — TestFlight metadata
+# Tutar 1.0 (19) — TestFlight metadata
 
 ## Beta Description — Turkish
 
@@ -8,7 +8,7 @@ Tutar, Rafael Soh ve katkıda bulunanların oluşturduğu Dime temel alınarak d
 
 ## What to Test — Turkish
 
-Build 18, kategori ekleme ve düzenleme ekranındaki gereksiz renk seçimini kaldırır. Kategori adı, emoji ve gelir/gider türü yeterlidir; emoji klavyesi otomatik açılmaya devam eder ve aynı emoji ikinci bir kategoriye kaydedilemez. Kategoriler ekranındaki üç noktalı düzenleme menüsünün yerini doğrudan kalem düğmesi alır ve sıralama modunda onay işaretine dönüşür. Önerilenler başlığındaki göz düğmesi öneri listesini açıp kapatır. Tutar klavyesinde Türkçe virgül dâhil yerel ondalık ayıracı ve silme tuşu her giriş modunda görünür. Mevcut kategorilerin, içe aktarılan yedeklerin ve eski renk verilerinin uyumluluğu korunur. Yeni bağımlılık veya veri migration'ı eklenmedi.
+Build 19; yeni kategori adını otomatik odaklar, tarih seçilince takvimi kapatır ve numaratörü yerel ondalık ayıracı, 0 ve kaydet oku bulunan standart 3×4 düzene getirir. Silme tuşu tutarın yanındadır. İşlem kayıtları kompakt iki satırlı düzene, hızlı gider/gelir/kategori/tekrar/taksit/yaklaşan filtrelerine ve filtreyle birlikte güncellenen özete kavuşur. Yaklaşan kayıtlar ikincil hiyerarşide ve yaklaşan net toplamıyla görünür. Bütçeler işlem oluşturmadığını açıklar ve ilerlemeyi native dairesel Gauge ile gösterir. Yeni bağımlılık veya veri migration'ı eklenmedi.
 
 1. Ayarlar → Kategoriler ekranında Gider/Gelir seçiminin listeleri doğru ayırdığını doğrulayın.
 2. Önerilenler başlığındaki göz düğmesiyle listeyi gizleyip yeniden gösterin; düğmenin her iki durumda da erişilebilir kaldığını doğrulayın.
@@ -40,7 +40,7 @@ Tutar is a GPLv3 modified work based on Dime, originally created by Rafael Soh a
 
 ## What to Test — English
 
-Build 18 removes the unnecessary colour picker from category creation and editing. A category name, emoji, and expense/income type are sufficient; the emoji keyboard still opens automatically, and the same emoji cannot be saved to a second category. The categories screen now shows a direct pencil button instead of a three-dot edit menu, changing to a checkmark while reordering. An eye button in Suggested shows or hides the suggestion list. The amount keypad now keeps the locale-appropriate decimal separator and delete keys visible in every entry mode. Existing categories, imported backups, and legacy colour data remain compatible. No dependency or data migration was added.
+Build 19 focuses a new category name automatically, dismisses calendars after date selection, and returns the keypad to a standard 3×4 layout with the locale decimal separator, zero, and a save arrow. Delete now sits beside the amount. Records use a compact two-line layout with quick expense, income, category, recurring, installment, and upcoming filters; the summary follows the same filtered data. Upcoming records use a quieter hierarchy and show their net total. Budgets explain that they do not create transactions and use a native circular Gauge. No dependency or data migration was added.
 
 1. In Settings → Categories, confirm the Expense/Income control separates the lists correctly.
 2. Hide and show the list with the eye button in Suggested; confirm the button remains accessible in both states.

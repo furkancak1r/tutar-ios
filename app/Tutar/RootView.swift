@@ -319,11 +319,20 @@ private struct LockedView: View {
     }
 }
 
+private enum TransactionFilter: Equatable {
+    case all, expense, income, recurring, installments, upcoming, uncategorized
+    case category(String)
+}
+
 struct TransactionsView: View {
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Transaction.date, ascending: false)],
         animation: .default
     ) private var transactions: FetchedResults<Transaction>
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Category.order, ascending: true)],
+        animation: .default
+    ) private var categories: FetchedResults<Category>
 
     @EnvironmentObject private var dataController: DataController
     @Environment(\.appLanguage) private var language
@@ -337,6 +346,7 @@ struct TransactionsView: View {
     ) ?? .now
     @State private var monthTransitionEdge: Edge = .trailing
     @State private var searchText = ""
+    @State private var filter: TransactionFilter = .all
     @State private var editing: Transaction?
     @State private var deleting: Transaction?
     @State private var errorMessage = ""
@@ -352,7 +362,7 @@ struct TransactionsView: View {
 
     private var monthTransactions: [Transaction] {
         transactions.filter {
-            monthInterval.contains($0.wrappedDate) && matchesSearch($0)
+            monthInterval.contains($0.wrappedDate) && matchesSearch($0) && matchesFilter($0)
         }
     }
 
@@ -361,7 +371,7 @@ struct TransactionsView: View {
     }
 
     private var upcoming: [Transaction] {
-        guard showUpcoming else { return [] }
+        guard showUpcoming || filter == .upcoming else { return [] }
         return monthTransactions
             .filter { $0.wrappedDate > Date.now }
             .sorted { $0.wrappedDate < $1.wrappedDate }
@@ -379,6 +389,10 @@ struct TransactionsView: View {
 
     private var income: Double {
         monthTransactions.filter(\.income).reduce(0) { $0 + $1.amount }
+    }
+
+    private var upcomingNet: Double {
+        upcoming.reduce(0) { $0 + ($1.income ? $1.amount : -$1.amount) }
     }
 
     var body: some View {
@@ -403,9 +417,14 @@ struct TransactionsView: View {
                         row(transaction)
                     }
                 } header: {
-                    Text("transactions.upcoming")
-                        .font(.headline)
-                        .foregroundStyle(.primary)
+                    HStack {
+                        Text("transactions.upcoming")
+                        Spacer()
+                        Text(verbatim: signedMoney(upcomingNet))
+                            .monospacedDigit()
+                    }
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
                         .textCase(nil)
                 }
             }
@@ -415,7 +434,14 @@ struct TransactionsView: View {
                     ContentUnavailableView {
                         Label("empty.transactions.title", systemImage: "tray")
                     } description: {
-                        Text(searchText.isEmpty ? "empty.transactions.message" : "empty.search.message")
+                        Text(filter == .all
+                            ? (searchText.isEmpty ? "empty.transactions.message" : "empty.search.message")
+                            : "transactions.filter.empty")
+                    } actions: {
+                        if filter != .all {
+                            Button("transactions.filter.clear") { filter = .all }
+                                .buttonStyle(.bordered)
+                        }
                     }
                     .frame(maxWidth: .infinity)
                     .listRowBackground(Color.clear)
@@ -429,15 +455,15 @@ struct TransactionsView: View {
                         }
                     } header: {
                         Text(AppFormat.dayHeader(group.date, language: language))
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.primary)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
                             .textCase(nil)
                     }
                 }
             }
         }
         .listStyle(.plain)
-        .headerProminence(.increased)
+        .listSectionSpacing(.compact)
         .scrollContentBackground(.hidden)
         .background(Color(.systemBackground))
         .frame(maxWidth: 760)
@@ -446,6 +472,9 @@ struct TransactionsView: View {
         .transition(.push(from: monthTransitionEdge))
         .navigationTitle("transactions.title")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) { filterMenu }
+        }
         .searchable(
             text: $searchText,
             placement: .navigationBarDrawer(displayMode: .automatic),
@@ -485,6 +514,9 @@ struct TransactionsView: View {
         .refreshable {
             try? dataController.materializeRecurringTransactions()
         }
+        .onChange(of: categories.map { $0.objectID.uriRepresentation().absoluteString }) { _, ids in
+            if case let .category(id) = filter, !ids.contains(id) { filter = .all }
+        }
     }
 
     private func deleteDialogBinding(for transaction: Transaction) -> Binding<Bool> {
@@ -506,6 +538,62 @@ struct TransactionsView: View {
             || (transaction.category?.displayName(language: language).localizedCaseInsensitiveContains(query) ?? false)
     }
 
+    private func matchesFilter(_ transaction: Transaction) -> Bool {
+        switch filter {
+        case .all: true
+        case .expense: !transaction.income
+        case .income: transaction.income
+        case .recurring: transaction.recurringType > 0
+        case .installments: transaction.isInstallment
+        case .upcoming: transaction.wrappedDate > .now
+        case .uncategorized: transaction.category == nil
+        case let .category(id): transaction.category?.objectID.uriRepresentation().absoluteString == id
+        }
+    }
+
+    private func signedMoney(_ value: Double) -> String {
+        let formatted = AppFormat.money(value, language: language, currencyCode: currency)
+        return value > 0 ? "+\(formatted)" : formatted
+    }
+
+    private var filterMenu: some View {
+        Menu {
+            filterButton("transactions.filter.all", systemImage: "tray.full", value: .all)
+            filterButton("transactions.filter.expense", systemImage: "arrow.up.circle", value: .expense)
+            filterButton("transactions.filter.income", systemImage: "arrow.down.circle", value: .income)
+            Menu("transactions.filter.category", systemImage: "square.grid.2x2") {
+                filterButton("transactions.filter.uncategorized", systemImage: "questionmark.circle", value: .uncategorized)
+                ForEach(categories) { category in
+                    Button {
+                        filter = .category(category.objectID.uriRepresentation().absoluteString)
+                    } label: {
+                        HStack {
+                            Text(verbatim: "\(category.wrappedEmoji) \(category.displayName(language: language))")
+                            if filter == .category(category.objectID.uriRepresentation().absoluteString) { Image(systemName: "checkmark") }
+                        }
+                    }
+                }
+            }
+            filterButton("transactions.filter.recurring", systemImage: "repeat", value: .recurring)
+            filterButton("transactions.filter.installments", systemImage: "rectangle.stack", value: .installments)
+            filterButton("transactions.filter.upcoming", systemImage: "clock", value: .upcoming)
+        } label: {
+            Image(systemName: filter == .all ? "line.3.horizontal.decrease" : "line.3.horizontal.decrease.circle.fill")
+                .frame(width: 44, height: 44)
+        }
+        .accessibilityLabel(Text("transactions.filter.title"))
+        .accessibilityIdentifier("transactionFilterButton")
+    }
+
+    private func filterButton(_ title: LocalizedStringKey, systemImage: String, value: TransactionFilter) -> some View {
+        Button { filter = value } label: {
+            HStack {
+                Label(title, systemImage: systemImage)
+                if filter == value { Image(systemName: "checkmark") }
+            }
+        }
+    }
+
     private func moveMonth(_ value: Int) {
         guard let month = Calendar.current.date(byAdding: .month, value: value, to: selectedMonth) else { return }
         monthTransitionEdge = value > 0 ? .trailing : .leading
@@ -515,7 +603,8 @@ struct TransactionsView: View {
     }
 
     private func row(_ transaction: Transaction) -> some View {
-        TransactionRow(transaction: transaction)
+        TransactionRow(transaction: transaction, isUpcoming: transaction.wrappedDate > .now)
+            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
             .contentShape(Rectangle())
             .onTapGesture { editing = transaction }
             .tutarDeleteSwipeAction { deleting = transaction }
@@ -753,6 +842,7 @@ struct TransactionRow: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage("currencyCode", store: .tutar) private var preferredCurrency = ""
     let transaction: Transaction
+    var isUpcoming = false
 
     private var formattedAmount: String {
         AppFormat.money(
@@ -782,23 +872,25 @@ struct TransactionRow: View {
                 }
             }
         }
-        .frame(minHeight: 56)
+        .frame(minHeight: dynamicTypeSize.isAccessibilitySize ? nil : 44)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("transactionRow")
     }
 
     private var categoryIcon: some View {
         Text(transaction.category?.wrappedEmoji ?? "•")
-            .font(.title3)
-            .frame(width: 28)
+            .font(.body)
+            .frame(width: 24)
+            .foregroundStyle(isUpcoming ? .secondary : .primary)
             .accessibilityIdentifier("transactionCategoryIcon")
             .accessibilityHidden(true)
     }
 
     private var details: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: 1) {
             Text(verbatim: primaryText)
-                .font(.body.weight(.medium))
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(isUpcoming ? .secondary : .primary)
                 .lineLimit(1)
                 .truncationMode(.tail)
                 .allowsTightening(true)
@@ -807,7 +899,7 @@ struct TransactionRow: View {
             HStack(spacing: 5) {
                 Text(verbatim: metadataText)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(isUpcoming ? .tertiary : .secondary)
                     .lineLimit(1)
                     .truncationMode(.tail)
                     .allowsTightening(true)
@@ -834,7 +926,7 @@ struct TransactionRow: View {
     private var amountLabel: some View {
         Text(formattedAmount)
             .font(.subheadline.monospacedDigit().weight(.semibold))
-            .foregroundStyle(transaction.income ? Color.green : .primary)
+            .foregroundStyle(isUpcoming ? AnyShapeStyle(.secondary) : AnyShapeStyle(transaction.income ? Color.green : .primary))
             .multilineTextAlignment(.trailing)
             .lineLimit(1)
             .minimumScaleFactor(0.78)
@@ -849,8 +941,8 @@ struct TransactionRow: View {
             .font(.caption2.weight(.semibold).monospacedDigit())
             .lineLimit(1)
             .fixedSize(horizontal: true, vertical: false)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
+            .padding(.horizontal, 5)
+            .padding(.vertical, 1)
             .foregroundStyle(.secondary)
             .background(Color(.tertiarySystemFill), in: Capsule())
             .accessibilityLabel(Text(accessibilityKey))

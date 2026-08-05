@@ -269,6 +269,7 @@ private struct CategoryEditorView: View {
     @State private var emoji: String
     @State private var income: Bool
     @State private var errorKey: String?
+    @FocusState private var nameFocused: Bool
 
     var body: some View {
         NavigationStack {
@@ -276,6 +277,7 @@ private struct CategoryEditorView: View {
                 Section("categories.details.section") {
                     TextField("categories.name", text: $name)
                         .textInputAutocapitalization(.words)
+                        .focused($nameFocused)
                         .accessibilityIdentifier("categoryNameField")
                     EmojiKeyboardField(
                         text: $emoji,
@@ -287,6 +289,13 @@ private struct CategoryEditorView: View {
                     }
                     .pickerStyle(.segmented)
                     .disabled(category != nil)
+                    .accessibilityHint(category == nil ? Text("") : Text("categories.type.lockedHint"))
+
+                    if category != nil {
+                        Text("categories.type.lockedHint")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
                 }
 
                 if let errorKey {
@@ -309,6 +318,11 @@ private struct CategoryEditorView: View {
             }
         }
         .presentationDetents([.medium, .large])
+        .task {
+            guard category == nil else { return }
+            await Task.yield()
+            nameFocused = true
+        }
     }
 
     init(category: Category? = nil, initialName: String = "") {

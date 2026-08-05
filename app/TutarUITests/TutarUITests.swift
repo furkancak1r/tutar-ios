@@ -203,8 +203,9 @@ final class TutarUITests: XCTestCase {
 
         XCTAssertTrue(app.otherElements["amountKeypad"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["keypadDecimal"].exists)
-        XCTAssertTrue(app.buttons["keypadDelete"].exists)
-        attachScreenshot("08-keypad-decimal-and-delete", in: app)
+        XCTAssertTrue(app.buttons["amountDeleteButton"].exists)
+        XCTAssertFalse(app.buttons["keypadDelete"].exists)
+        attachScreenshot("08-keypad-decimal-arrow-and-delete", in: app)
         app.buttons["keypad3"].tap()
         for _ in 0 ..< 5 { app.buttons["keypad0"].tap() }
 
@@ -288,6 +289,9 @@ final class TutarUITests: XCTestCase {
         XCTAssertEqual(editMode.label, "Edit")
         app.buttons["Add category"].tap()
 
+        let name = app.textFields["categoryNameField"]
+        XCTAssertTrue(name.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 3))
         let emoji = app.textFields["categoryEmojiField"]
         XCTAssertTrue(emoji.waitForExistence(timeout: 5))
         XCTAssertFalse(app.staticTexts["Colour"].exists)
@@ -296,11 +300,40 @@ final class TutarUITests: XCTestCase {
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 3))
         XCTAssertTrue(app.keys["😀"].waitForExistence(timeout: 3))
         emoji.typeText("🛒")
-        let name = app.textFields["categoryNameField"]
         name.tap()
         name.typeText("Duplicate Emoji")
         app.buttons["Save"].tap()
         XCTAssertTrue(app.staticTexts["This emoji is already used by another category."].waitForExistence(timeout: 3))
+    }
+
+    @MainActor
+    func testFiltersCompactRowsAndBudgetGauge() throws {
+        let app = launch(language: "en", locale: "en_US", appearance: "Dark")
+        XCTAssertTrue(app.buttons["transactionFilterButton"].waitForExistence(timeout: 8))
+        let row = app.descendants(matching: .any).matching(identifier: "transactionRow").firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        XCTAssertGreaterThanOrEqual(row.frame.height, 44)
+        XCTAssertLessThanOrEqual(row.frame.height, 60)
+
+        app.buttons["transactionFilterButton"].tap()
+        XCTAssertTrue(app.buttons["Expenses"].waitForExistence(timeout: 3))
+        app.buttons["Expenses"].tap()
+        XCTAssertTrue(app.buttons["transactionFilterButton"].exists)
+        attachScreenshot("19-records-filtered-compact", in: app)
+
+        openTab("Budgets", in: app)
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "budgetExplanation").firstMatch.waitForExistence(timeout: 5))
+        if app.buttons["emptyBudgetAddButton"].exists {
+            app.buttons["emptyBudgetAddButton"].tap()
+            XCTAssertTrue(app.buttons["keypad1"].waitForExistence(timeout: 5))
+            app.buttons["keypad1"].tap()
+            app.buttons["keypad0"].tap()
+            app.buttons["keypad0"].tap()
+            app.buttons["keypadSubmit"].tap()
+        }
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "budgetGauge").firstMatch.waitForExistence(timeout: 5))
+        attachScreenshot("19-budgets-gauge-dark", in: app)
+        try app.performAccessibilityAudit(for: [.contrast]) { self.contrastFalsePositive($0) }
     }
 
     @MainActor
