@@ -324,19 +324,16 @@ final class TutarUITests: XCTestCase {
             for _ in 0 ..< 4 where !app.buttons[categories].exists { app.swipeUp() }
             app.buttons[categories].tap()
 
-            let row = app.descendants(matching: .any)
+            let firstRow = app.descendants(matching: .any)
                 .matching(identifier: "categoryRow-category.market").firstMatch
+            let row = app.descendants(matching: .any)
+                .matching(identifier: "categoryRow-category.health").firstMatch
             let followingRow = app.descendants(matching: .any)
-                .matching(identifier: "categoryRow-category.food").firstMatch
+                .matching(identifier: "categoryRow-category.entertainment").firstMatch
+            XCTAssertTrue(firstRow.waitForExistence(timeout: 5))
             XCTAssertTrue(row.waitForExistence(timeout: 5))
             XCTAssertTrue(followingRow.waitForExistence(timeout: 5))
-            let window = app.windows.firstMatch
-            let rowY = row.frame.midY / window.frame.height
-            window.coordinate(withNormalizedOffset: CGVector(dx: 0.82, dy: rowY))
-                .press(
-                    forDuration: 0.1,
-                    thenDragTo: window.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: rowY))
-                )
+            swipeDeleteRow(row, in: app)
             XCTAssertTrue(app.buttons[delete].waitForExistence(timeout: 3))
             XCTAssertFalse(app.buttons[edit].exists)
             Thread.sleep(forTimeInterval: 0.5)
@@ -350,15 +347,13 @@ final class TutarUITests: XCTestCase {
             }
 
             if !app.buttons[delete].exists {
-                window.coordinate(withNormalizedOffset: CGVector(dx: 0.82, dy: rowY))
-                    .press(
-                        forDuration: 0.1,
-                        thenDragTo: window.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: rowY))
-                    )
+                swipeDeleteRow(row, in: app)
             }
             XCTAssertTrue(app.buttons[delete].waitForExistence(timeout: 3))
             app.buttons[delete].tap()
             XCTAssertTrue(app.staticTexts[dialogTitle].waitForExistence(timeout: 3))
+            assertPopover(in: app, isAnchoredTo: row, ratherThan: firstRow)
+            XCTAssertTrue(firstRow.exists)
             XCTAssertTrue(row.exists)
             XCTAssertTrue(followingRow.exists)
             XCTAssertGreaterThan(row.frame.height, 20)
@@ -367,10 +362,100 @@ final class TutarUITests: XCTestCase {
 
             app.coordinate(withNormalizedOffset: CGVector(dx: 0.02, dy: 0.55)).tap()
             XCTAssertTrue(app.staticTexts[dialogTitle].waitForNonExistence(timeout: 3))
+            XCTAssertTrue(firstRow.waitForExistence(timeout: 3))
             XCTAssertTrue(row.waitForExistence(timeout: 3))
             XCTAssertTrue(followingRow.waitForExistence(timeout: 3))
+
+            swipeDeleteRow(row, in: app)
+            XCTAssertTrue(app.buttons[delete].waitForExistence(timeout: 3))
+            app.buttons[delete].tap()
+            XCTAssertTrue(app.staticTexts[dialogTitle].waitForExistence(timeout: 3))
+            app.buttons[delete].tap()
+            XCTAssertTrue(row.waitForNonExistence(timeout: 3))
+            XCTAssertTrue(firstRow.exists)
+            XCTAssertTrue(followingRow.exists)
             app.terminate()
         }
+    }
+
+    @MainActor
+    func testTransactionDeleteDialogUsesSelectedRowAndKeepsInstallmentScopes() {
+        let app = launch(language: "en", locale: "en_US", seed: false)
+        addTransaction(note: "First record", in: app)
+        addTransaction(note: "Second record", in: app)
+
+        let firstRow = app.staticTexts["Second record"]
+        let targetRow = app.staticTexts["First record"]
+        XCTAssertTrue(firstRow.waitForExistence(timeout: 5))
+        XCTAssertTrue(targetRow.waitForExistence(timeout: 5))
+        swipeDeleteRow(targetRow, in: app)
+        XCTAssertTrue(app.buttons["Delete"].waitForExistence(timeout: 3))
+        app.buttons["Delete"].tap()
+        XCTAssertTrue(app.staticTexts["Delete transaction?"].waitForExistence(timeout: 3))
+        assertPopover(in: app, isAnchoredTo: targetRow, ratherThan: firstRow)
+        attachScreenshot("transaction-delete-selected-row", in: app)
+
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.02, dy: 0.55)).tap()
+        XCTAssertTrue(app.staticTexts["Delete transaction?"].waitForNonExistence(timeout: 3))
+        XCTAssertTrue(firstRow.exists)
+        XCTAssertTrue(targetRow.exists)
+
+        swipeDeleteRow(targetRow, in: app)
+        XCTAssertTrue(app.buttons["Delete"].waitForExistence(timeout: 3))
+        app.buttons["Delete"].tap()
+        XCTAssertTrue(app.staticTexts["Delete transaction?"].waitForExistence(timeout: 3))
+        app.buttons["Delete"].tap()
+        XCTAssertTrue(targetRow.waitForNonExistence(timeout: 3))
+        XCTAssertTrue(firstRow.exists)
+
+        app.terminate()
+        let installments = launch(language: "en", locale: "en_US")
+        let installment = installments.staticTexts["UI Test"]
+        XCTAssertTrue(installment.waitForExistence(timeout: 5))
+        swipeDeleteRow(installment, in: installments)
+        XCTAssertTrue(installments.buttons["Delete"].waitForExistence(timeout: 3))
+        installments.buttons["Delete"].tap()
+        XCTAssertTrue(installments.buttons["Only this installment"].waitForExistence(timeout: 3))
+        XCTAssertTrue(installments.buttons["This and following installments"].exists)
+        attachScreenshot("installment-delete-scopes", in: installments)
+    }
+
+    @MainActor
+    func testBudgetDeleteDialogUsesSelectedRow() {
+        let app = launch(language: "en", locale: "en_US", seed: false)
+        openTab("Budgets", in: app)
+        XCTAssertTrue(app.buttons["emptyBudgetAddButton"].waitForExistence(timeout: 5))
+        app.buttons["emptyBudgetAddButton"].tap()
+        enterAmountAndSubmit(in: app)
+        XCTAssertTrue(app.navigationBars["Budgets"].waitForExistence(timeout: 5))
+
+        app.buttons["addBudgetButton"].tap()
+        enterAmountAndSubmit(in: app)
+        XCTAssertTrue(app.navigationBars["Budgets"].waitForExistence(timeout: 5))
+
+        let firstRow = app.staticTexts["Overall budget"]
+        let targetRow = app.staticTexts["Market"]
+        XCTAssertTrue(firstRow.waitForExistence(timeout: 5))
+        XCTAssertTrue(targetRow.waitForExistence(timeout: 5))
+        swipeDeleteRow(targetRow, in: app)
+        XCTAssertTrue(app.buttons["Delete"].waitForExistence(timeout: 3))
+        app.buttons["Delete"].tap()
+        XCTAssertTrue(app.staticTexts["Delete budget?"].waitForExistence(timeout: 3))
+        assertPopover(in: app, isAnchoredTo: targetRow, ratherThan: firstRow)
+        attachScreenshot("budget-delete-selected-row", in: app)
+
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.02, dy: 0.55)).tap()
+        XCTAssertTrue(app.staticTexts["Delete budget?"].waitForNonExistence(timeout: 3))
+        XCTAssertTrue(firstRow.exists)
+        XCTAssertTrue(targetRow.exists)
+
+        swipeDeleteRow(targetRow, in: app)
+        XCTAssertTrue(app.buttons["Delete"].waitForExistence(timeout: 3))
+        app.buttons["Delete"].tap()
+        XCTAssertTrue(app.staticTexts["Delete budget?"].waitForExistence(timeout: 3))
+        app.buttons["Delete"].tap()
+        XCTAssertTrue(targetRow.waitForNonExistence(timeout: 3))
+        XCTAssertTrue(firstRow.exists)
     }
 
     @MainActor
@@ -443,6 +528,60 @@ final class TutarUITests: XCTestCase {
         for _ in 0 ..< 5 where !button.isHittable { app.swipeDown() }
         XCTAssertTrue(button.isHittable)
         button.tap()
+    }
+
+    @MainActor
+    private func addTransaction(note: String, in app: XCUIApplication) {
+        XCTAssertTrue(app.buttons["addTransactionButton"].waitForExistence(timeout: 5))
+        app.buttons["addTransactionButton"].tap()
+        XCTAssertTrue(app.buttons["keypad1"].waitForExistence(timeout: 5))
+        app.buttons["keypad1"].tap()
+        app.buttons["keypad0"].tap()
+        app.buttons["keypad0"].tap()
+        let noteField = app.textFields["noteField"]
+        noteField.tap()
+        noteField.typeText(note)
+        app.buttons["keyboardDoneButton"].tap()
+        app.buttons["keypadSubmit"].tap()
+        XCTAssertTrue(app.staticTexts[note].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    private func enterAmountAndSubmit(in app: XCUIApplication) {
+        XCTAssertTrue(app.buttons["keypad1"].waitForExistence(timeout: 5))
+        app.buttons["keypad1"].tap()
+        app.buttons["keypad0"].tap()
+        app.buttons["keypad0"].tap()
+        app.buttons["keypadSubmit"].tap()
+    }
+
+    @MainActor
+    private func swipeDeleteRow(_ row: XCUIElement, in app: XCUIApplication) {
+        let window = app.windows.firstMatch
+        let rowY = row.frame.midY / window.frame.height
+        window.coordinate(withNormalizedOffset: CGVector(dx: 0.82, dy: rowY))
+            .press(
+                forDuration: 0.1,
+                thenDragTo: window.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: rowY))
+            )
+    }
+
+    @MainActor
+    private func assertPopover(
+        in app: XCUIApplication,
+        isAnchoredTo target: XCUIElement,
+        ratherThan other: XCUIElement,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        let popover = app.descendants(matching: .popover).firstMatch
+        XCTAssertTrue(popover.waitForExistence(timeout: 3), file: file, line: line)
+        XCTAssertLessThan(
+            abs(popover.frame.maxY - target.frame.midY),
+            abs(popover.frame.maxY - other.frame.midY),
+            file: file,
+            line: line
+        )
     }
 
     @MainActor

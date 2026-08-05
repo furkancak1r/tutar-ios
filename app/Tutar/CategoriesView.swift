@@ -111,12 +111,6 @@ struct CategoriesView: View {
                 initialName: category.displayName(language: language)
             )
         }
-        .confirmationDialog("categories.delete.title", isPresented: deleteBinding, titleVisibility: .visible) {
-            Button("action.delete", role: .destructive, action: performDelete)
-            Button("action.cancel", role: .cancel) { deleting = nil }
-        } message: {
-            Text("categories.delete.message")
-        }
         .alert("error.save.title", isPresented: errorBinding) {
             Button("action.ok") { errorMessage = "" }
         } message: {
@@ -124,8 +118,12 @@ struct CategoriesView: View {
         }
     }
 
-    private var deleteBinding: Binding<Bool> {
-        Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })
+    private func deleteBinding(for category: Category) -> Binding<Bool> {
+        let objectID = category.objectID
+        return Binding(
+            get: { deleting?.objectID == objectID },
+            set: { if !$0, deleting?.objectID == objectID { deleting = nil } }
+        )
     }
 
     private var errorBinding: Binding<Bool> {
@@ -149,6 +147,16 @@ struct CategoriesView: View {
                 .contentShape(Rectangle())
                 .onTapGesture { editing = category }
                 .tutarDeleteSwipeAction { deleting = category }
+                .confirmationDialog(
+                    "categories.delete.title",
+                    isPresented: deleteBinding(for: category),
+                    titleVisibility: .visible
+                ) {
+                    Button("action.delete", role: .destructive, action: performDelete)
+                    Button("action.cancel", role: .cancel) { deleting = nil }
+                } message: {
+                    Text("categories.delete.message")
+                }
                 .accessibilityIdentifier("categoryRow-\(category.systemKey ?? category.objectID.uriRepresentation().absoluteString)")
             }
             .onMove { source, destination in

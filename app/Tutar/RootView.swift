@@ -477,17 +477,6 @@ struct TransactionsView: View {
         .fullScreenCover(item: $editing) {
             TransactionEditorView(transaction: $0)
         }
-        .confirmationDialog("delete.title", isPresented: deleteDialogBinding, titleVisibility: .visible) {
-            if deleting?.isInstallment == true {
-                Button("delete.one", role: .destructive) { performDelete(.one) }
-                Button("delete.following", role: .destructive) { performDelete(.thisAndFollowing) }
-            } else {
-                Button("action.delete", role: .destructive) { performDelete(.one) }
-            }
-            Button("action.cancel", role: .cancel) { deleting = nil }
-        } message: {
-            Text("delete.message")
-        }
         .alert("error.save.title", isPresented: errorBinding) {
             Button("action.ok") { errorMessage = "" }
         } message: {
@@ -498,8 +487,12 @@ struct TransactionsView: View {
         }
     }
 
-    private var deleteDialogBinding: Binding<Bool> {
-        Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })
+    private func deleteDialogBinding(for transaction: Transaction) -> Binding<Bool> {
+        let objectID = transaction.objectID
+        return Binding(
+            get: { deleting?.objectID == objectID },
+            set: { if !$0, deleting?.objectID == objectID { deleting = nil } }
+        )
     }
 
     private var errorBinding: Binding<Bool> {
@@ -526,6 +519,21 @@ struct TransactionsView: View {
             .contentShape(Rectangle())
             .onTapGesture { editing = transaction }
             .tutarDeleteSwipeAction { deleting = transaction }
+            .confirmationDialog(
+                "delete.title",
+                isPresented: deleteDialogBinding(for: transaction),
+                titleVisibility: .visible
+            ) {
+                if transaction.isInstallment {
+                    Button("delete.one", role: .destructive) { performDelete(.one) }
+                    Button("delete.following", role: .destructive) { performDelete(.thisAndFollowing) }
+                } else {
+                    Button("action.delete", role: .destructive) { performDelete(.one) }
+                }
+                Button("action.cancel", role: .cancel) { deleting = nil }
+            } message: {
+                Text("delete.message")
+            }
             .accessibilityAction(named: Text("action.edit")) { editing = transaction }
             .accessibilityAction(named: Text("action.delete")) { deleting = transaction }
     }

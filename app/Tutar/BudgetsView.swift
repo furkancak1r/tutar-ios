@@ -70,6 +70,16 @@ struct BudgetsView: View {
                     .contentShape(Rectangle())
                     .onTapGesture { editorTarget = .overall(overall) }
                     .tutarDeleteSwipeAction { deleting = .overall(overall) }
+                    .confirmationDialog(
+                        "budgets.delete.title",
+                        isPresented: deleteBinding(for: .overall(overall)),
+                        titleVisibility: .visible
+                    ) {
+                        Button("action.delete", role: .destructive, action: performDelete)
+                        Button("action.cancel", role: .cancel) { deleting = nil }
+                    } message: {
+                        Text("budgets.delete.message")
+                    }
                 }
             }
 
@@ -88,6 +98,16 @@ struct BudgetsView: View {
                         .contentShape(Rectangle())
                         .onTapGesture { editorTarget = .category(budget) }
                         .tutarDeleteSwipeAction { deleting = .category(budget) }
+                        .confirmationDialog(
+                            "budgets.delete.title",
+                            isPresented: deleteBinding(for: .category(budget)),
+                            titleVisibility: .visible
+                        ) {
+                            Button("action.delete", role: .destructive, action: performDelete)
+                            Button("action.cancel", role: .cancel) { deleting = nil }
+                        } message: {
+                            Text("budgets.delete.message")
+                        }
                     }
                 }
             }
@@ -137,12 +157,6 @@ struct BudgetsView: View {
                 BudgetEditorView(overallBudget: budget)
             }
         }
-        .confirmationDialog("budgets.delete.title", isPresented: deleteBinding, titleVisibility: .visible) {
-            Button("action.delete", role: .destructive, action: performDelete)
-            Button("action.cancel", role: .cancel) { deleting = nil }
-        } message: {
-            Text("budgets.delete.message")
-        }
         .alert("error.save.title", isPresented: errorBinding) {
             Button("action.ok") { errorMessage = "" }
         } message: {
@@ -150,8 +164,11 @@ struct BudgetsView: View {
         }
     }
 
-    private var deleteBinding: Binding<Bool> {
-        Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })
+    private func deleteBinding(for target: BudgetDeletion) -> Binding<Bool> {
+        Binding(
+            get: { deleting?.id == target.id },
+            set: { if !$0, deleting?.id == target.id { deleting = nil } }
+        )
     }
 
     private var errorBinding: Binding<Bool> {
