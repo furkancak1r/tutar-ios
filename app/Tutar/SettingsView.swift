@@ -6,6 +6,8 @@ import UniformTypeIdentifiers
 import UserNotifications
 
 struct SettingsView: View {
+    let showOnboarding: () -> Void
+
     @EnvironmentObject private var dataController: DataController
     @Environment(\.appLanguage) private var language
     @AppStorage("appLanguage", store: .tutar) private var languageRaw = AppLanguage.system.rawValue
@@ -154,6 +156,11 @@ struct SettingsView: View {
             }
 
             Section("settings.info.section") {
+                Button(action: showOnboarding) {
+                    Label("settings.onboarding", systemImage: "sparkles")
+                }
+                .accessibilityIdentifier("showOnboardingButton")
+
                 NavigationLink("settings.about") { AboutView() }
 
                 Link(destination: AppConstants.supportURL) {

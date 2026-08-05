@@ -38,7 +38,8 @@ struct TutarApp: App {
             "haptics": true,
             "showSuggestions": true,
             "showUpcoming": true,
-            "biometricLock": false
+            "biometricLock": false,
+            "hasCompletedOnboardingV1": false
         ])
         if !UserDefaults.tutar.bool(forKey: "didMigrateDecimalEntryV20") {
             UserDefaults.tutar.set(MoneyEntry.Mode.decimal.rawValue, forKey: "numberEntryType")
@@ -48,6 +49,11 @@ struct TutarApp: App {
         if arguments.contains("-ui-testing") {
             UserDefaults.tutar.set("", forKey: "currencyCode")
             UserDefaults.tutar.set(MoneyEntry.Mode.decimal.rawValue, forKey: "numberEntryType")
+            if arguments.contains("-ui-test-reset-onboarding") {
+                UserDefaults.tutar.set(false, forKey: "hasCompletedOnboardingV1")
+            } else if arguments.contains("-ui-test-skip-onboarding") {
+                UserDefaults.tutar.set(true, forKey: "hasCompletedOnboardingV1")
+            }
             if let index = arguments.firstIndex(of: "-appLanguage"), arguments.indices.contains(index + 1) {
                 UserDefaults.tutar.set(arguments[index + 1], forKey: "appLanguage")
             }

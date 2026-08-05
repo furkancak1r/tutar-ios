@@ -166,8 +166,10 @@ struct RootView: View {
     @Environment(\.appLanguage) private var language
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage("biometricLock", store: .tutar) private var biometricLock = false
+    @AppStorage("hasCompletedOnboardingV1", store: .tutar) private var hasCompletedOnboarding = false
     @State private var selectedTab = AppTab.log
     @State private var showingEditor = false
+    @State private var showingOnboarding = false
     @State private var transactionTarget: TransactionNavigationTarget?
 
     var body: some View {
@@ -177,6 +179,8 @@ struct RootView: View {
                     canRetry: appLockController.canRetryAuthentication,
                     authenticate: requestAuthentication
                 )
+            } else if !hasCompletedOnboarding || showingOnboarding {
+                OnboardingView(onFinish: finishOnboarding)
             } else {
                 appContent
             }
@@ -254,7 +258,11 @@ struct RootView: View {
             .tag(AppTab.budgets)
 
             NavigationStack {
-                SettingsView()
+                SettingsView {
+                    withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+                        showingOnboarding = true
+                    }
+                }
             }
             .tabItem { Label("tab.settings", systemImage: "gearshape") }
             .tag(AppTab.settings)
@@ -282,6 +290,13 @@ struct RootView: View {
 
     private func requestAuthentication() {
         appLockController.requestAuthentication(reason: authenticationReason)
+    }
+
+    private func finishOnboarding() {
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+            hasCompletedOnboarding = true
+            showingOnboarding = false
+        }
     }
 
     private var loadErrorBinding: Binding<Bool> {

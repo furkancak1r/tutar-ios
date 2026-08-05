@@ -1,14 +1,20 @@
-# Tutar 1.0 (22) — TestFlight metadata
+# Tutar 1.0 (23) — TestFlight metadata
 
 ## Beta Description — Turkish
 
-Tutar; gelir, gider, bütçe, tekrar ve taksitleri takip etmek için tamamen ücretsiz, reklamsız ve açık kaynak bir iOS uygulamasıdır. Otomatik kuruşlu numaratör hızlı veri girişi sağlar. Taksitler ayrı bir sekme yerine işlemdeki Plan alanından, Tek sefer ve Tekrar seçeneklerinin yanında ayarlanır. Bağlı işlemler toplamı tam korur, 1/3 gibi sıra bilgisini gösterir ve tek taksit ya da bu ve sonrasını düzenleme/silme seçenekleri sunar. Dime/Tutar CSV içe aktarma, CSV dışa aktarma, tam JSON yedekleme, yerel saklama ve isteğe bağlı özel iCloud eşzamanlaması bulunur.
+Tutar; gelir, gider, bütçe, tekrar ve taksitleri takip etmek için tamamen ücretsiz, reklamsız ve açık kaynak bir iOS uygulamasıdır. İlk açılıştaki dört kısa sayfa kayıtları, Plan alanındaki tekrar/taksit seçeneklerini, bütçelerin işlem oluşturmadığını ve Tutar’ın gizlilik yaklaşımını açıklar. Taksitler ayrı bir sekme yerine işlemdeki Plan alanından ayarlanır. Dime/Tutar CSV içe aktarma, CSV dışa aktarma, tam JSON yedekleme, yerel saklama ve isteğe bağlı özel iCloud eşzamanlaması bulunur.
 
 Tutar, Rafael Soh ve katkıda bulunanların oluşturduğu Dime temel alınarak değiştirilmiş GPLv3 çalışmasıdır. Bu buildin değişiklik tarihi: 5 Ağustos 2026. Tam kaynak: https://github.com/furkancak1r/tutar-ios
 
 ## What to Test — Turkish
 
-Build 22, build 21 davranışını değiştirmeden tam regresyon doğrulamasından geçirir: 36 unit ve 17 UI testi hatasız tamamlandı. Proje üretim ayarı Xcode projesiyle build 22'de eşitlendi; proje yeniden üretildiğinde build numarası geriye düşmez. Aktif filtrede sağ üst kontrol tek dokunuşla filtreyi temizler. Yeni işlemde boş yan alanda yatay kaydırarak Gider/Gelir arasında geçilebilir; form kontrollerindeki hareketler türü değiştirmez. Aylık Analiz grafiğinin sütun ve eksen yerleşimi düzenlidir. Gerçek bir sütuna dokunmak Kayıtlar'da doğru ayı ve günü açar, kesin eşleşen işlemlere kaydırır ve bu satırları üç saniye monokrom kenarlıkla vurgular; boş grafik alanı navigasyon başlatmaz. Tutar, Rafael Soh ve katkıda bulunanların Dime uygulamasını temel alan GPLv3 türev çalışmadır. Değişiklik: 5 Ağustos 2026. Kaynak: https://github.com/furkancak1r/tutar-ios
+Build 23, mevcut siyah-beyaz temaya uygun dört sayfalık onboarding ekler. Onboarding mevcut ve yeni kullanıcılara bir kez gösterilir; atlama ve tamamlama kalıcıdır, Ayarlar → Bilgi → Tutar’ı Tanı ile yeniden açılabilir. Uygulama kilidi etkinse Face ID/Touch ID ekranı onboarding’den önce kalır. 36 unit ve 21 UI testi iPhone 17 Pro iOS 26.5’te geçti; kilit önceliği iOS 26.2’de, Türkçe/koyu dört sayfa iPadOS 26.5’te ayrıca doğrulandı. Tutar, Rafael Soh ve katkıda bulunanların Dime uygulamasını temel alan GPLv3 türev çalışmadır. Değişiklik: 5 Ağustos 2026. Kaynak: https://github.com/furkancak1r/tutar-ios
+
+1. Güncellemeden sonraki ilk açılışta onboarding’in görünmesini; dört sayfanın yatay kaydırma ve İleri/Geri düğmeleriyle çalışmasını doğrulayın.
+2. Onboarding’i yarıda kapatıp yeniden açın; tekrar başlamalıdır. Atla veya Tutar’ı Kullanmaya Başla sonrasında yeniden görünmemelidir.
+3. Ayarlar → Bilgi → Tutar’ı Tanı ile onboarding’i tekrar açın; kapatınca Ayarlar’a dönmelidir.
+4. Uygulama Kilidi açıksa önce yalnız kilit ekranının görünmesini, doğrulama başarıyla bitince onboarding’in açılmasını kontrol edin.
+5. Türkçe/English, açık/koyu görünüm, büyük metin ve VoiceOver ile sayfaları; monokrom kontrolleri ve taşmayan kaydırılabilir içeriği doğrulayın.
 
 1. Gider, gelir veya kategori filtresi seçin; sağ üst filtre simgesinin monokrom temizleme simgesine dönüştüğünü ve tek dokunuşla filtreyi kaldırdığını doğrulayın.
 2. Yeni işlemde boş sağ kenarda sola, boş sol kenarda sağa kaydırın; Gider/Gelir türünün değiştiğini, numaratör veya form üzerindeki hareketlerin türü değiştirmediğini doğrulayın.
@@ -43,13 +49,19 @@ Build 22, build 21 davranışını değiştirmeden tam regresyon doğrulamasınd
 
 ## Beta Description — English
 
-Tutar is a completely free, ad-free, open-source iOS app for tracking income, expenses, budgets, repeats, and installments. Its automatic-cents keypad makes entry fast. Installments live in the transaction Schedule field beside One time and Repeat, rather than in a separate tab. Linked entries preserve the exact total, show positions such as 1/3, and support editing or deleting one installment or the selected installment and all following ones. Dime/Tutar CSV import, CSV export, complete JSON backup, local storage, and optional private iCloud sync are included.
+Tutar is a completely free, ad-free, open-source iOS app for tracking income, expenses, budgets, repeats, and installments. Four concise first-launch pages explain records, repeat/installment options in Schedule, why budgets do not create transactions, and Tutar’s privacy model. Installments live in the transaction Schedule field rather than in a separate tab. Dime/Tutar CSV import, CSV export, complete JSON backup, local storage, and optional private iCloud sync are included.
 
 Tutar is a GPLv3 modified work based on Dime, originally created by Rafael Soh and contributors. This build was modified on 5 August 2026. Complete source: https://github.com/furkancak1r/tutar-ios
 
 ## What to Test — English
 
-Build 22 keeps build 21 behavior unchanged and completes a full regression pass: 36 unit and 17 UI tests passed. The project generator setting now matches Xcode at build 22, so regenerating the project cannot roll the build number back. The top-right control clears an active filter with one tap. In a new transaction, horizontal swipes in the empty side area switch between Expense and Income without intercepting form controls. Monthly Analysis chart bars and axes remain clear. Tapping a real bar opens the correct month and day in Records, scrolls to the exact contributing transactions, and highlights them with a monochrome border for three seconds; tapping empty chart space does not navigate. Tutar is a GPLv3 derivative of Dime by Rafael Soh and contributors. Modified 5 August 2026. Source: https://github.com/furkancak1r/tutar-ios
+Build 23 adds a four-page onboarding flow that matches the monochrome theme. It appears once for current and new users; Skip and completion persist, while Settings → Information → How Tutar Works reopens it on demand. When App Lock is enabled, Face ID/Touch ID stays ahead of onboarding. All 36 unit and 21 UI tests passed on iPhone 17 Pro with iOS 26.5; lock priority also passed on iOS 26.2 and the complete Turkish/dark flow passed on iPadOS 26.5. Tutar is a GPLv3 derivative of Dime by Rafael Soh and contributors. Modified 5 August 2026. Source: https://github.com/furkancak1r/tutar-ios
+
+1. After updating, confirm onboarding appears once and all four pages work with horizontal swipes and the Back/Next buttons.
+2. Quit midway and relaunch; onboarding should return. After Skip or Start Using Tutar, it should stay completed.
+3. Reopen it from Settings → Information → How Tutar Works and confirm closing it returns to Settings.
+4. With App Lock enabled, confirm only the lock screen appears first and onboarding opens after one successful authentication.
+5. Check Turkish/English, light/dark appearance, large text, VoiceOver, monochrome controls, and scrollable content without clipping.
 
 1. Select an expense, income, or category filter; confirm the top-right filter icon becomes a monochrome clear icon and removes the filter with one tap.
 2. In a new transaction, swipe left from the empty right edge and right from the empty left edge; confirm the type changes while gestures on the keypad and form do not.

@@ -16,6 +16,20 @@
 "accessibility.expenseAmount" = "Expense amount";
 "accessibility.incomeAmount" = "Income amount";
 
+"onboarding.skip" = "Skip";
+"onboarding.back" = "Back";
+"onboarding.next" = "Next";
+"onboarding.start" = "Start Using Tutar";
+"onboarding.page.accessibility" = "Page %1$d of %2$d.";
+"onboarding.welcome.title" = "Welcome to Tutar";
+"onboarding.welcome.message" = "Record income and expenses quickly. Tutar keeps personal finance tracking simple and completely free.";
+"onboarding.planning.title" = "Plan From One Entry";
+"onboarding.planning.message" = "Use Schedule in a new transaction to create a repeat or installments. Every installment counts only toward the month it belongs to.";
+"onboarding.budgets.title" = "A Budget Is Not a Transaction";
+"onboarding.budgets.message" = "Adding a budget does not create income or an expense; it compares spending with your goal. Record your salary only as income—you do not need to enter it again as a budget. An overall budget follows every expense, while a category budget follows only its selected expense category. Analysis is calculated automatically from your records.";
+"onboarding.privacy.title" = "Your Data Stays Yours";
+"onboarding.privacy.message" = "Your data stays on your device and, only if you enable it, in your private iCloud account. Import and export keep it portable. Tutar is ad-free, tracker-free, completely free, and open source under GPLv3.";
+
 "dashboard.title" = "Tutar";
 "dashboard.monthEyebrow" = "SPENT THIS MONTH";
 "dashboard.monthExpense" = "Expense this month";
@@ -167,6 +181,7 @@
 "settings.reminder" = "Daily entry reminder";
 "settings.reminder.hour" = "Time";
 "settings.info.section" = "Information";
+"settings.onboarding" = "How Tutar Works";
 "settings.about" = "About & Licenses";
 "settings.support" = "Support";
 "settings.privacy" = "Privacy policy";

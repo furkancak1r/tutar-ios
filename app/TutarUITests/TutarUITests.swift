@@ -4,6 +4,115 @@ import XCTest
 
 final class TutarUITests: XCTestCase {
     @MainActor
+    func testTurkishDarkOnboardingCompletesAndReopensFromSettings() throws {
+        let app = launch(
+            language: "tr",
+            locale: "tr_TR",
+            appearance: "Dark",
+            showOnboarding: true
+        )
+
+        XCTAssertTrue(app.staticTexts["Tutar’a Hoş Geldin"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.staticTexts["onboardingPagePosition"].exists)
+        attachScreenshot("23-onboarding-welcome-tr-dark", in: app)
+        try app.performAccessibilityAudit(for: [.contrast]) { self.contrastFalsePositive($0) }
+
+        app.buttons["onboardingNextButton"].tap()
+        XCTAssertTrue(app.staticTexts["Tek İşlemden Planla"].waitForExistence(timeout: 3))
+        attachScreenshot("23-onboarding-planning-tr-dark", in: app)
+
+        app.buttons["onboardingNextButton"].tap()
+        XCTAssertTrue(app.staticTexts["Bütçe Bir İşlem Değildir"].waitForExistence(timeout: 3))
+        attachScreenshot("23-onboarding-budgets-tr-dark", in: app)
+
+        app.buttons["onboardingNextButton"].tap()
+        XCTAssertTrue(app.staticTexts["Verilerin Sana Ait"].waitForExistence(timeout: 3))
+        XCTAssertFalse(app.buttons["onboardingSkipButton"].exists)
+        attachScreenshot("23-onboarding-privacy-tr-dark", in: app)
+
+        app.buttons["onboardingFinishButton"].tap()
+        XCTAssertTrue(app.navigationBars["Kayıtlar"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Tutar’a Hoş Geldin"].exists)
+
+        openTab("Ayarlar", in: app)
+        let showOnboarding = app.buttons["showOnboardingButton"]
+        for _ in 0 ..< 5 where !showOnboarding.isHittable { app.swipeUp() }
+        XCTAssertTrue(showOnboarding.waitForExistence(timeout: 5))
+        showOnboarding.tap()
+        XCTAssertTrue(app.staticTexts["Tutar’a Hoş Geldin"].waitForExistence(timeout: 5))
+        app.buttons["onboardingSkipButton"].tap()
+        XCTAssertTrue(app.navigationBars["Ayarlar"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testEnglishLightOnboardingSkipPersistsAcrossRelaunch() {
+        let app = launch(
+            language: "en",
+            locale: "en_US",
+            appearance: "Light",
+            showOnboarding: true
+        )
+
+        XCTAssertTrue(app.staticTexts["Welcome to Tutar"].waitForExistence(timeout: 8))
+        attachScreenshot("23-onboarding-welcome-en-light", in: app)
+        app.swipeLeft()
+        XCTAssertTrue(app.staticTexts["Plan From One Entry"].waitForExistence(timeout: 3))
+
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "-ui-test-reset-onboarding" }
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["Welcome to Tutar"].waitForExistence(timeout: 8))
+        app.buttons["onboardingSkipButton"].tap()
+        XCTAssertTrue(app.navigationBars["Records"].waitForExistence(timeout: 5))
+
+        app.terminate()
+        app.launch()
+
+        XCTAssertTrue(app.navigationBars["Records"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.staticTexts["Welcome to Tutar"].exists)
+    }
+
+    @MainActor
+    func testAppLockTakesPriorityOverOnboarding() {
+        let failed = launch(
+            language: "en",
+            locale: "en_US",
+            lockAuthenticationSucceeds: false,
+            showOnboarding: true
+        )
+        XCTAssertTrue(failed.staticTexts["App locked"].waitForExistence(timeout: 8))
+        XCTAssertFalse(failed.staticTexts["Welcome to Tutar"].exists)
+        failed.terminate()
+
+        let successful = launch(
+            language: "en",
+            locale: "en_US",
+            lockAuthenticationSucceeds: true,
+            showOnboarding: true
+        )
+        XCTAssertTrue(successful.staticTexts["Welcome to Tutar"].waitForExistence(timeout: 8))
+        Thread.sleep(forTimeInterval: 2)
+        XCTAssertTrue(successful.staticTexts["Welcome to Tutar"].exists)
+        XCTAssertFalse(successful.buttons["unlockButton"].exists)
+    }
+
+    @MainActor
+    func testOnboardingSupportsLargestText() {
+        let app = launch(
+            language: "en",
+            locale: "en_US",
+            largestText: true,
+            showOnboarding: true
+        )
+
+        XCTAssertTrue(app.staticTexts["Welcome to Tutar"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["onboardingNextButton"].isHittable)
+        XCTAssertTrue(app.buttons["onboardingSkipButton"].isHittable)
+        attachScreenshot("23-onboarding-largest-text", in: app)
+    }
+
+    @MainActor
     func testAppLockSuccessStaysUnlockedAfterForegroundReturn() {
         let app = launch(
             language: "tr",
@@ -632,11 +741,13 @@ final class TutarUITests: XCTestCase {
         seed: Bool = true,
         largestText: Bool = false,
         appearance: String? = nil,
-        lockAuthenticationSucceeds: Bool? = nil
+        lockAuthenticationSucceeds: Bool? = nil,
+        showOnboarding: Bool = false
     ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [
             "-ui-testing",
+            showOnboarding ? "-ui-test-reset-onboarding" : "-ui-test-skip-onboarding",
             "-appLanguage", language,
             "-AppleLanguages", "(\(language))",
             "-AppleLocale", locale

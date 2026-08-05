@@ -16,6 +16,20 @@
 "accessibility.expenseAmount" = "Gider tutarı";
 "accessibility.incomeAmount" = "Gelir tutarı";
 
+"onboarding.skip" = "Atla";
+"onboarding.back" = "Geri";
+"onboarding.next" = "İleri";
+"onboarding.start" = "Tutar’ı Kullanmaya Başla";
+"onboarding.page.accessibility" = "%2$d sayfadan %1$d.";
+"onboarding.welcome.title" = "Tutar’a Hoş Geldin";
+"onboarding.welcome.message" = "Gelir ve giderlerini hızlıca kaydet. Tutar, kişisel finansını sade ve tamamen ücretsiz biçimde takip etmene yardımcı olur.";
+"onboarding.planning.title" = "Tek İşlemden Planla";
+"onboarding.planning.message" = "Yeni işlemde Plan alanını kullanarak tekrarlayan kayıt veya taksit oluştur. Her taksit yalnız ait olduğu ayın toplamına katılır.";
+"onboarding.budgets.title" = "Bütçe Bir İşlem Değildir";
+"onboarding.budgets.message" = "Bütçe eklemek gelir veya gider oluşturmaz; harcamalarını hedefinle karşılaştırır. Maaşını yalnız gelir işlemi olarak kaydet, bütçeye tekrar girmen gerekmez. Genel bütçe tüm giderleri, kategori bütçesi yalnız seçtiğin gider kategorisini izler. Analizler kayıtlarından otomatik hesaplanır.";
+"onboarding.privacy.title" = "Verilerin Sana Ait";
+"onboarding.privacy.message" = "Verilerin cihazında ve yalnız etkinleştirirsen özel iCloud hesabında saklanır. İçe ve dışa aktarma her zaman elindedir. Tutar reklamsız, izleyicisiz, tamamen ücretsiz ve GPLv3 açık kaynaktır.";
+
 "dashboard.title" = "Tutar";
 "dashboard.monthEyebrow" = "BU AY HARCANAN";
 "dashboard.monthExpense" = "Bu ayın harcaması";
@@ -167,6 +181,7 @@
 "settings.reminder" = "Günlük kayıt hatırlatıcısı";
 "settings.reminder.hour" = "Saat";
 "settings.info.section" = "Bilgi";
+"settings.onboarding" = "Tutar’ı Tanı";
 "settings.about" = "Hakkında ve Lisanslar";
 "settings.support" = "Destek";
 "settings.privacy" = "Gizlilik politikası";
