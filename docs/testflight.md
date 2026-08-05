@@ -1,4 +1,4 @@
-# Tutar 1.0 (23) — TestFlight metadata
+# Tutar 1.0 (24) — TestFlight metadata
 
 ## Beta Description — Turkish
 
@@ -8,7 +8,7 @@ Tutar, Rafael Soh ve katkıda bulunanların oluşturduğu Dime temel alınarak d
 
 ## What to Test — Turkish
 
-Build 23, mevcut siyah-beyaz temaya uygun dört sayfalık onboarding ekler. Onboarding mevcut ve yeni kullanıcılara bir kez gösterilir; atlama ve tamamlama kalıcıdır, Ayarlar → Bilgi → Tutar’ı Tanı ile yeniden açılabilir. Uygulama kilidi etkinse Face ID/Touch ID ekranı onboarding’den önce kalır. 36 unit ve 21 UI testi iPhone 17 Pro iOS 26.5’te geçti; kilit önceliği iOS 26.2’de, Türkçe/koyu dört sayfa iPadOS 26.5’te ayrıca doğrulandı. Tutar, Rafael Soh ve katkıda bulunanların Dime uygulamasını temel alan GPLv3 türev çalışmadır. Değişiklik: 5 Ağustos 2026. Kaynak: https://github.com/furkancak1r/tutar-ios
+Build 24, onboarding alt navigasyonunu daha minimal hâle getirir. İlk sayfadaki İleri düğmesi gerçek merkeze alındı; büyük dolgulu geri düğmesi yerine 44 pt erişilebilir dokunma alanını koruyan sade bir chevron kullanıldı. İleri ve başla eylemleri içerik genişliğinde kompakt kapsüllere dönüştürüldü. 36 unit ve 21 UI testlik tam paket geçti. Tutar, Rafael Soh ve katkıda bulunanların Dime uygulamasını temel alan GPLv3 türev çalışmadır. Değişiklik: 5 Ağustos 2026. Kaynak: https://github.com/furkancak1r/tutar-ios
 
 1. Güncellemeden sonraki ilk açılışta onboarding’in görünmesini; dört sayfanın yatay kaydırma ve İleri/Geri düğmeleriyle çalışmasını doğrulayın.
 2. Onboarding’i yarıda kapatıp yeniden açın; tekrar başlamalıdır. Atla veya Tutar’ı Kullanmaya Başla sonrasında yeniden görünmemelidir.
@@ -55,7 +55,7 @@ Tutar is a GPLv3 modified work based on Dime, originally created by Rafael Soh a
 
 ## What to Test — English
 
-Build 23 adds a four-page onboarding flow that matches the monochrome theme. It appears once for current and new users; Skip and completion persist, while Settings → Information → How Tutar Works reopens it on demand. When App Lock is enabled, Face ID/Touch ID stays ahead of onboarding. All 36 unit and 21 UI tests passed on iPhone 17 Pro with iOS 26.5; lock priority also passed on iOS 26.2 and the complete Turkish/dark flow passed on iPadOS 26.5. Tutar is a GPLv3 derivative of Dime by Rafael Soh and contributors. Modified 5 August 2026. Source: https://github.com/furkancak1r/tutar-ios
+Build 24 makes the onboarding navigation more minimal. The first-page Next button is now truly centered; the large filled Back control is replaced by a plain chevron that keeps a 44-point accessible touch target. Next and Start actions now use compact content-width capsules. The complete suite of 36 unit and 21 UI tests passed. Tutar is a GPLv3 derivative of Dime by Rafael Soh and contributors. Modified 5 August 2026. Source: https://github.com/furkancak1r/tutar-ios
 
 1. After updating, confirm onboarding appears once and all four pages work with horizontal swipes and the Back/Next buttons.
 2. Quit midway and relaunch; onboarding should return. After Skip or Start Using Tutar, it should stay completed.

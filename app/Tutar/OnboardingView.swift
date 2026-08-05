@@ -147,10 +147,7 @@ struct OnboardingView: View {
             HStack(spacing: 12) {
                 if selectedPage > 0 {
                     backButton
-                } else {
-                    Color.clear
-                        .frame(width: 52, height: 52)
-                        .accessibilityHidden(true)
+                    Spacer(minLength: 12)
                 }
                 primaryButton
             }
@@ -163,10 +160,10 @@ struct OnboardingView: View {
         } label: {
             Image(systemName: "chevron.left")
                 .font(.body.weight(.semibold))
-                .frame(width: 52, height: 52)
+                .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.bordered)
+        .buttonStyle(.plain)
         .foregroundStyle(.primary)
         .accessibilityLabel(Text("onboarding.back"))
         .accessibilityIdentifier("onboardingBackButton")
@@ -191,9 +188,9 @@ struct OnboardingView: View {
                 }
             }
             .foregroundStyle(Color(.systemBackground))
-            .padding(.horizontal, 18)
-            .frame(maxWidth: .infinity, minHeight: 52)
-            .background(Color.primary, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .padding(.horizontal, 22)
+            .frame(minHeight: 48)
+            .background(Color.primary, in: Capsule(style: .continuous))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
