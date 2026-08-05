@@ -1,4 +1,4 @@
-# Tutar 1.0 (21) — TestFlight metadata
+# Tutar 1.0 (22) — TestFlight metadata
 
 ## Beta Description — Turkish
 
@@ -8,7 +8,7 @@ Tutar, Rafael Soh ve katkıda bulunanların oluşturduğu Dime temel alınarak d
 
 ## What to Test — Turkish
 
-Build 21; aktif filtre varken sağ üst filtre düğmesini tek dokunuşlu temizleme kontrolüne dönüştürür ve liste içindeki ek filtre satırını kaldırır. Yeni işlemde boş yan alanda yatay kaydırarak Gider/Gelir arasında geçilebilir; form kontrollerindeki hareketler türü değiştirmez. Aylık Analiz grafiğinin sütun ve eksen yerleşimi düzeltildi. Gerçek bir sütuna dokunmak Kayıtlar'da doğru ayı ve günü açar, kesin eşleşen işlemlere kaydırır ve bu satırları üç saniye monokrom kenarlıkla vurgular; boş grafik alanı navigasyon başlatmaz. Yeni bağımlılık veya Core Data şema değişikliği eklenmedi.
+Build 22, build 21 davranışını değiştirmeden tam regresyon doğrulamasından geçirir: 36 unit ve 17 UI testi hatasız tamamlandı. Proje üretim ayarı Xcode projesiyle build 22'de eşitlendi; proje yeniden üretildiğinde build numarası geriye düşmez. Aktif filtrede sağ üst kontrol tek dokunuşla filtreyi temizler. Yeni işlemde boş yan alanda yatay kaydırarak Gider/Gelir arasında geçilebilir; form kontrollerindeki hareketler türü değiştirmez. Aylık Analiz grafiğinin sütun ve eksen yerleşimi düzenlidir. Gerçek bir sütuna dokunmak Kayıtlar'da doğru ayı ve günü açar, kesin eşleşen işlemlere kaydırır ve bu satırları üç saniye monokrom kenarlıkla vurgular; boş grafik alanı navigasyon başlatmaz. Tutar, Rafael Soh ve katkıda bulunanların Dime uygulamasını temel alan GPLv3 türev çalışmadır. Değişiklik: 5 Ağustos 2026. Kaynak: https://github.com/furkancak1r/tutar-ios
 
 1. Gider, gelir veya kategori filtresi seçin; sağ üst filtre simgesinin monokrom temizleme simgesine dönüştüğünü ve tek dokunuşla filtreyi kaldırdığını doğrulayın.
 2. Yeni işlemde boş sağ kenarda sola, boş sol kenarda sağa kaydırın; Gider/Gelir türünün değiştiğini, numaratör veya form üzerindeki hareketlerin türü değiştirmediğini doğrulayın.
@@ -49,7 +49,7 @@ Tutar is a GPLv3 modified work based on Dime, originally created by Rafael Soh a
 
 ## What to Test — English
 
-Build 21 turns the top-right filter button into a one-tap clear control whenever a filter is active and removes the extra in-list filter row. In a new transaction, swiping horizontally in the empty side area switches between Expense and Income without intercepting form controls. Monthly Analysis chart bars and axes no longer overlap. Tapping a real bar opens the correct month and day in Records, scrolls to the exact contributing transactions, and highlights them with a monochrome border for three seconds; tapping empty chart space does not navigate. No dependency or Core Data schema change was added.
+Build 22 keeps build 21 behavior unchanged and completes a full regression pass: 36 unit and 17 UI tests passed. The project generator setting now matches Xcode at build 22, so regenerating the project cannot roll the build number back. The top-right control clears an active filter with one tap. In a new transaction, horizontal swipes in the empty side area switch between Expense and Income without intercepting form controls. Monthly Analysis chart bars and axes remain clear. Tapping a real bar opens the correct month and day in Records, scrolls to the exact contributing transactions, and highlights them with a monochrome border for three seconds; tapping empty chart space does not navigate. Tutar is a GPLv3 derivative of Dime by Rafael Soh and contributors. Modified 5 August 2026. Source: https://github.com/furkancak1r/tutar-ios
 
 1. Select an expense, income, or category filter; confirm the top-right filter icon becomes a monochrome clear icon and removes the filter with one tap.
 2. In a new transaction, swipe left from the empty right edge and right from the empty left edge; confirm the type changes while gestures on the keypad and form do not.
