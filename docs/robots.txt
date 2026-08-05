@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://furkancak1r.github.io/tutar-ios/sitemap.xml

@@ -1,6 +1,6 @@
 # Tutar
 
-Tutar, günlük gelir-giderleri ve kredi kartı taksitlerini takip etmek için geliştirilmiş, tamamen ücretsiz ve açık kaynak bir iPhone/iPad uygulamasıdır. Reklam, analitik, izleyici, hesap, satın alma, abonelik, bağış veya paywall içermez.
+Tutar; aylık bütçe planlama, günlük gelir gider takibi, harcama analizi ve kredi kartı taksitlerini yönetmek için geliştirilmiş, tamamen ücretsiz ve açık kaynak bir iPhone/iPad bütçe uygulamasıdır. Reklam, analitik, izleyici, hesap, satın alma, abonelik, bağış veya paywall içermez.
 
 > English documentation follows the Turkish section.
 
