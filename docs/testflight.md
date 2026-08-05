@@ -1,4 +1,4 @@
-# Tutar 1.0 (14) — TestFlight metadata
+# Tutar 1.0 (15) — TestFlight metadata
 
 ## Beta Description — Turkish
 
@@ -8,7 +8,7 @@ Tutar, Rafael Soh ve katkıda bulunanların oluşturduğu Dime temel alınarak d
 
 ## What to Test — Turkish
 
-Build 14, açık ve koyu modda swipe eylemlerinin renk/etiket kontrastını düzeltir. Düzenleme satıra dokunarak yapılır; sola kaydırmada yalnız okunaklı kırmızı Sil eylemi gösterilir. Aynı hata sınıfının geri dönmesini önlemek için Kayıtlar, Kategoriler ve Bütçeler tek ortak swipe bileşenine bağlandı; doğrudan swipe kullanımı, etkileşimli dolgularda AccentColor, sabit siyah/beyaz dolgular ve `.borderedProminent` CI kuralıyla engellendi. Yeni bağımlılık veya gradient eklenmedi.
+Build 15, kategori, kayıt ve bütçe satırlarında silme onayı açılırken SwiftUI'nin satırı erken kaldırma animasyonunu engeller. Onay açıkken seçilen satır ve komşuları yerinde kalır; iptal edildiğinde hiçbir satır kaybolmaz. Düzenleme satıra dokunarak yapılır; sola kaydırmada yalnız okunaklı kırmızı Sil eylemi gösterilir. Doğrudan swipe kullanımı, etkileşimli dolgularda AccentColor, sabit siyah/beyaz dolgular ve `.borderedProminent` CI kuralıyla engellenmeye devam eder. Yeni bağımlılık veya gradient eklenmedi.
 
 1. Ayarlar → Kategoriler ekranında Gider/Gelir seçiminin listeleri doğru ayırdığını doğrulayın.
 2. Önerilenler bölümünden Konut ve Serbest Çalışma kategorilerini ekleyin; tek dokunuşla Kategorilerin bölümüne taşındıklarını ve önerilerden kaybolduklarını doğrulayın.
@@ -37,7 +37,7 @@ Tutar is a GPLv3 modified work based on Dime, originally created by Rafael Soh a
 
 ## What to Test — English
 
-Build 14 fixes swipe-action colour and label contrast in both light and dark appearance. Editing remains available by tapping a row; swiping left now shows only a readable red Delete action. Records, Categories, and Budgets share one audited swipe component, while CI rejects direct swipe implementations, AccentColor interaction fills, fixed black/white fills, and `.borderedProminent`. No dependency or gradient was added.
+Build 15 prevents SwiftUI from starting an early row-removal animation when delete confirmation opens for categories, records, or budgets. The selected row and its neighbours stay in place while confirmation is visible, and cancelling no longer makes any row disappear. Editing remains available by tapping a row; swiping left shows one readable red Delete action. CI continues to reject direct swipe implementations, AccentColor interaction fills, fixed black/white fills, and `.borderedProminent`. No dependency or gradient was added.
 
 1. In Settings → Categories, confirm the Expense/Income control separates the lists correctly.
 2. Add Housing and Freelance from Suggested; confirm each moves into Your categories with one tap and disappears from Suggested.

@@ -315,9 +315,9 @@ final class TutarUITests: XCTestCase {
 
     @MainActor
     func testCategoryDeleteActionPassesContrastInLightAndDark() throws {
-        for (language, locale, appearance, settings, categories, delete, edit) in [
-            ("en", "en_US", "Light", "Settings", "Categories", "Delete", "Edit"),
-            ("tr", "tr_TR", "Dark", "Ayarlar", "Kategoriler", "Sil", "Düzenle")
+        for (language, locale, appearance, settings, categories, delete, dialogTitle, edit) in [
+            ("en", "en_US", "Light", "Settings", "Categories", "Delete", "Delete category?", "Edit"),
+            ("tr", "tr_TR", "Dark", "Ayarlar", "Kategoriler", "Sil", "Kategori silinsin mi?", "Düzenle")
         ] {
             let app = launch(language: language, locale: locale, seed: false, appearance: appearance)
             openTab(settings, in: app)
@@ -326,13 +326,16 @@ final class TutarUITests: XCTestCase {
 
             let row = app.descendants(matching: .any)
                 .matching(identifier: "categoryRow-category.market").firstMatch
+            let followingRow = app.descendants(matching: .any)
+                .matching(identifier: "categoryRow-category.food").firstMatch
             XCTAssertTrue(row.waitForExistence(timeout: 5))
+            XCTAssertTrue(followingRow.waitForExistence(timeout: 5))
             let window = app.windows.firstMatch
             let rowY = row.frame.midY / window.frame.height
-            window.coordinate(withNormalizedOffset: CGVector(dx: 0.88, dy: rowY))
+            window.coordinate(withNormalizedOffset: CGVector(dx: 0.82, dy: rowY))
                 .press(
                     forDuration: 0.1,
-                    thenDragTo: window.coordinate(withNormalizedOffset: CGVector(dx: 0.22, dy: rowY))
+                    thenDragTo: window.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: rowY))
                 )
             XCTAssertTrue(app.buttons[delete].waitForExistence(timeout: 3))
             XCTAssertFalse(app.buttons[edit].exists)
@@ -345,6 +348,27 @@ final class TutarUITests: XCTestCase {
                     || (issue.element?.elementType == .staticText
                         && label != delete)
             }
+
+            if !app.buttons[delete].exists {
+                window.coordinate(withNormalizedOffset: CGVector(dx: 0.82, dy: rowY))
+                    .press(
+                        forDuration: 0.1,
+                        thenDragTo: window.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: rowY))
+                    )
+            }
+            XCTAssertTrue(app.buttons[delete].waitForExistence(timeout: 3))
+            app.buttons[delete].tap()
+            XCTAssertTrue(app.staticTexts[dialogTitle].waitForExistence(timeout: 3))
+            XCTAssertTrue(row.exists)
+            XCTAssertTrue(followingRow.exists)
+            XCTAssertGreaterThan(row.frame.height, 20)
+            XCTAssertGreaterThan(followingRow.frame.height, 20)
+            attachScreenshot("category-delete-confirmation-\(appearance.lowercased())", in: app)
+
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.02, dy: 0.55)).tap()
+            XCTAssertTrue(app.staticTexts[dialogTitle].waitForNonExistence(timeout: 3))
+            XCTAssertTrue(row.waitForExistence(timeout: 3))
+            XCTAssertTrue(followingRow.waitForExistence(timeout: 3))
             app.terminate()
         }
     }
