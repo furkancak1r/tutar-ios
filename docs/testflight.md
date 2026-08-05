@@ -1,4 +1,4 @@
-# Tutar 1.0 (12) — TestFlight metadata
+# Tutar 1.0 (13) — TestFlight metadata
 
 ## Beta Description — Turkish
 
@@ -8,22 +8,26 @@ Tutar, Rafael Soh ve katkıda bulunanların oluşturduğu Dime temel alınarak d
 
 ## What to Test — Turkish
 
-Build 12, kayıtlar ekranına Dime'ın güçlü toplam hiyerarşisinden esinlenen ancak Tutar'a özgü monokrom bir aylık özet getirir. Net toplam artık büyük odaktır; seçili ay rozet içinde, aylık hareket ince eğilim çizgisinde, harcama ve gelir ise sakin ikinci seviyede gösterilir. Önceki build'deki koyu mod, sağ alt hızlı kayıt, iki satırlı işlemler, Face ID geçişi ve numaratör titreşimi düzeltmeleri korunur. Gradient veya yeni tasarım bağımlılığı eklenmedi.
+Build 13, Kategoriler ekranını Gider ve Gelir olarak iki sade görünüme ayırır. Konut, eğitim, seyahat, sigorta, serbest çalışma, prim, yatırım ve diğer yaygın öneriler tek dokunuşla kullanıcının listesine eklenir; eklenen sistem kategorileri Türkçe/English arasında doğru adla değişir. Mevcut özel kategoriler ve veriler korunur. Gradient veya yeni tasarım bağımlılığı eklenmedi.
 
-1. Kayıtlar ekranında net toplamın birincil odak olduğunu; seçili ay rozetinin, monokrom eğilim çizgisinin ve ikincil harcama/gelir değerlerinin açık ve koyu modda okunabildiğini doğrulayın.
-2. Yeni kayıt düğmesinin sağ altta, sekme çubuğunun üstünde ve kolay erişilebilir kaldığını doğrulayın.
-3. İşlem satırında notun üstte; kategori, kısa gün/ay tarihi ve taksit sırasının altta; tutarın sağda okunaklı göründüğünü kontrol edin. Tarihte yıl görünmemeli.
-4. Bir satırı sola kaydırın; Düzenle ve Sil eylemlerinin koyu modda belirgin ve okunaklı olduğunu doğrulayın.
-5. Ay özetini sağa/sola kaydırın; özet verilerinin ve çizginin seçilen aya güncellendiğini, animasyonlu geçişi ve dört sekmenin görünür kaldığını kontrol edin.
-6. Ayarlar ekranını koyu modda inceleyin; başlıkların, seçimlerin, anahtarların ve para birimi kodunun okunaklı olduğunu doğrulayın.
-7. İşlem editöründe Tuş titreşimi açıkken rakam ve silme tuşlarına basın; her dokunuşta hafif dokunsal geri bildirim gelmeli.
-8. Türkçe ve English arayüzü, açık/koyu görünümü ve en büyük Dynamic Type boyutunu deneyin; en büyük boyutta özet ve işlem satırı okunabilir dikey düzene geçmeli.
-9. Uygulama Kilidi'ni etkinleştirin; Face ID sırasında kilit ekranının arkada kaldığını, başarı işareti görünürken uygulamanın çizilmeye başladığını ve tek doğrulama sonrası yeniden kilitlenmediğini kontrol edin.
-10. 3.000 TL, 3 taksit ve 18 Ağustos seçerek 18 Ağustos, 18 Eylül ve 18 Ekim'de tam üç bağlı işlem oluştuğunu doğrulayın.
-11. Plan alanından tekrar oluşturun; aynı vade için mükerrer işlem oluşmadığını kontrol edin.
-12. Özel emojili kategoriyle CSV ve tam JSON yedeğini dışa ve içe aktarın; emojinin korunduğunu doğrulayın.
-13. TRY dışında bir ISO para birimi seçin ve seçimin uygulama yeniden açıldığında korunduğunu doğrulayın.
-14. VoiceOver ile sekmeleri, ay düğmelerini, net toplamı, işlem satırlarını, kilit ekranını ve numaratörü gezin.
+1. Ayarlar → Kategoriler ekranında Gider/Gelir seçiminin listeleri doğru ayırdığını doğrulayın.
+2. Önerilenler bölümünden Konut ve Serbest Çalışma kategorilerini ekleyin; tek dokunuşla Kategorilerin bölümüne taşındıklarını ve önerilerden kaybolduklarını doğrulayın.
+3. Uygulama dilini Türkçe ve English arasında değiştirin; öneriden eklenen kategori adlarının çevrildiğini doğrulayın.
+4. Kategori ekranını açık/koyu modda, büyük metinde, VoiceOver ile ve iPhone/iPad üzerinde kontrol edin.
+5. Kayıtlar ekranında net toplamın birincil odak olduğunu; seçili ay rozetinin, monokrom eğilim çizgisinin ve ikincil harcama/gelir değerlerinin açık ve koyu modda okunabildiğini doğrulayın.
+6. Yeni kayıt düğmesinin sağ altta, sekme çubuğunun üstünde ve kolay erişilebilir kaldığını doğrulayın.
+7. İşlem satırında notun üstte; kategori, kısa gün/ay tarihi ve taksit sırasının altta; tutarın sağda okunaklı göründüğünü kontrol edin. Tarihte yıl görünmemeli.
+8. Bir satırı sola kaydırın; Düzenle ve Sil eylemlerinin koyu modda belirgin ve okunaklı olduğunu doğrulayın.
+9. Ay özetini sağa/sola kaydırın; özet verilerinin ve çizginin seçilen aya güncellendiğini, animasyonlu geçişi ve dört sekmenin görünür kaldığını kontrol edin.
+10. Ayarlar ekranını koyu modda inceleyin; başlıkların, seçimlerin, anahtarların ve para birimi kodunun okunaklı olduğunu doğrulayın.
+11. İşlem editöründe Tuş titreşimi açıkken rakam ve silme tuşlarına basın; her dokunuşta hafif dokunsal geri bildirim gelmeli.
+12. Türkçe ve English arayüzü, açık/koyu görünümü ve en büyük Dynamic Type boyutunu deneyin; en büyük boyutta özet ve işlem satırı okunabilir dikey düzene geçmeli.
+13. Uygulama Kilidi'ni etkinleştirin; Face ID sırasında kilit ekranının arkada kaldığını, başarı işareti görünürken uygulamanın çizilmeye başladığını ve tek doğrulama sonrası yeniden kilitlenmediğini kontrol edin.
+14. 3.000 TL, 3 taksit ve 18 Ağustos seçerek 18 Ağustos, 18 Eylül ve 18 Ekim'de tam üç bağlı işlem oluştuğunu doğrulayın.
+15. Plan alanından tekrar oluşturun; aynı vade için mükerrer işlem oluşmadığını kontrol edin.
+16. Özel emojili kategoriyle CSV ve tam JSON yedeğini dışa ve içe aktarın; emojinin korunduğunu doğrulayın.
+17. TRY dışında bir ISO para birimi seçin ve seçimin uygulama yeniden açıldığında korunduğunu doğrulayın.
+18. VoiceOver ile sekmeleri, ay düğmelerini, net toplamı, işlem satırlarını, kilit ekranını ve numaratörü gezin.
 
 ## Beta Description — English
 
@@ -33,22 +37,26 @@ Tutar is a GPLv3 modified work based on Dime, originally created by Rafael Soh a
 
 ## What to Test — English
 
-Build 12 adds a Tutar-specific monochrome monthly summary inspired by Dime's strong balance hierarchy. Net total is now the primary focus; the selected month appears in a pill, monthly movement in a restrained trend line, and spending/income as quiet secondary metrics. The previous build's dark-mode, bottom-right quick entry, two-line records, Face ID timing, and keypad-haptic fixes remain. No gradient or new design dependency was added.
+Build 13 separates Categories into two focused Expense and Income views. Common suggestions including Housing, Education, Travel, Insurance, Freelance, Bonus, Investment, and more can be added to the user's list with one tap; added system categories keep the correct name when switching between Turkish and English. Existing custom categories and data remain intact. No gradient or new design dependency was added.
 
-1. Confirm net total is the primary focus and that the selected-month pill, monochrome trend, and secondary spent/income values remain readable in light and dark appearance.
-2. Confirm the add button stays at the bottom-right above the tab bar and remains easy to reach.
-3. In each record, verify the note is on top; category, abbreviated day/month date, and installment position are below; and the amount is readable on the right. The date must not include a year.
-4. Swipe a record left and confirm Edit and Delete remain distinct and readable in dark mode.
-5. Swipe the month summary left and right; confirm the values and trend update for the selected month, the transition animates, and all four tabs remain visible.
-6. Inspect Settings in dark mode and confirm headings, picker values, switches, and the currency code are readable.
-7. With Key haptics enabled, press number and delete keys in the editor; each tap should produce light haptic feedback.
-8. Test Turkish and English, light and dark appearance, and the largest Dynamic Type size. At the largest size, summary values and records should adapt to a readable vertical layout.
-9. Enable App Lock; confirm the lock screen stays behind Face ID, app content starts rendering during the success checkmark, and one successful authentication does not relock the app.
-10. Enter 3,000, choose 3 installments and 18 August, then verify exactly three linked entries on 18 August, 18 September, and 18 October.
-11. Create a repeat from Schedule and confirm a due date is materialized only once.
-12. Export and import CSV and complete JSON backup with a custom category emoji; confirm the emoji is preserved.
-13. Choose a non-default ISO currency and confirm the choice persists after relaunch.
-14. Navigate tabs, month controls, net total, transaction rows, the lock screen, and the keypad with VoiceOver.
+1. In Settings → Categories, confirm the Expense/Income control separates the lists correctly.
+2. Add Housing and Freelance from Suggested; confirm each moves into Your categories with one tap and disappears from Suggested.
+3. Switch the app between Turkish and English; confirm suggested categories that were added change to the correct localized name.
+4. Check Categories in light/dark appearance, large text, VoiceOver, and iPhone/iPad layouts.
+5. Confirm net total is the primary focus and that the selected-month pill, monochrome trend, and secondary spent/income values remain readable in light and dark appearance.
+6. Confirm the add button stays at the bottom-right above the tab bar and remains easy to reach.
+7. In each record, verify the note is on top; category, abbreviated day/month date, and installment position are below; and the amount is readable on the right. The date must not include a year.
+8. Swipe a record left and confirm Edit and Delete remain distinct and readable in dark mode.
+9. Swipe the month summary left and right; confirm the values and trend update for the selected month, the transition animates, and all four tabs remain visible.
+10. Inspect Settings in dark mode and confirm headings, picker values, switches, and the currency code are readable.
+11. With Key haptics enabled, press number and delete keys in the editor; each tap should produce light haptic feedback.
+12. Test Turkish and English, light and dark appearance, and the largest Dynamic Type size. At the largest size, summary values and records should adapt to a readable vertical layout.
+13. Enable App Lock; confirm the lock screen stays behind Face ID, app content starts rendering during the success checkmark, and one successful authentication does not relock the app.
+14. Enter 3,000, choose 3 installments and 18 August, then verify exactly three linked entries on 18 August, 18 September, and 18 October.
+15. Create a repeat from Schedule and confirm a due date is materialized only once.
+16. Export and import CSV and complete JSON backup with a custom category emoji; confirm the emoji is preserved.
+17. Choose a non-default ISO currency and confirm the choice persists after relaunch.
+18. Navigate tabs, month controls, net total, transaction rows, the lock screen, and the keypad with VoiceOver.
 
 Feedback email: furkancakr7@gmail.com
 

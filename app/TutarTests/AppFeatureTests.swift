@@ -377,6 +377,31 @@ final class DataFeatureTests: XCTestCase {
         XCTAssertEqual(try controller.context.count(for: Transaction.fetchRequest()), 1)
     }
 
+    func testSuggestedCategoryKeepsLocalizationAndCannotBeAddedTwice() async throws {
+        let controller = DataController(inMemory: true, cloudEnabled: false)
+        try await waitUntilLoaded(controller)
+
+        let category = try controller.saveCategory(
+            name: "category.housing",
+            emoji: "🏠",
+            colour: "#6B6258",
+            income: false,
+            systemKey: "category.housing"
+        )
+
+        XCTAssertEqual(category.displayName(language: .turkish), "Konut")
+        XCTAssertEqual(category.displayName(language: .english), "Housing")
+        XCTAssertThrowsError(try controller.saveCategory(
+            name: "category.housing",
+            emoji: "🏠",
+            colour: "#6B6258",
+            income: false,
+            systemKey: "category.housing"
+        )) { error in
+            XCTAssertEqual(error as? CategoryError, .duplicate)
+        }
+    }
+
     private func waitUntilLoaded(_ controller: DataController) async throws {
         for _ in 0 ..< 100 where !controller.isStoreLoaded && controller.loadError == nil {
             try await Task.sleep(nanoseconds: 20_000_000)

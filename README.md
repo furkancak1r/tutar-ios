@@ -11,7 +11,7 @@ Tutar, günlük gelir-giderleri ve kredi kartı taksitlerini takip etmek için g
 - Haftalık, aylık ve yıllık analiz; arama ve kategori kırılımları
 - Ay özetini sağa/sola kaydırarak veya oklarla ay değiştirme
 - Günlük, haftalık, aylık ve yıllık genel/kategori bütçeleri
-- Düzenlenebilir, sıralanabilir gelir ve gider kategorileri
+- Gelir/Gider görünümünde düzenlenebilir, sıralanabilir kategoriler ve tek dokunuşla eklenen öneriler
 - Tek sefer, tekrar veya taksit seçeneklerini aynı **Plan** menüsünden ayarlama
 - Toplam tutarı kuruşu kuruşuna koruyan bağlı taksit planları
 - Her taksitte sıra göstergesi (`1/3`, `2/3`, `3/3`)
@@ -72,7 +72,7 @@ Tutar ve tüm türev kod GNU General Public License v3.0 altında yayımlanır. 
 
 Tutar is a completely free and open-source iPhone/iPad app for tracking everyday income, expenses, and card installments. It contains no advertising, analytics, tracking, account system, purchases, subscriptions, donations, or paywalls.
 
-The automatic-cents keypad makes amount entry immediate, with an optional decimal mode. Past-entry suggestions, editable categories, swipeable months, search, weekly/monthly/yearly analysis, all ISO currencies, and general or category budgets cover everyday tracking. Dime/Tutar CSV import, transaction CSV export, and a complete JSON backup provide local data portability. The interface uses a flat monochrome accent system with no gradients.
+The automatic-cents keypad makes amount entry immediate, with an optional decimal mode. Past-entry suggestions, separate expense/income category lists with one-tap suggested categories, swipeable months, search, weekly/monthly/yearly analysis, all ISO currencies, and general or category budgets cover everyday tracking. Dime/Tutar CSV import, transaction CSV export, and a complete JSON backup provide local data portability. The interface uses a flat monochrome accent system with no gradients.
 
 Installments are configured inside the transaction **Schedule** menu beside One time and Repeat, not in a separate tab. The flow creates exactly the selected number of linked transactions, assigns any rounding remainder to the final installment, shows positions such as `1/3`, and supports editing or deleting one installment or the selected installment and all following ones. Future installments are shown separately and count toward spending only in their own calendar month.
 

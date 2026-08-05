@@ -212,6 +212,12 @@
 
 "categories.title" = "Kategoriler";
 "categories.add" = "Kategori ekle";
+"categories.type" = "Kategori türü";
+"categories.yours.section" = "Kategorilerin";
+"categories.suggested.section" = "Önerilenler";
+"categories.suggested.footer" = "Kendine eklemek için bir kategoriye dokun.";
+"categories.suggested.empty" = "Tüm öneriler eklendi.";
+"categories.suggested.add" = "%@ kategorisini ekle";
 "categories.details.section" = "Ayrıntılar";
 "categories.name" = "Ad";
 "categories.emoji" = "Simge veya emoji";
@@ -224,6 +230,7 @@
 "categories.error.name" = "En fazla 80 karakterlik bir kategori adı gir.";
 "categories.error.emoji" = "Kısa bir simge veya emoji gir.";
 "categories.error.duplicate" = "Bu ada sahip bir kategori zaten var.";
+"categories.error.add" = "Kategori eklenemedi.";
 
 "notification.title" = "Kısa bir Tutar kontrolü";
 "notification.body" = "Bugünün harcamalarını aklındayken kaydet.";
@@ -251,6 +258,20 @@
 "category.health" = "Sağlık";
 "category.entertainment" = "Eğlence";
 "category.salary" = "Maaş";
+"category.housing" = "Konut";
+"category.education" = "Eğitim";
+"category.travel" = "Seyahat";
+"category.insurance" = "Sigorta";
+"category.pets" = "Evcil Hayvan";
+"category.personalCare" = "Kişisel Bakım";
+"category.subscriptions" = "Abonelikler";
+"category.taxes" = "Vergi";
+"category.freelance" = "Serbest Çalışma";
+"category.bonus" = "Prim";
+"category.investment" = "Yatırım";
+"category.rentalIncome" = "Kira Geliri";
+"category.refund" = "İade";
+"category.otherIncome" = "Diğer Gelir";
 "category.uncategorized" = "Kategorisiz";
 
 "error.data.title" = "Veriye erişilemiyor";

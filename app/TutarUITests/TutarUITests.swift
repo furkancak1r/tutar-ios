@@ -268,6 +268,48 @@ final class TutarUITests: XCTestCase {
     }
 
     @MainActor
+    func testSuggestedExpenseAndIncomeCategoriesAddWithOneTap() throws {
+        let app = launch(language: "en", locale: "en_US", seed: false, appearance: "Dark")
+        openTab("Settings", in: app)
+        for _ in 0 ..< 4 where !app.buttons["Categories"].exists { app.swipeUp() }
+        app.buttons["Categories"].tap()
+
+        let housing = app.descendants(matching: .any).matching(identifier: "suggestedCategory-category.housing").firstMatch
+        XCTAssertTrue(housing.waitForExistence(timeout: 5))
+        attachScreenshot("05-categories-expense-dark", in: app)
+        housing.tap()
+        XCTAssertTrue(app.descendants(matching: .any)
+            .matching(identifier: "categoryRow-category.housing").firstMatch
+            .waitForExistence(timeout: 5))
+        XCTAssertFalse(housing.exists)
+
+        app.buttons["Income"].tap()
+        let freelance = app.descendants(matching: .any).matching(identifier: "suggestedCategory-category.freelance").firstMatch
+        XCTAssertTrue(freelance.waitForExistence(timeout: 5))
+        attachScreenshot("06-categories-income-dark", in: app)
+        try app.performAccessibilityAudit(for: [.contrast, .sufficientElementDescription]) {
+            self.contrastFalsePositive($0)
+        }
+        freelance.tap()
+        XCTAssertTrue(app.descendants(matching: .any)
+            .matching(identifier: "categoryRow-category.freelance").firstMatch
+            .waitForExistence(timeout: 5))
+        XCTAssertFalse(freelance.exists)
+
+        app.terminate()
+        let turkish = launch(language: "tr", locale: "tr_TR", seed: false)
+        openTab("Ayarlar", in: turkish)
+        for _ in 0 ..< 4 where !turkish.buttons["Kategoriler"].exists { turkish.swipeUp() }
+        turkish.buttons["Kategoriler"].tap()
+        let housingTurkish = turkish.descendants(matching: .any)
+            .matching(identifier: "suggestedCategory-category.housing").firstMatch
+        XCTAssertTrue(housingTurkish.waitForExistence(timeout: 5))
+        XCTAssertEqual(housingTurkish.label, "Konut kategorisini ekle")
+        XCTAssertTrue(turkish.buttons["Gelir"].exists)
+        attachScreenshot("07-categories-expense-turkish", in: turkish)
+    }
+
+    @MainActor
     func testTurkishCurrencyCanBeChangedFromTRY() {
         let app = launch(language: "tr", locale: "tr_TR", seed: false)
         openTab("Ayarlar", in: app)

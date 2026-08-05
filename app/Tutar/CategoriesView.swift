@@ -12,17 +12,77 @@ struct CategoriesView: View {
     @EnvironmentObject private var dataController: DataController
     @Environment(\.appLanguage) private var language
     @State private var showingNew = false
+    @State private var showingIncome = false
     @State private var editing: Category?
     @State private var deleting: Category?
     @State private var errorMessage = ""
 
-    private var expenses: [Category] { categories.filter { !$0.income } }
-    private var income: [Category] { categories.filter(\.income) }
+    private var selectedCategories: [Category] {
+        categories.filter { $0.income == showingIncome }
+    }
+
+    private var availableSuggestions: [CategorySuggestion] {
+        Self.suggestions.filter { suggestion in
+            suggestion.income == showingIncome && !categories.contains { category in
+                category.income == suggestion.income
+                    && (category.systemKey == suggestion.key
+                        || category.displayName(language: language).localizedCaseInsensitiveCompare(
+                            AppFormat.localized(suggestion.key, language: language)
+                        ) == .orderedSame)
+            }
+        }
+    }
 
     var body: some View {
         List {
-            categorySection("editor.expense", items: expenses)
-            categorySection("editor.income", items: income)
+            Section {
+                Picker("categories.type", selection: $showingIncome) {
+                    Text("editor.expense").tag(false)
+                    Text("editor.income").tag(true)
+                }
+                .pickerStyle(.segmented)
+                .accessibilityIdentifier("categoryTypePicker")
+            }
+
+            categorySection("categories.yours.section", items: selectedCategories)
+
+            Section {
+                if availableSuggestions.isEmpty {
+                    Text("categories.suggested.empty")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(availableSuggestions) { suggestion in
+                        Button {
+                            add(suggestion)
+                        } label: {
+                            HStack(spacing: 12) {
+                                Text(verbatim: suggestion.emoji)
+                                    .font(.title3)
+                                    .frame(width: 28)
+                                Text(verbatim: AppFormat.localized(suggestion.key, language: language))
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.title3)
+                                    .foregroundStyle(.primary)
+                                    .accessibilityHidden(true)
+                            }
+                            .frame(minHeight: 44)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("suggestedCategory-\(suggestion.key)")
+                        .accessibilityLabel(Text(verbatim: String(
+                            format: AppFormat.localized("categories.suggested.add", language: language),
+                            AppFormat.localized(suggestion.key, language: language)
+                        )))
+                    }
+                }
+            } header: {
+                Text("categories.suggested.section")
+            } footer: {
+                Text("categories.suggested.footer")
+            }
         }
         .navigationTitle("categories.title")
         .navigationBarTitleDisplayMode(.inline)
@@ -88,6 +148,7 @@ struct CategoriesView: View {
                 }
                 .contentShape(Rectangle())
                 .onTapGesture { editing = category }
+                .accessibilityIdentifier("categoryRow-\(category.systemKey ?? category.objectID.uriRepresentation().absoluteString)")
                 .swipeActions {
                     Button(role: .destructive) { deleting = category } label: {
                         Label("action.delete", systemImage: "trash")
@@ -119,6 +180,54 @@ struct CategoriesView: View {
         }
         self.deleting = nil
     }
+
+    private func add(_ suggestion: CategorySuggestion) {
+        do {
+            try dataController.saveCategory(
+                name: suggestion.key,
+                emoji: suggestion.emoji,
+                colour: suggestion.colour,
+                income: suggestion.income,
+                systemKey: suggestion.key
+            )
+        } catch {
+            errorMessage = AppFormat.localized("categories.error.add", language: language)
+        }
+    }
+
+    private static let suggestions = [
+        CategorySuggestion(key: "category.market", emoji: "🛒", colour: "#9B554D", income: false),
+        CategorySuggestion(key: "category.food", emoji: "🍽️", colour: "#9A7B4F", income: false),
+        CategorySuggestion(key: "category.transport", emoji: "🚇", colour: "#5F6B5C", income: false),
+        CategorySuggestion(key: "category.bills", emoji: "🧾", colour: "#5C5A57", income: false),
+        CategorySuggestion(key: "category.shopping", emoji: "🛍️", colour: "#7A6068", income: false),
+        CategorySuggestion(key: "category.health", emoji: "🩺", colour: "#87504D", income: false),
+        CategorySuggestion(key: "category.entertainment", emoji: "🎟️", colour: "#736A62", income: false),
+        CategorySuggestion(key: "category.housing", emoji: "🏠", colour: "#6B6258", income: false),
+        CategorySuggestion(key: "category.education", emoji: "🎓", colour: "#5C6674", income: false),
+        CategorySuggestion(key: "category.travel", emoji: "✈️", colour: "#5F6771", income: false),
+        CategorySuggestion(key: "category.insurance", emoji: "🛡️", colour: "#555F66", income: false),
+        CategorySuggestion(key: "category.pets", emoji: "🐾", colour: "#78645A", income: false),
+        CategorySuggestion(key: "category.personalCare", emoji: "🧴", colour: "#80616F", income: false),
+        CategorySuggestion(key: "category.subscriptions", emoji: "🔁", colour: "#62626E", income: false),
+        CategorySuggestion(key: "category.taxes", emoji: "🧮", colour: "#6B5B54", income: false),
+        CategorySuggestion(key: "category.salary", emoji: "💼", colour: "#4F705F", income: true),
+        CategorySuggestion(key: "category.freelance", emoji: "🧑‍💻", colour: "#4F665E", income: true),
+        CategorySuggestion(key: "category.bonus", emoji: "🎉", colour: "#6D6551", income: true),
+        CategorySuggestion(key: "category.investment", emoji: "📈", colour: "#526C63", income: true),
+        CategorySuggestion(key: "category.rentalIncome", emoji: "🏡", colour: "#5C6757", income: true),
+        CategorySuggestion(key: "category.refund", emoji: "↩️", colour: "#5C666B", income: true),
+        CategorySuggestion(key: "category.otherIncome", emoji: "💰", colour: "#5C6657", income: true)
+    ]
+}
+
+private struct CategorySuggestion: Identifiable {
+    let key: String
+    let emoji: String
+    let colour: String
+    let income: Bool
+
+    var id: String { key }
 }
 
 private struct CategoryEditorView: View {

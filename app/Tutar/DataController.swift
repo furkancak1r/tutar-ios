@@ -379,7 +379,8 @@ final class DataController: ObservableObject {
         emoji: String,
         colour: String,
         income: Bool,
-        replacesSystemName: Bool = false
+        replacesSystemName: Bool = false,
+        systemKey: String? = nil
     ) throws -> Category {
         let cleanedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         let cleanedEmoji = emoji.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -392,7 +393,9 @@ final class DataController: ObservableObject {
         let request = Category.fetchRequest()
         request.predicate = NSPredicate(format: "income == %@", NSNumber(value: income))
         let duplicate = try context.fetch(request).contains {
-            $0 != category && $0.name?.localizedCaseInsensitiveCompare(cleanedName) == .orderedSame
+            $0 != category
+                && ((systemKey != nil && $0.systemKey == systemKey)
+                    || $0.name?.localizedCaseInsensitiveCompare(cleanedName) == .orderedSame)
         }
         guard !duplicate else { throw CategoryError.duplicate }
 
@@ -407,6 +410,7 @@ final class DataController: ObservableObject {
         item.colour = colour
         item.income = income
         if category == nil {
+            item.systemKey = systemKey
             item.order = (try context.fetch(request).map(\.order).max() ?? -1) + 1
         } else if replacesSystemName {
             item.systemKey = nil
