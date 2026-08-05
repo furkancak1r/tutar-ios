@@ -26,6 +26,7 @@ Neler yapabilirsiniz?
 • Dime/Tutar CSV ile içe aktarın; CSV veya tam JSON yedeğiyle dışa aktarın.
 • İsteğe bağlı Face ID, Touch ID veya aygıt parolası kilidini kullanın.
 • Widget ve yerel hatırlatıcılarla kayıtlarınıza hızlıca ulaşın.
+• Banka veya saklama yerine göre döviz, gram altın ve gram gümüş birikimlerinizin yaklaşık TL değerini görün.
 
 Tutar tamamen ücretsizdir. Reklam, analitik, izleyici, hesap, abonelik, satın alma, bağış veya paywall içermez.
 
@@ -55,6 +56,7 @@ What you can do:
 • Import Dime/Tutar CSV and export transaction CSV or a complete JSON backup.
 • Protect the app with optional Face ID, Touch ID, or device passcode.
 • Use the widget and local reminders for quick access.
+• See the estimated TRY value of currency, gram gold, and gram silver savings grouped by bank or storage location.
 
 Tutar is completely free. It contains no ads, analytics, trackers, accounts, subscriptions, purchases, donations, or paywalls.
 

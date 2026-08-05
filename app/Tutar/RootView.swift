@@ -8,6 +8,7 @@ private enum AppTab: Hashable {
     case log
     case analysis
     case budgets
+    case savings
     case settings
 }
 
@@ -256,6 +257,12 @@ struct RootView: View {
             }
             .tabItem { Label("tab.budgets", systemImage: "gauge.with.dots.needle.50percent") }
             .tag(AppTab.budgets)
+
+            NavigationStack {
+                SavingsView()
+            }
+            .tabItem { Label("tab.savings", systemImage: "building.columns") }
+            .tag(AppTab.savings)
 
             NavigationStack {
                 SettingsView {

@@ -73,6 +73,93 @@ final class AppFormatTests: XCTestCase {
     }
 }
 
+final class SavingsQuoteTests: XCTestCase {
+    func testGoldOunceConvertsToPureAnd995GramTRY() {
+        let pure = SavingsQuoteMath.metalPriceTRY(
+            ounceUSD: Decimal(string: "4000")!,
+            usdTRY: Decimal(string: "48")!
+        )
+        let gold995 = SavingsQuoteMath.metalPriceTRY(
+            ounceUSD: Decimal(string: "4000")!,
+            usdTRY: Decimal(string: "48")!,
+            purity: Decimal(string: "0.995")!
+        )
+        XCTAssertEqual(NSDecimalNumber(decimal: pure).doubleValue, 6_172.94334, accuracy: 0.00001)
+        XCTAssertEqual(NSDecimalNumber(decimal: gold995).doubleValue, NSDecimalNumber(decimal: pure * Decimal(string: "0.995")!).doubleValue, accuracy: 0.0001)
+    }
+
+    func testTCMBParserRespectsCurrencyUnitAndHourlyGoldCodes() throws {
+        let xml = """
+        <Tarih_Date Tarih="05.08.2026">
+          <Currency CurrencyCode="JPY"><Unit>100</Unit><ForexBuying>32.5000</ForexBuying></Currency>
+          <doviz_kur_liste gecerlilik_tarihi="2026-8-5">
+            <kur><doviz_cinsi>XAU</doviz_cinsi><birim>1</birim><alis>6367,96</alis></kur>
+            <kur><doviz_cinsi>XAS</doviz_cinsi><birim>1</birim><alis>6399,96</alis></kur>
+          </doviz_kur_liste>
+        </Tarih_Date>
+        """
+        let quotes = try TCMBQuoteParser.parse(Data(xml.utf8))
+        XCTAssertEqual(quotes["JPY"]?.priceTRY, Decimal(string: "0.325"))
+        XCTAssertEqual(quotes["XAU995"]?.priceTRY, Decimal(string: "6367.96"))
+        XCTAssertEqual(quotes["XAU1000"]?.priceTRY, Decimal(string: "6399.96"))
+    }
+}
+
+@MainActor
+final class SavingsDataTests: XCTestCase {
+    func testHoldingRoundTripsThroughVersionTwoBackup() throws {
+        let source = DataController(inMemory: true, cloudEnabled: false)
+        let holding = try source.saveHolding(
+            institution: "Enpara",
+            asset: .XAU995,
+            quantity: Decimal(string: "12.5")!,
+            quoteMode: 1,
+            manualPrice: Decimal(string: "6400")!
+        )
+        XCTAssertEqual(holding.wrappedQuantity, Decimal(string: "12.5"))
+
+        let destination = DataController(inMemory: true, cloudEnabled: false)
+        let result = try destination.importData(source.exportBackup(), fileExtension: "json", language: .turkish)
+        let restored = try XCTUnwrap(destination.context.fetch(SavingsHolding.fetchRequest()).first)
+        XCTAssertGreaterThan(result.imported, 0)
+        XCTAssertEqual(restored.wrappedInstitution, "Enpara")
+        XCTAssertEqual(restored.wrappedAsset, .XAU995)
+        XCTAssertEqual(restored.wrappedQuantity, Decimal(string: "12.5"))
+        XCTAssertEqual(restored.wrappedManualPrice, Decimal(string: "6400"))
+    }
+
+    func testHoldingDoesNotCreateTransactionsOrBudgets() throws {
+        let controller = DataController(inMemory: true, cloudEnabled: false)
+        try controller.saveHolding(
+            institution: "Cash",
+            asset: .USD,
+            quantity: 100,
+            quoteMode: 0,
+            manualPrice: 0
+        )
+        XCTAssertEqual(try controller.context.count(for: Transaction.fetchRequest()), 0)
+        XCTAssertEqual(try controller.context.count(for: Budget.fetchRequest()), 0)
+        XCTAssertEqual(try controller.context.count(for: MainBudget.fetchRequest()), 0)
+    }
+
+    func testHoldingRoundTripsThroughCSVWithoutBecomingATransaction() throws {
+        let source = DataController(inMemory: true, cloudEnabled: false)
+        try source.saveHolding(
+            institution: "Physical",
+            asset: .XAG,
+            quantity: Decimal(string: "125.75")!,
+            quoteMode: 0,
+            manualPrice: 0
+        )
+        let destination = DataController(inMemory: true, cloudEnabled: false)
+        _ = try destination.importData(source.exportCSV(language: .english), fileExtension: "csv", language: .english)
+        let restored = try XCTUnwrap(destination.context.fetch(SavingsHolding.fetchRequest()).first)
+        XCTAssertEqual(restored.wrappedAsset, .XAG)
+        XCTAssertEqual(restored.wrappedQuantity, Decimal(string: "125.75"))
+        XCTAssertEqual(try destination.context.count(for: Transaction.fetchRequest()), 0)
+    }
+}
+
 @MainActor
 private final class AuthenticationProbe {
     private(set) var callCount = 0

@@ -1,0 +1,374 @@
+// Copyright © 2026 Furkan Çakır. Licensed under GPLv3.
+
+import CoreData
+import SwiftUI
+
+struct SavingsView: View {
+    @FetchRequest(
+        sortDescriptors: [
+            NSSortDescriptor(keyPath: \SavingsHolding.institution, ascending: true),
+            NSSortDescriptor(keyPath: \SavingsHolding.createdAt, ascending: true)
+        ],
+        animation: .default
+    ) private var holdings: FetchedResults<SavingsHolding>
+
+    @EnvironmentObject private var dataController: DataController
+    @Environment(\.appLanguage) private var language
+    @StateObject private var quotes = SavingsQuoteStore()
+    @State private var editor: SavingsHolding?
+    @State private var showingNewEditor = false
+    @State private var deleting: SavingsHolding?
+    @State private var showingInfo = false
+    @State private var errorMessage = ""
+
+    private var grouped: [(String, [SavingsHolding])] {
+        Dictionary(grouping: Array(holdings), by: \.wrappedInstitution)
+            .sorted { $0.key.localizedCaseInsensitiveCompare($1.key) == .orderedAscending }
+    }
+
+    private var valuedHoldings: [(SavingsHolding, Decimal)] {
+        holdings.compactMap { holding in
+            unitPrice(for: holding).map { (holding, holding.wrappedQuantity * $0.priceTRY) }
+        }
+    }
+
+    private var total: Decimal { valuedHoldings.reduce(0) { $0 + $1.1 } }
+    private var missingCount: Int { holdings.count - valuedHoldings.count }
+
+    var body: some View {
+        List {
+            Section {
+                VStack(alignment: .leading, spacing: 7) {
+                    Text(missingCount > 0 ? "savings.total.minimum" : "savings.total")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Text(SavingsFormatting.money(total, language: language))
+                        .font(.system(.largeTitle, design: .rounded, weight: .medium))
+                        .monospacedDigit()
+                        .minimumScaleFactor(0.65)
+                        .lineLimit(1)
+                    if missingCount > 0 {
+                        Text(AppFormat.plural("savings.missing.count", count: missingCount, language: language))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else if let updated = valuedHoldings.compactMap({ unitPrice(for: $0.0)?.updatedAt }).min() {
+                        Text(updated.formatted(.relative(presentation: .named).locale(language.locale)))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 8)
+                .listRowBackground(Color.clear)
+            }
+
+            ForEach(grouped, id: \.0) { institution, items in
+                Section(institution) {
+                    ForEach(items) { holding in
+                        holdingRow(holding)
+                            .contentShape(Rectangle())
+                            .onTapGesture { editor = holding }
+                            .tutarDeleteSwipeAction { deleting = holding }
+                            .confirmationDialog(
+                                "savings.delete.title",
+                                isPresented: deleteBinding(for: holding),
+                                titleVisibility: .visible
+                            ) {
+                                Button("action.delete", role: .destructive) { performDelete() }
+                                Button("action.cancel", role: .cancel) { deleting = nil }
+                            } message: {
+                                Text("savings.delete.message")
+                            }
+                    }
+                }
+            }
+
+            if holdings.isEmpty {
+                Section {
+                    ContentUnavailableView {
+                        Label("savings.empty.title", systemImage: "building.columns")
+                    } description: {
+                        Text("savings.empty.message")
+                    }
+                    .frame(maxWidth: .infinity)
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                }
+            }
+        }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(Color(.systemBackground))
+        .frame(maxWidth: 760)
+        .frame(maxWidth: .infinity)
+        .navigationTitle("savings.title")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button { showingInfo = true } label: {
+                    Label("savings.info", systemImage: "info.circle").labelStyle(.iconOnly)
+                }
+                .popover(isPresented: $showingInfo, arrowEdge: .top) {
+                    Text("savings.info.message")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .padding(18)
+                        .frame(idealWidth: 320)
+                        .presentationCompactAdaptation(.popover)
+                }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                if quotes.isRefreshing { ProgressView().controlSize(.small) }
+            }
+        }
+        .overlay(alignment: .bottomTrailing) {
+            Button { showingNewEditor = true } label: {
+                Image(systemName: "plus")
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(Color(.systemBackground))
+                    .frame(width: 54, height: 54)
+                    .background(Color.primary, in: Circle())
+            }
+            .accessibilityLabel(Text("savings.add"))
+            .accessibilityIdentifier("addSavingsButton")
+            .padding(.trailing, 20)
+            .padding(.bottom, 18)
+        }
+        .refreshable { await quotes.refresh(force: true) }
+        .task { await quotes.refresh() }
+        .sheet(isPresented: $showingNewEditor) { SavingsEditorView() }
+        .sheet(item: $editor) { SavingsEditorView(holding: $0) }
+        .alert("error.save.title", isPresented: Binding(
+            get: { !errorMessage.isEmpty },
+            set: { if !$0 { errorMessage = "" } }
+        )) { Button("action.ok") { errorMessage = "" } } message: { Text(verbatim: errorMessage) }
+    }
+
+    @ViewBuilder
+    private func holdingRow(_ holding: SavingsHolding) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 12) {
+                Image(systemName: holding.wrappedAsset.symbol)
+                    .font(.title3)
+                    .frame(width: 28)
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(holding.wrappedAsset.name(language: language))
+                        .font(.subheadline.weight(.medium))
+                        .lineLimit(1)
+                    Text(verbatim: quantityText(holding))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 8)
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(unitPrice(for: holding).map { SavingsFormatting.money(holding.wrappedQuantity * $0.priceTRY, language: language) } ?? "—")
+                        .font(.subheadline.weight(.semibold))
+                        .monospacedDigit()
+                        .lineLimit(1)
+                    Text(sourceText(for: holding))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+            }
+
+            if holding.quoteMode == 1, !holding.manualQuoteDeclined, quotes.quote(for: holding.wrappedAsset) != nil {
+                HStack(spacing: 10) {
+                    Text("savings.automatic.available")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer(minLength: 4)
+                    Button("savings.automatic.use") { useAutomatic(holding) }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    Button("savings.manual.keep") { keepManual(holding) }
+                        .buttonStyle(.plain)
+                        .font(.caption.weight(.medium))
+                }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    private func unitPrice(for holding: SavingsHolding) -> SavingsQuote? {
+        if holding.quoteMode == 1, holding.wrappedManualPrice > 0 {
+            return SavingsQuote(priceTRY: holding.wrappedManualPrice, updatedAt: holding.updatedAt ?? .now, source: .manual)
+        }
+        return quotes.quote(for: holding.wrappedAsset)
+    }
+
+    private func quantityText(_ holding: SavingsHolding) -> String {
+        let unit = holding.wrappedAsset.isMetal
+            ? AppFormat.localized("savings.unit.gram.short", language: language)
+            : holding.wrappedAsset.rawValue
+        return "\(SavingsFormatting.quantity(holding.wrappedQuantity, language: language)) \(unit)"
+    }
+
+    private func sourceText(for holding: SavingsHolding) -> String {
+        guard let quote = unitPrice(for: holding) else { return AppFormat.localized("savings.source.unavailable", language: language) }
+        return AppFormat.localized("savings.source.\(quote.source.rawValue)", language: language)
+    }
+
+    private func deleteBinding(for holding: SavingsHolding) -> Binding<Bool> {
+        let id = holding.objectID
+        return Binding(
+            get: { deleting?.objectID == id },
+            set: { if !$0, deleting?.objectID == id { deleting = nil } }
+        )
+    }
+
+    private func performDelete() {
+        guard let target = deleting else { return }
+        deleting = nil
+        do { try dataController.delete(target) } catch { errorMessage = error.localizedDescription }
+    }
+
+    private func useAutomatic(_ holding: SavingsHolding) {
+        do { try dataController.useAutomaticQuote(holding) } catch { errorMessage = error.localizedDescription }
+    }
+
+    private func keepManual(_ holding: SavingsHolding) {
+        do { try dataController.keepManualQuote(holding) } catch { errorMessage = error.localizedDescription }
+    }
+}
+
+private struct SavingsEditorView: View {
+    @EnvironmentObject private var dataController: DataController
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.appLanguage) private var language
+    let holding: SavingsHolding?
+
+    @State private var institution: String
+    @State private var asset: SavingsAsset
+    @State private var quantity: String
+    @State private var quoteMode: Int
+    @State private var manualPrice: String
+    @State private var errorMessage = ""
+    @FocusState private var focusedField: Field?
+
+    private enum Field { case institution, quantity, price }
+
+    init(holding: SavingsHolding? = nil) {
+        self.holding = holding
+        _institution = State(initialValue: holding?.wrappedInstitution ?? "")
+        _asset = State(initialValue: holding?.wrappedAsset ?? .XAU995)
+        _quantity = State(initialValue: holding.map { SavingsFormatting.editable($0.wrappedQuantity) } ?? "")
+        _quoteMode = State(initialValue: Int(holding?.quoteMode ?? 0))
+        _manualPrice = State(initialValue: holding.map { SavingsFormatting.editable($0.wrappedManualPrice) } ?? "")
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("savings.location.section") {
+                    TextField("savings.location.placeholder", text: $institution)
+                        .focused($focusedField, equals: .institution)
+                        .textInputAutocapitalization(.words)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack {
+                            ForEach(["Enpara", "savings.location.physical", "savings.location.cash", "savings.location.otherBank"], id: \.self) { key in
+                                Button(key.hasPrefix("savings.") ? AppFormat.localized(key, language: language) : key) {
+                                    institution = key.hasPrefix("savings.") ? AppFormat.localized(key, language: language) : key
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
+                            }
+                        }
+                    }
+                }
+
+                Section("savings.asset.section") {
+                    Picker("savings.asset", selection: $asset) {
+                        ForEach(SavingsAsset.allCases) { item in
+                            Text("\(item.name(language: language)) (\(item.rawValue))").tag(item)
+                        }
+                    }
+                    TextField("savings.quantity", text: $quantity)
+                        .keyboardType(.decimalPad)
+                        .focused($focusedField, equals: .quantity)
+                }
+
+                Section("savings.valuation.section") {
+                    Picker("savings.valuation", selection: $quoteMode) {
+                        Text("savings.valuation.automatic").tag(0)
+                        Text("savings.valuation.manual").tag(1)
+                    }
+                    .pickerStyle(.segmented)
+                    if quoteMode == 1 {
+                        TextField("savings.manual.price", text: $manualPrice)
+                            .keyboardType(.decimalPad)
+                            .focused($focusedField, equals: .price)
+                        Text("savings.manual.help")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .navigationTitle(holding == nil ? "savings.add" : "savings.edit")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("action.cancel") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) { Button("action.save", action: save) }
+            }
+            .onAppear { if holding == nil { focusedField = .institution } }
+            .alert("error.save.title", isPresented: Binding(
+                get: { !errorMessage.isEmpty }, set: { if !$0 { errorMessage = "" } }
+            )) { Button("action.ok") { errorMessage = "" } } message: { Text(verbatim: errorMessage) }
+        }
+    }
+
+    private func save() {
+        guard let quantity = SavingsFormatting.parse(quantity, language: language),
+              let price = SavingsFormatting.parse(manualPrice.isEmpty ? "0" : manualPrice, language: language) else {
+            errorMessage = AppFormat.localized("savings.error.invalid", language: language)
+            return
+        }
+        do {
+            try dataController.saveHolding(
+                holding,
+                institution: institution,
+                asset: asset,
+                quantity: quantity,
+                quoteMode: quoteMode,
+                manualPrice: price
+            )
+            dismiss()
+        } catch {
+            errorMessage = AppFormat.localized("savings.error.invalid", language: language)
+        }
+    }
+}
+
+enum SavingsFormatting {
+    static func money(_ amount: Decimal, language: AppLanguage) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.locale = language.locale
+        formatter.currencyCode = "TRY"
+        formatter.minimumFractionDigits = 2
+        formatter.maximumFractionDigits = 2
+        return formatter.string(from: NSDecimalNumber(decimal: amount)) ?? "—"
+    }
+
+    static func quantity(_ value: Decimal, language: AppLanguage) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.locale = language.locale
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 6
+        return formatter.string(from: NSDecimalNumber(decimal: value)) ?? "—"
+    }
+
+    static func editable(_ value: Decimal) -> String {
+        NSDecimalNumber(decimal: value).stringValue
+    }
+
+    static func parse(_ value: String, language: AppLanguage) -> Decimal? {
+        let normalized = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: language.locale.decimalSeparator ?? ",", with: ".")
+            .replacingOccurrences(of: ",", with: ".")
+        return Decimal(string: normalized, locale: Locale(identifier: "en_US_POSIX"))
+    }
+}

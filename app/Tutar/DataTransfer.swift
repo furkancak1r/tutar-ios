@@ -108,6 +108,7 @@ private struct TutarBackup: Codable {
     let budgets: [BudgetRecord]
     let overallBudgets: [OverallBudgetRecord]
     let templates: [TemplateRecord]
+    let holdings: [HoldingRecord]?
 }
 
 private struct CategoryRecord: Codable {
@@ -165,6 +166,18 @@ private struct TemplateRecord: Codable {
     let recurringCoefficient: Int
 }
 
+private struct HoldingRecord: Codable {
+    let id: UUID
+    let institution: String
+    let assetCode: String
+    let quantity: Decimal
+    let quoteMode: Int
+    let manualPrice: Decimal
+    let manualQuoteDeclined: Bool
+    let createdAt: Date?
+    let updatedAt: Date?
+}
+
 extension DataController {
     func exportCSV(language: AppLanguage) throws -> Data {
         let request = Transaction.fetchRequest()
@@ -173,10 +186,11 @@ extension DataController {
             "Date", "Note", "Amount", "Category", "CategoryEmoji", "Type", "ID", "CategoryID",
             "InstallmentGroupID", "InstallmentIndex", "InstallmentCount",
             "InstallmentIntervalMonths", "InstallmentOriginalTotalMinorUnits",
-            "RecurringType", "RecurringCoefficient"
+            "RecurringType", "RecurringCoefficient", "RecordKind", "Institution",
+            "AssetCode", "Quantity", "QuoteMode", "ManualUnitPrice"
         ]
 
-        let rows = try context.fetch(request).map { transaction in
+        var rows = try context.fetch(request).map { transaction in
             [
                 Self.iso8601.string(from: transaction.wrappedDate),
                 transaction.note ?? "",
@@ -193,7 +207,18 @@ extension DataController {
                 transaction.installmentOriginalTotalMinorUnits > 0
                     ? String(transaction.installmentOriginalTotalMinorUnits) : "",
                 transaction.recurringType > 0 ? String(transaction.recurringType) : "",
-                transaction.recurringCoefficient > 0 ? String(transaction.recurringCoefficient) : ""
+                transaction.recurringCoefficient > 0 ? String(transaction.recurringCoefficient) : "",
+                "Transaction", "", "", "", "", ""
+            ]
+        }
+        rows += try context.fetch(SavingsHolding.fetchRequest()).map { holding in
+            [
+                Self.iso8601.string(from: holding.createdAt ?? .now), "",
+                SavingsFormatting.editable(holding.wrappedQuantity), "", "", "Savings",
+                holding.id?.uuidString ?? "", "", "", "", "", "", "", "", "",
+                "Savings", holding.wrappedInstitution, holding.wrappedAsset.rawValue,
+                SavingsFormatting.editable(holding.wrappedQuantity), String(holding.quoteMode),
+                SavingsFormatting.editable(holding.wrappedManualPrice)
             ]
         }
         guard let data = CSVCodec.encode([header] + rows).data(using: .utf8) else {
@@ -265,16 +290,31 @@ extension DataController {
                 recurringCoefficient: Int(item.recurringCoefficient)
             )
         }
+        let holdings = try context.fetch(SavingsHolding.fetchRequest()).compactMap { holding -> HoldingRecord? in
+            guard let id = holding.id else { return nil }
+            return HoldingRecord(
+                id: id,
+                institution: holding.wrappedInstitution,
+                assetCode: holding.wrappedAsset.rawValue,
+                quantity: holding.wrappedQuantity,
+                quoteMode: Int(holding.quoteMode),
+                manualPrice: holding.wrappedManualPrice,
+                manualQuoteDeclined: holding.manualQuoteDeclined,
+                createdAt: holding.createdAt,
+                updatedAt: holding.updatedAt
+            )
+        }
 
         let backup = TutarBackup(
             format: "com.furkancakir.tutar.backup",
-            version: 1,
+            version: 2,
             exportedAt: .now,
             categories: categories,
             transactions: transactions,
             budgets: budgets,
             overallBudgets: overall,
-            templates: templates
+            templates: templates,
+            holdings: holdings
         )
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
@@ -302,7 +342,7 @@ extension DataController {
         decoder.dateDecodingStrategy = .iso8601
         let backup = try decoder.decode(TutarBackup.self, from: data)
         guard backup.format == "com.furkancakir.tutar.backup" else { throw DataTransferError.invalidFormat }
-        guard backup.version == 1 else { throw DataTransferError.unsupportedVersion }
+        guard (1 ... 2).contains(backup.version) else { throw DataTransferError.unsupportedVersion }
 
         let existingCategories = try context.fetch(Category.fetchRequest())
         var categoriesByID = Dictionary(uniqueKeysWithValues: existingCategories.compactMap { category in
@@ -485,6 +525,28 @@ extension DataController {
             imported += 1
         }
 
+        var existingHoldingIDs = Set(try context.fetch(SavingsHolding.fetchRequest()).compactMap(\.id))
+        for record in backup.holdings ?? [] {
+            guard existingHoldingIDs.insert(record.id).inserted else { skipped += 1; continue }
+            guard let asset = SavingsAsset(rawValue: record.assetCode),
+                  !record.institution.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  record.institution.count <= 80, record.quantity > 0,
+                  record.quoteMode == 0 || (record.quoteMode == 1 && record.manualPrice > 0) else {
+                throw DataTransferError.invalidFormat
+            }
+            let holding = NSEntityDescription.insertNewObject(forEntityName: "SavingsHolding", into: context) as! SavingsHolding
+            holding.id = record.id
+            holding.institution = record.institution
+            holding.assetCode = asset.rawValue
+            holding.quantity = NSDecimalNumber(decimal: record.quantity)
+            holding.quoteMode = Int16(record.quoteMode)
+            holding.manualPrice = NSDecimalNumber(decimal: record.manualPrice)
+            holding.manualQuoteDeclined = record.manualQuoteDeclined
+            holding.createdAt = record.createdAt ?? .now
+            holding.updatedAt = record.updatedAt ?? .now
+            imported += 1
+        }
+
         try save()
         return DataTransferResult(imported: imported, skipped: skipped)
     }
@@ -520,6 +582,12 @@ extension DataController {
         let totalColumn = headers.firstIndex(of: "installmentoriginaltotalminorunits")
         let recurringTypeColumn = headers.firstIndex(of: "recurringtype")
         let recurringCoefficientColumn = headers.firstIndex(of: "recurringcoefficient")
+        let recordKindColumn = headers.firstIndex(of: "recordkind")
+        let institutionColumn = headers.firstIndex(of: "institution")
+        let assetCodeColumn = headers.firstIndex(of: "assetcode")
+        let quantityColumn = headers.firstIndex(of: "quantity")
+        let quoteModeColumn = headers.firstIndex(of: "quotemode")
+        let manualPriceColumn = headers.firstIndex(of: "manualunitprice")
 
         let existingTransactions = try context.fetch(Transaction.fetchRequest())
         var existingIDs = Set(existingTransactions.compactMap(\.id))
@@ -538,10 +606,40 @@ extension DataController {
             )
         }
         var categories = try context.fetch(Category.fetchRequest())
+        var existingHoldingIDs = Set(try context.fetch(SavingsHolding.fetchRequest()).compactMap(\.id))
         var imported = 0
         var skipped = 0
 
         for (rowIndex, row) in rows.enumerated() {
+            let kind = recordKindColumn.flatMap { row[safe: $0] }?.lowercased() ?? "transaction"
+            if kind == "savings" {
+                let id = idColumn.flatMap { row[safe: $0] }.flatMap(UUID.init(uuidString:)) ?? UUID()
+                guard existingHoldingIDs.insert(id).inserted else { skipped += 1; continue }
+                guard let institution = institutionColumn.flatMap({ row[safe: $0] })?.trimmingCharacters(in: .whitespacesAndNewlines),
+                      !institution.isEmpty, institution.count <= 80,
+                      let assetCode = assetCodeColumn.flatMap({ row[safe: $0] }),
+                      let asset = SavingsAsset(rawValue: assetCode),
+                      let quantityText = quantityColumn.flatMap({ row[safe: $0] }),
+                      let quantity = Self.parseDecimal(quantityText), quantity > 0 else {
+                    throw DataTransferError.invalidRow(rowIndex + (hasHeader ? 2 : 1))
+                }
+                let mode = quoteModeColumn.flatMap { row[safe: $0] }.flatMap(Int.init) ?? 0
+                let manual = manualPriceColumn.flatMap { row[safe: $0] }.flatMap(Self.parseDecimal) ?? 0
+                guard mode == 0 || (mode == 1 && manual > 0) else {
+                    throw DataTransferError.invalidRow(rowIndex + (hasHeader ? 2 : 1))
+                }
+                let holding = NSEntityDescription.insertNewObject(forEntityName: "SavingsHolding", into: context) as! SavingsHolding
+                holding.id = id
+                holding.institution = institution
+                holding.assetCode = asset.rawValue
+                holding.quantity = NSDecimalNumber(decimal: quantity)
+                holding.quoteMode = Int16(mode)
+                holding.manualPrice = NSDecimalNumber(decimal: manual)
+                holding.createdAt = row[safe: dateColumn].flatMap(Self.parseDate) ?? .now
+                holding.updatedAt = .now
+                imported += 1
+                continue
+            }
             guard row.indices.contains(dateColumn), row.indices.contains(amountColumn),
                   let date = Self.parseDate(row[dateColumn]),
                   let amountMinorUnits = Self.parseAmount(row[amountColumn]),
@@ -732,6 +830,10 @@ extension DataController {
             return nil
         }
         return number.int64Value
+    }
+
+    private static func parseDecimal(_ value: String) -> Decimal? {
+        Decimal(string: value.trimmingCharacters(in: .whitespacesAndNewlines), locale: Locale(identifier: "en_US_POSIX"))
     }
 
     private static func signature(_ transaction: Transaction) -> String {

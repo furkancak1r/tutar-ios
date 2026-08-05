@@ -11,6 +11,7 @@
 		37DE37129E809A9CD8842603 /* AmountKeypad.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0E01F89BB6264AD22700ED5 /* AmountKeypad.swift */; };
 		3D386AC84EAE44A2146D2B0E /* AppFeatureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13D92C390683949CD1795ABF /* AppFeatureTests.swift */; };
 		3F4396751BF181439603EAEF /* InstallmentPlannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB0107A3E6CFDED1556D7C3 /* InstallmentPlannerTests.swift */; };
+		490F5E5E57D68364C42E8499 /* Savings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92318B4590021367486D8ED7 /* Savings.swift */; };
 		52FDE9923D8B5B74801F661F /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60CE970A511C121AF7629A6A /* OnboardingView.swift */; };
 		5B6C4A37A7C6DF602ABDC593 /* CategoriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD9A61E024F182601B49DBB /* CategoriesView.swift */; };
 		69F8144C2EE56E3703F6CF76 /* AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14B4D9D937EF7093AA2A3257 /* AppConstants.swift */; };
@@ -30,6 +31,7 @@
 		C9955AA0FDA7AD06D4D440D9 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F16079640051B2058B6BD086 /* PrivacyInfo.xcprivacy */; };
 		D19A300A344CCD1820893491 /* Localizable.stringsdict in Resources */ = {isa = PBXBuildFile; fileRef = F89A593B0C03AF68BD37E85C /* Localizable.stringsdict */; };
 		DD5AFACB0BFDC297C1BECD7C /* DataTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 144A9BEFC0F8169726108599 /* DataTransfer.swift */; };
+		E9E9F02CD700E68977DC68C1 /* SavingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70C55D836328559DD1473074 /* SavingsView.swift */; };
 		EA0F74CEC1C7143921662176 /* Localizable.stringsdict in Resources */ = {isa = PBXBuildFile; fileRef = F89A593B0C03AF68BD37E85C /* Localizable.stringsdict */; };
 		EBC837C9F37F93F5EA900B2B /* InstallmentPlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B0EFE5E90A9325CF1D4A9FF /* InstallmentPlanner.swift */; };
 		F1462F3BD72FC6415117C0A7 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F16079640051B2058B6BD086 /* PrivacyInfo.xcprivacy */; };
@@ -90,10 +92,13 @@
 		508BDE69E94B1DFD1A96C8B6 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		5592D40B040FD141F76B515E /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = tr; path = tr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		60CE970A511C121AF7629A6A /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		662A4BBE6CB4D995AC13CC8D /* MainModel 4.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "MainModel 4.xcdatamodel"; sourceTree = "<group>"; };
 		6B8D866ABE825AC1F6E5A9DF /* TutarWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TutarWidget.swift; sourceTree = "<group>"; };
 		6BD9A61E024F182601B49DBB /* CategoriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoriesView.swift; sourceTree = "<group>"; };
+		70C55D836328559DD1473074 /* SavingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavingsView.swift; sourceTree = "<group>"; };
 		77718213FB560780D40C32B9 /* MainModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = MainModel.xcdatamodel; sourceTree = "<group>"; };
 		7CDCAD36C111B03A77641FCC /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = tr; path = tr.lproj/Localizable.strings; sourceTree = "<group>"; };
+		92318B4590021367486D8ED7 /* Savings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Savings.swift; sourceTree = "<group>"; };
 		973393404F492F753E5EB52D /* MainModel 2.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "MainModel 2.xcdatamodel"; sourceTree = "<group>"; };
 		98F8FFA1996DE28EE24FC373 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		9977C7291E7851E4761BDBF1 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = en; path = en.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
@@ -179,6 +184,8 @@
 				0B0EFE5E90A9325CF1D4A9FF /* InstallmentPlanner.swift */,
 				60CE970A511C121AF7629A6A /* OnboardingView.swift */,
 				C1EC38EE1A5375A47A788499 /* RootView.swift */,
+				92318B4590021367486D8ED7 /* Savings.swift */,
+				70C55D836328559DD1473074 /* SavingsView.swift */,
 				508BDE69E94B1DFD1A96C8B6 /* SettingsView.swift */,
 				139EB0A1285CEEEB0E06070D /* TransactionEditorView.swift */,
 				EC8530FABA3F64642C4ADA1E /* TutarApp.swift */,
@@ -398,6 +405,8 @@
 				734EFB1558C61ACD65524840 /* MainModel.xcdatamodeld in Sources */,
 				52FDE9923D8B5B74801F661F /* OnboardingView.swift in Sources */,
 				B09132C900080F56DF43CB66 /* RootView.swift in Sources */,
+				490F5E5E57D68364C42E8499 /* Savings.swift in Sources */,
+				E9E9F02CD700E68977DC68C1 /* SavingsView.swift in Sources */,
 				F608340796BA0DF6BED29BDA /* SettingsView.swift in Sources */,
 				6A5FB5BE98E7A7B9BD278F9D /* TransactionEditorView.swift in Sources */,
 				743AE9FECAA65CDCCC109A5D /* TutarApp.swift in Sources */,
@@ -508,7 +517,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 24;
+				CURRENT_PROJECT_VERSION = 25;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 9LYL5R6LS4;
 				ENABLE_APP_INTENTS_METADATA_EXTRACTION = NO;
@@ -637,7 +646,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 24;
+				CURRENT_PROJECT_VERSION = 25;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 9LYL5R6LS4;
 				ENABLE_APP_INTENTS_METADATA_EXTRACTION = NO;
@@ -831,9 +840,10 @@
 			children = (
 				973393404F492F753E5EB52D /* MainModel 2.xcdatamodel */,
 				31AB43924B3C3337B5BFE512 /* MainModel 3.xcdatamodel */,
+				662A4BBE6CB4D995AC13CC8D /* MainModel 4.xcdatamodel */,
 				77718213FB560780D40C32B9 /* MainModel.xcdatamodel */,
 			);
-			currentVersion = 31AB43924B3C3337B5BFE512 /* MainModel 3.xcdatamodel */;
+			currentVersion = 662A4BBE6CB4D995AC13CC8D /* MainModel 4.xcdatamodel */;
 			path = MainModel.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;

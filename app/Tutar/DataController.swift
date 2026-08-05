@@ -305,7 +305,7 @@ final class DataController: ObservableObject {
     }
 
     func deleteAll() throws {
-        for entityName in ["Transaction", "Category", "Budget", "MainBudget", "TemplateTransaction"] {
+        for entityName in ["Transaction", "Category", "Budget", "MainBudget", "TemplateTransaction", "SavingsHolding"] {
             let request = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
             let deleteRequest = NSBatchDeleteRequest(fetchRequest: request)
             deleteRequest.resultType = .resultTypeObjectIDs

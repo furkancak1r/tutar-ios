@@ -735,6 +735,34 @@ final class TutarUITests: XCTestCase {
     }
 
     @MainActor
+    func testSavingsAddsManualGoldWithoutCreatingATransaction() throws {
+        let app = launch(language: "en", locale: "en_US", seed: false, appearance: "Dark")
+        openTab("Savings", in: app)
+        XCTAssertTrue(app.navigationBars["Savings"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["No savings yet"].exists)
+
+        app.buttons["addSavingsButton"].tap()
+        XCTAssertTrue(app.navigationBars["Add savings"].waitForExistence(timeout: 5))
+        app.buttons["Enpara"].tap()
+        let quantity = app.textFields["Quantity"]
+        quantity.tap()
+        quantity.typeText("12.5")
+        app.buttons["Manual"].tap()
+        let price = app.textFields["TRY price per unit"]
+        price.tap()
+        price.typeText("6400")
+        app.buttons["Save"].tap()
+
+        XCTAssertTrue(app.staticTexts["Enpara"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Gram gold 995/1000"].exists)
+        attachScreenshot("25-savings-en-dark", in: app)
+        try app.performAccessibilityAudit(for: [.contrast]) { self.contrastFalsePositive($0) }
+
+        openTab("Transactions", in: app)
+        XCTAssertTrue(app.staticTexts["A clean slate"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
     private func launch(
         language: String,
         locale: String,
