@@ -56,6 +56,7 @@
 "analysis.kind" = "İşlem türü";
 "analysis.trend" = "Değişim";
 "analysis.chart" = "İşlem grafiği";
+"analysis.chart.hint" = "Bir sütuna dokunarak ilgili kayıt gününe git.";
 
 "empty.transactions.title" = "Temiz bir başlangıç";
 "empty.transactions.message" = "Aylık akışını görmek için ilk işlemini ekle.";
@@ -200,6 +201,7 @@
 "budgets.remaining" = "Kalan";
 "budgets.target" = "Hedef";
 "budgets.explanation" = "Bütçeler işlem oluşturmaz. Maaş ve diğer gelirleri yalnız gelir kaydı olarak gir. Genel bütçe tüm giderleri, kategori bütçesi yalnız bağlı gider kategorisini hedefle karşılaştırır. Gelirler bütçeyi tüketmez.";
+"budgets.info" = "Bütçeler hakkında bilgi";
 "budgets.editorHint" = "Bütçe yalnız bir karşılaştırma hedefidir; gelir veya gider kaydı oluşturmaz.";
 "budgets.new.title" = "Yeni bütçe";
 "budgets.edit.title" = "Bütçeyi düzenle";
@@ -225,14 +227,15 @@
 "categories.suggested.add" = "%@ kategorisini ekle";
 "categories.details.section" = "Ayrıntılar";
 "categories.name" = "Ad";
-"categories.emoji" = "Simge veya emoji";
+"categories.emoji" = "Emoji";
 "categories.type.lockedHint" = "Mevcut işlem ve bütçe ilişkilerini korumak için kategori türü sonradan değiştirilemez.";
 "categories.new.title" = "Yeni kategori";
 "categories.edit.title" = "Kategoriyi düzenle";
 "categories.delete.title" = "Kategori silinsin mi?";
-"categories.delete.message" = "Mevcut işlemler kategorisiz olarak korunur. Bağlı bütçe silinir.";
+"categories.delete.message" = "Bağlı kaydı olmayan kategori silinir. Bağlı bütçe de silinir.";
+"categories.error.inUse" = "Bu kategori işlem veya tekrarlayan kayıtlarda kullanılıyor. Önce bu kayıtları başka bir kategoriye taşıyın.";
 "categories.error.name" = "En fazla 80 karakterlik bir kategori adı gir.";
-"categories.error.emoji" = "Kısa bir simge veya emoji gir.";
+"categories.error.emoji" = "Bir emoji ekleyin.";
 "categories.error.duplicate" = "Bu ada sahip bir kategori zaten var.";
 "categories.error.duplicateEmoji" = "Bu emoji başka bir kategoride zaten kullanılıyor.";
 "categories.error.add" = "Kategori eklenemedi.";
@@ -242,12 +245,13 @@
 "transactions.filter.expense" = "Giderler";
 "transactions.filter.income" = "Gelirler";
 "transactions.filter.category" = "Kategoriye göre";
-"transactions.filter.uncategorized" = "Kategorisiz";
 "transactions.filter.recurring" = "Tekrarlayanlar";
 "transactions.filter.installments" = "Taksitler";
 "transactions.filter.upcoming" = "Yaklaşanlar";
 "transactions.filter.empty" = "Bu filtreyle eşleşen kayıt yok.";
 "transactions.filter.clear" = "Filtreyi temizle";
+"accessibility.expanded" = "Genişletilmiş";
+"accessibility.collapsed" = "Daraltılmış";
 
 "notification.title" = "Kısa bir Tutar kontrolü";
 "notification.body" = "Bugünün harcamalarını aklındayken kaydet.";
@@ -289,6 +293,7 @@
 "category.rentalIncome" = "Kira Geliri";
 "category.refund" = "İade";
 "category.otherIncome" = "Diğer Gelir";
+"category.other" = "Diğer";
 "category.uncategorized" = "Kategorisiz";
 
 "error.data.title" = "Veriye erişilemiyor";

@@ -23,6 +23,19 @@ enum CategoryError: Error, Equatable {
     case invalidColour
     case duplicate
     case duplicateEmoji
+    case inUse
+}
+
+enum CategoryEmoji {
+    static func isValid(_ value: String) -> Bool {
+        let value = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard value.count == 1, let character = value.first else { return false }
+        let scalars = character.unicodeScalars
+        return scalars.contains { $0.properties.isEmojiPresentation }
+            || (scalars.contains { $0.properties.isEmoji }
+                && scalars.contains { $0.value == 0xFE0F || $0.value == 0x200D || $0.value == 0x20E3 })
+            || scalars.allSatisfy { (0x1F1E6 ... 0x1F1FF).contains($0.value) }
+    }
 }
 
 @MainActor
@@ -108,7 +121,7 @@ final class DataController: ObservableObject {
     @discardableResult
     func createTransaction(
         note: String,
-        category: Category?,
+        category: Category,
         income: Bool,
         amountMinorUnits: Int64,
         date: Date,
@@ -141,7 +154,7 @@ final class DataController: ObservableObject {
     @discardableResult
     func createInstallments(
         note: String,
-        category: Category?,
+        category: Category,
         income: Bool,
         totalMinorUnits: Int64,
         count: Int,
@@ -192,7 +205,7 @@ final class DataController: ObservableObject {
     func update(
         _ transaction: Transaction,
         note: String,
-        category: Category?,
+        category: Category,
         income: Bool,
         amountMinorUnits: Int64,
         date: Date,
@@ -386,7 +399,7 @@ final class DataController: ObservableObject {
         let cleanedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         let cleanedEmoji = emoji.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleanedName.isEmpty, cleanedName.count <= 80 else { throw CategoryError.invalidName }
-        guard !cleanedEmoji.isEmpty, cleanedEmoji.count <= 16 else { throw CategoryError.invalidEmoji }
+        guard CategoryEmoji.isValid(cleanedEmoji) else { throw CategoryError.invalidEmoji }
         guard colour.range(of: "^#[0-9A-Fa-f]{6}$", options: .regularExpression) != nil else {
             throw CategoryError.invalidColour
         }
@@ -426,11 +439,11 @@ final class DataController: ObservableObject {
     func deleteCategory(_ category: Category) throws {
         let transactions = Transaction.fetchRequest()
         transactions.predicate = NSPredicate(format: "category == %@", category)
-        try context.fetch(transactions).forEach { $0.category = nil }
-
         let templates = TemplateTransaction.fetchRequest()
         templates.predicate = NSPredicate(format: "category == %@", category)
-        try context.fetch(templates).forEach { $0.category = nil }
+        guard try context.count(for: transactions) == 0, try context.count(for: templates) == 0 else {
+            throw CategoryError.inUse
+        }
 
         if let budget = category.budget { context.delete(budget) }
         context.delete(category)
@@ -469,7 +482,7 @@ final class DataController: ObservableObject {
     func configure(
         _ transaction: Transaction,
         note: String,
-        category: Category?,
+        category: Category,
         income: Bool,
         amountMinorUnits: Int64,
         date: Date
@@ -520,10 +533,11 @@ final class DataController: ObservableObject {
                 forEntityName: "Transaction",
                 into: context
             ) as! Transaction
+            let category = try marker.category ?? fallbackCategory(income: marker.income)
             configure(
                 next,
                 note: marker.note ?? "",
-                category: marker.category,
+                category: category,
                 income: marker.income,
                 amountMinorUnits: marker.amountMinorUnits,
                 date: nextDate
@@ -607,7 +621,48 @@ final class DataController: ObservableObject {
             }
         }
 
+        try repairUncategorizedRecords()
+
         try save()
+    }
+
+    func fallbackCategory(income: Bool) throws -> Category {
+        let key = income ? "category.otherIncome" : "category.other"
+        let request = Category.fetchRequest()
+        request.fetchLimit = 1
+        request.predicate = NSPredicate(format: "systemKey == %@", key)
+        if let existing = try context.fetch(request).first { return existing }
+
+        let used = Set(try context.fetch(Category.fetchRequest()).compactMap(\.emoji))
+        let candidates = income
+            ? ["💰", "🪙", "🏦", "💵", "💳", "📈", "🎁", "🏧", "🧮", "🧾", "💼", "🏆"]
+            : ["🗂️", "📦", "🧩", "🏷️", "📌", "🧺", "🛒", "🧰", "🪴", "🎯", "🗃️", "📝"]
+        guard let emoji = candidates.first(where: { !used.contains($0) }) else {
+            throw CategoryError.duplicateEmoji
+        }
+        let category = NSEntityDescription.insertNewObject(forEntityName: "Category", into: context) as! Category
+        category.id = UUID()
+        category.systemKey = key
+        category.name = key
+        category.emoji = emoji
+        category.colour = "#232326"
+        category.income = income
+        category.order = (try context.fetch(Category.fetchRequest()).filter { $0.income == income }.map(\.order).max() ?? -1) + 1
+        category.dateCreated = .now
+        return category
+    }
+
+    private func repairUncategorizedRecords() throws {
+        let transactions = try context.fetch(Transaction.fetchRequest()).filter { $0.category == nil }
+        let templates = try context.fetch(TemplateTransaction.fetchRequest()).filter { $0.category == nil }
+        for income in [false, true] {
+            let matchingTransactions = transactions.filter { $0.income == income }
+            let matchingTemplates = templates.filter { $0.income == income }
+            guard !matchingTransactions.isEmpty || !matchingTemplates.isEmpty else { continue }
+            let category = try fallbackCategory(income: income)
+            matchingTransactions.forEach { $0.category = category }
+            matchingTemplates.forEach { $0.category = category }
+        }
     }
 
     private func localizeKnownLegacyCategories() throws {
@@ -655,7 +710,7 @@ final class DataController: ObservableObject {
         let categoryRequest = Category.fetchRequest()
         categoryRequest.fetchLimit = 1
         categoryRequest.predicate = NSPredicate(format: "income == NO")
-        let category = try context.fetch(categoryRequest).first
+        let category = try context.fetch(categoryRequest).first ?? fallbackCategory(income: false)
         try createInstallments(
             note: "UI Test",
             category: category,

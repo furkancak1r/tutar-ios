@@ -5,6 +5,12 @@ import XCTest
 @testable import Tutar
 
 final class MoneyEntryTests: XCTestCase {
+    func testDefaultEntryStartsWithWholeCurrencyUnits() {
+        var entry = MoneyEntry()
+        [4, 2, 5].forEach { entry.append($0) }
+        XCTAssertEqual(entry.minorUnits, 42_500)
+    }
+
     func testAutomaticCentsEntryAndDeletion() {
         var entry = MoneyEntry(mode: .automaticCents)
         [3, 0, 0, 0, 0, 0].forEach { entry.append($0) }
@@ -362,7 +368,7 @@ final class DataFeatureTests: XCTestCase {
         XCTAssertEqual(items.filter { $0.recurringType > 0 }.count, 1)
     }
 
-    func testDeletingCategoryKeepsTransactions() async throws {
+    func testDeletingUsedCategoryIsRejectedWithoutChangingTransactions() async throws {
         let controller = DataController(inMemory: true, cloudEnabled: false)
         try await waitUntilLoaded(controller)
         let category = try controller.saveCategory(
@@ -379,10 +385,48 @@ final class DataFeatureTests: XCTestCase {
             date: .now
         )
 
-        try controller.deleteCategory(category)
+        XCTAssertThrowsError(try controller.deleteCategory(category)) { error in
+            XCTAssertEqual(error as? CategoryError, .inUse)
+        }
         XCTAssertFalse(transaction.isDeleted)
-        XCTAssertNil(transaction.category)
+        XCTAssertEqual(transaction.category, category)
         XCTAssertEqual(try controller.context.count(for: Transaction.fetchRequest()), 1)
+    }
+
+    func testCategoryRequiresOneRealEmoji() async throws {
+        let controller = DataController(inMemory: true, cloudEnabled: false)
+        try await waitUntilLoaded(controller)
+
+        for valid in ["🛒", "👨‍👩‍👧‍👦", "👩🏽‍💻", "🇹🇷", "1️⃣"] {
+            XCTAssertTrue(CategoryEmoji.isValid(valid), valid)
+        }
+        for invalid in ["", "A", "1", "TL", "+", "circle.fill", "🛒📚"] {
+            XCTAssertFalse(CategoryEmoji.isValid(invalid), invalid)
+        }
+        XCTAssertThrowsError(try controller.saveCategory(
+            name: "Text symbol",
+            emoji: "+",
+            colour: "#232326",
+            income: false
+        )) { error in
+            XCTAssertEqual(error as? CategoryError, .invalidEmoji)
+        }
+    }
+
+    func testCSVWithoutCategoriesUsesTypeSpecificOtherCategories() async throws {
+        let controller = DataController(inMemory: true, cloudEnabled: false)
+        try await waitUntilLoaded(controller)
+        let csv = "Date,Note,Amount,Category,Type\n2026-08-18,Coffee,10.00,,Expense\n2026-08-18,Gift,20.00,,Income\n"
+        let data = try XCTUnwrap(csv.data(using: .utf8))
+
+        XCTAssertEqual(
+            try controller.importData(data, fileExtension: "csv", language: .english),
+            DataTransferResult(imported: 2, skipped: 0)
+        )
+        let imported = try controller.context.fetch(Transaction.fetchRequest())
+            .filter { ["Coffee", "Gift"].contains($0.note ?? "") }
+        XCTAssertEqual(imported.first { !$0.income }?.category?.systemKey, "category.other")
+        XCTAssertEqual(imported.first { $0.income }?.category?.systemKey, "category.otherIncome")
     }
 
     func testSuggestedCategoryKeepsLocalizationAndCannotBeAddedTwice() async throws {

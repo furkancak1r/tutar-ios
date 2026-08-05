@@ -34,15 +34,20 @@ struct TutarApp: App {
             "appearance": 0,
             "icloudSync": true,
             "currencyCode": "",
-            "numberEntryType": 1,
+            "numberEntryType": 2,
             "haptics": true,
             "showSuggestions": true,
             "showUpcoming": true,
             "biometricLock": false
         ])
+        if !UserDefaults.tutar.bool(forKey: "didMigrateDecimalEntryV20") {
+            UserDefaults.tutar.set(MoneyEntry.Mode.decimal.rawValue, forKey: "numberEntryType")
+            UserDefaults.tutar.set(true, forKey: "didMigrateDecimalEntryV20")
+        }
         #if DEBUG
         if arguments.contains("-ui-testing") {
             UserDefaults.tutar.set("", forKey: "currencyCode")
+            UserDefaults.tutar.set(MoneyEntry.Mode.decimal.rawValue, forKey: "numberEntryType")
             if let index = arguments.firstIndex(of: "-appLanguage"), arguments.indices.contains(index + 1) {
                 UserDefaults.tutar.set(arguments[index + 1], forKey: "appLanguage")
             }

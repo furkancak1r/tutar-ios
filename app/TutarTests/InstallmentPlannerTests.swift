@@ -203,6 +203,7 @@ final class InstallmentPersistenceTests: XCTestCase {
         let transactions = try migrated.context.fetch(Transaction.fetchRequest())
         let preserved = try XCTUnwrap(transactions.first { $0.note == "Legacy transaction" })
         XCTAssertEqual(preserved.amount, 42.75, accuracy: 0.001)
+        XCTAssertEqual(preserved.category?.systemKey, "category.other")
         XCTAssertNil(preserved.installmentGroupID)
         XCTAssertEqual(preserved.installmentIndex, 0)
         for store in migrated.container.persistentStoreCoordinator.persistentStores {

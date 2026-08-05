@@ -15,7 +15,7 @@ struct MoneyEntry: Equatable {
     private(set) var decimalText: String
     private var hasAutomaticInput = false
 
-    init(minorUnits: Int64 = 0, mode: Mode = .automaticCents) {
+    init(minorUnits: Int64 = 0, mode: Mode = .decimal) {
         self.mode = mode
         automaticMinorUnits = max(0, min(minorUnits, Self.maximumMinorUnits))
 

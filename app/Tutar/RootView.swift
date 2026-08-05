@@ -157,9 +157,11 @@ struct RootView: View {
     @EnvironmentObject private var appLockController: AppLockController
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.appLanguage) private var language
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage("biometricLock", store: .tutar) private var biometricLock = false
     @State private var selectedTab = AppTab.log
     @State private var showingEditor = false
+    @State private var transactionTarget: DateInterval?
 
     var body: some View {
         ZStack {
@@ -222,13 +224,18 @@ struct RootView: View {
     private var tabContent: some View {
         TabView(selection: $selectedTab) {
             NavigationStack {
-                TransactionsView(showingEditor: $showingEditor)
+                TransactionsView(showingEditor: $showingEditor, navigationTarget: $transactionTarget)
             }
             .tabItem { Label("tab.transactions", systemImage: "list.bullet") }
             .tag(AppTab.log)
 
             NavigationStack {
-                AnalysisView()
+                AnalysisView { interval in
+                    transactionTarget = interval
+                    withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.25)) {
+                        selectedTab = .log
+                    }
+                }
             }
             .tabItem { Label("tab.analysis", systemImage: "chart.bar.xaxis") }
             .tag(AppTab.analysis)
@@ -320,7 +327,7 @@ private struct LockedView: View {
 }
 
 private enum TransactionFilter: Equatable {
-    case all, expense, income, recurring, installments, upcoming, uncategorized
+    case all, expense, income, recurring, installments, upcoming
     case category(String)
 }
 
@@ -340,6 +347,7 @@ struct TransactionsView: View {
     @AppStorage("currencyCode", store: .tutar) private var preferredCurrency = ""
     @AppStorage("showUpcoming", store: .tutar) private var showUpcoming = true
     @Binding var showingEditor: Bool
+    @Binding var navigationTarget: DateInterval?
 
     @State private var selectedMonth = Calendar.current.date(
         from: Calendar.current.dateComponents([.year, .month], from: .now)
@@ -350,6 +358,9 @@ struct TransactionsView: View {
     @State private var editing: Transaction?
     @State private var deleting: Transaction?
     @State private var errorMessage = ""
+    @State private var collapsedDays = Set<Date>()
+    @State private var upcomingCollapsed = false
+    @State private var scrollTarget: String?
 
     private var currency: String {
         AppFormat.currencyCode(language: language, preferred: preferredCurrency)
@@ -411,21 +422,30 @@ struct TransactionsView: View {
                 .listRowBackground(Color.clear)
             }
 
+            if filter != .all {
+                Section {
+                    activeFilterRow
+                        .listRowInsets(EdgeInsets(top: 2, leading: 16, bottom: 6, trailing: 16))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                }
+            }
+
             if !upcoming.isEmpty {
                 Section {
-                    ForEach(upcoming) { transaction in
-                        row(transaction)
+                    if !upcomingCollapsed {
+                        ForEach(upcoming) { transaction in
+                            row(transaction)
+                        }
                     }
                 } header: {
-                    HStack {
-                        Text("transactions.upcoming")
-                        Spacer()
-                        Text(verbatim: signedMoney(upcomingNet))
-                            .monospacedDigit()
-                    }
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .textCase(nil)
+                    accordionHeader(
+                        title: AppFormat.localized("transactions.upcoming", language: language),
+                        trailing: signedMoney(upcomingNet),
+                        collapsed: upcomingCollapsed
+                    ) { toggleUpcoming() }
+                    .id("upcoming")
+                    .accessibilityIdentifier("upcomingSectionHeader")
                 }
             }
 
@@ -450,14 +470,18 @@ struct TransactionsView: View {
             } else {
                 ForEach(groupedHistory, id: \.date) { group in
                     Section {
-                        ForEach(group.items) { transaction in
-                            row(transaction)
+                        if !collapsedDays.contains(group.date) {
+                            ForEach(group.items) { transaction in
+                                row(transaction)
+                            }
                         }
                     } header: {
-                        Text(AppFormat.dayHeader(group.date, language: language))
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                            .textCase(nil)
+                        accordionHeader(
+                            title: AppFormat.dayHeader(group.date, language: language),
+                            collapsed: collapsedDays.contains(group.date)
+                        ) { toggle(group.date) }
+                        .id(scrollID(group.date))
+                        .accessibilityIdentifier("daySectionHeader")
                     }
                 }
             }
@@ -468,6 +492,7 @@ struct TransactionsView: View {
         .background(Color(.systemBackground))
         .frame(maxWidth: 760)
         .frame(maxWidth: .infinity)
+        .scrollPosition(id: $scrollTarget, anchor: .top)
         .id(selectedMonth)
         .transition(.push(from: monthTransitionEdge))
         .navigationTitle("transactions.title")
@@ -517,6 +542,10 @@ struct TransactionsView: View {
         .onChange(of: categories.map { $0.objectID.uriRepresentation().absoluteString }) { _, ids in
             if case let .category(id) = filter, !ids.contains(id) { filter = .all }
         }
+        .onChange(of: navigationTarget) { _, target in
+            guard let target else { return }
+            navigate(to: target)
+        }
     }
 
     private func deleteDialogBinding(for transaction: Transaction) -> Binding<Bool> {
@@ -546,7 +575,6 @@ struct TransactionsView: View {
         case .recurring: transaction.recurringType > 0
         case .installments: transaction.isInstallment
         case .upcoming: transaction.wrappedDate > .now
-        case .uncategorized: transaction.category == nil
         case let .category(id): transaction.category?.objectID.uriRepresentation().absoluteString == id
         }
     }
@@ -562,7 +590,6 @@ struct TransactionsView: View {
             filterButton("transactions.filter.expense", systemImage: "arrow.up.circle", value: .expense)
             filterButton("transactions.filter.income", systemImage: "arrow.down.circle", value: .income)
             Menu("transactions.filter.category", systemImage: "square.grid.2x2") {
-                filterButton("transactions.filter.uncategorized", systemImage: "questionmark.circle", value: .uncategorized)
                 ForEach(categories) { category in
                     Button {
                         filter = .category(category.objectID.uriRepresentation().absoluteString)
@@ -581,6 +608,8 @@ struct TransactionsView: View {
             Image(systemName: filter == .all ? "line.3.horizontal.decrease" : "line.3.horizontal.decrease.circle.fill")
                 .frame(width: 44, height: 44)
         }
+        .tint(.primary)
+        .foregroundStyle(.primary)
         .accessibilityLabel(Text("transactions.filter.title"))
         .accessibilityIdentifier("transactionFilterButton")
     }
@@ -591,6 +620,114 @@ struct TransactionsView: View {
                 Label(title, systemImage: systemImage)
                 if filter == value { Image(systemName: "checkmark") }
             }
+        }
+    }
+
+    private var activeFilterRow: some View {
+        HStack(spacing: 8) {
+            activeFilterLabel
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+            Spacer(minLength: 8)
+            Button {
+                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) { filter = .all }
+            } label: {
+                Image(systemName: "xmark")
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.primary)
+            .accessibilityLabel(Text("transactions.filter.clear"))
+            .accessibilityIdentifier("clearTransactionFilterButton")
+        }
+        .padding(.leading, 12)
+        .background(Color(.secondarySystemFill), in: Capsule())
+    }
+
+    @ViewBuilder
+    private var activeFilterLabel: some View {
+        switch filter {
+        case .all: Label("transactions.filter.all", systemImage: "tray.full")
+        case .expense: Label("transactions.filter.expense", systemImage: "arrow.up.circle")
+        case .income: Label("transactions.filter.income", systemImage: "arrow.down.circle")
+        case .recurring: Label("transactions.filter.recurring", systemImage: "repeat")
+        case .installments: Label("transactions.filter.installments", systemImage: "rectangle.stack")
+        case .upcoming: Label("transactions.filter.upcoming", systemImage: "clock")
+        case let .category(id):
+            if let category = categories.first(where: { $0.objectID.uriRepresentation().absoluteString == id }) {
+                Text(verbatim: "\(category.wrappedEmoji) \(category.displayName(language: language))")
+            }
+        }
+    }
+
+    private func accordionHeader(
+        title: String,
+        trailing: String? = nil,
+        collapsed: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Text(verbatim: title)
+                    .lineLimit(1)
+                Spacer()
+                if let trailing {
+                    Text(verbatim: trailing)
+                        .monospacedDigit()
+                        .lineLimit(1)
+                }
+                Image(systemName: "chevron.down")
+                    .font(.caption2.weight(.semibold))
+                    .rotationEffect(.degrees(collapsed ? -90 : 0))
+                    .accessibilityHidden(true)
+            }
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.primary)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .textCase(nil)
+        .accessibilityLabel(Text(verbatim: title))
+        .accessibilityValue(Text(collapsed ? "accessibility.collapsed" : "accessibility.expanded"))
+    }
+
+    private func toggleUpcoming() {
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) { upcomingCollapsed.toggle() }
+    }
+
+    private func toggle(_ date: Date) {
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+            if collapsedDays.remove(date) == nil { collapsedDays.insert(date) }
+        }
+    }
+
+    private func scrollID(_ date: Date) -> String {
+        "day-\(Int(Calendar.current.startOfDay(for: date).timeIntervalSince1970))"
+    }
+
+    private func navigate(to interval: DateInterval) {
+        selectedMonth = Calendar.current.date(
+            from: Calendar.current.dateComponents([.year, .month], from: interval.start)
+        ) ?? interval.start
+        Task { @MainActor in
+            await Task.yield()
+            let isDay = interval.duration < 172_800
+            let day = Calendar.current.startOfDay(for: interval.start)
+            let targetDate = isDay
+                ? groupedHistory.first(where: { Calendar.current.isDate($0.date, inSameDayAs: day) })?.date
+                : groupedHistory.first?.date
+            if let targetDate {
+                collapsedDays.remove(targetDate)
+                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.3)) {
+                    scrollTarget = scrollID(targetDate)
+                }
+            } else if !upcoming.isEmpty {
+                upcomingCollapsed = false
+                scrollTarget = "upcoming"
+            }
+            navigationTarget = nil
         }
     }
 
@@ -881,7 +1018,8 @@ struct TransactionRow: View {
         Text(transaction.category?.wrappedEmoji ?? "•")
             .font(.body)
             .frame(width: 24)
-            .foregroundStyle(isUpcoming ? .secondary : .primary)
+            .grayscale(isUpcoming ? 0.6 : 0)
+            .opacity(isUpcoming ? 0.58 : 1)
             .accessibilityIdentifier("transactionCategoryIcon")
             .accessibilityHidden(true)
     }
@@ -987,6 +1125,11 @@ struct AnalysisView: View {
     @AppStorage("currencyCode", store: .tutar) private var preferredCurrency = ""
     @State private var period = AnalysisPeriod.month
     @State private var kind = AnalysisKind.expense
+    let onSelectInterval: (DateInterval) -> Void
+
+    init(onSelectInterval: @escaping (DateInterval) -> Void = { _ in }) {
+        self.onSelectInterval = onSelectInterval
+    }
 
     private var currency: String {
         AppFormat.currencyCode(language: language, preferred: preferredCurrency)
@@ -1073,7 +1216,7 @@ struct AnalysisView: View {
                 } else {
                     Chart(chartData, id: \.date) { point in
                         BarMark(
-                            x: .value(AppFormat.localized("analysis.dateAxis", language: language), chartLabel(point.date)),
+                            x: .value(AppFormat.localized("analysis.dateAxis", language: language), point.date),
                             y: .value(AppFormat.localized("analysis.amountAxis", language: language), point.amount),
                             width: .fixed(20)
                         )
@@ -1081,13 +1224,28 @@ struct AnalysisView: View {
                         .cornerRadius(3)
                     }
                     .chartXAxis {
-                        AxisMarks(values: .automatic(desiredCount: period == .month ? 5 : 7))
+                        AxisMarks(values: .automatic(desiredCount: period == .month ? 5 : 7)) { value in
+                            AxisGridLine()
+                            AxisTick()
+                            if let date = value.as(Date.self) {
+                                AxisValueLabel { Text(verbatim: chartLabel(date)) }
+                            }
+                        }
                     }
                     .chartYAxis {
                         AxisMarks(position: .leading, values: .automatic(desiredCount: 4))
                     }
                     .frame(height: 200)
+                    .chartGesture { proxy in
+                        SpatialTapGesture().onEnded { value in
+                            if let date: Date = proxy.value(atX: value.location.x) {
+                                selectChartDate(date)
+                            }
+                        }
+                    }
                     .accessibilityLabel(Text("analysis.chart"))
+                    .accessibilityHint(Text("analysis.chart.hint"))
+                    .accessibilityIdentifier("analysisChart")
                 }
             } header: {
                 Text("analysis.trend")
@@ -1142,5 +1300,18 @@ struct AnalysisView: View {
         case .year:
             date.formatted(.dateTime.month(.abbreviated).locale(language.locale))
         }
+    }
+
+    private func selectChartDate(_ date: Date) {
+        guard
+            let point = chartData.min(by: {
+                abs($0.date.timeIntervalSince(date)) < abs($1.date.timeIntervalSince(date))
+            }),
+            let interval = Calendar.current.dateInterval(
+                of: period == .year ? .month : .day,
+                for: point.date
+            )
+        else { return }
+        onSelectInterval(interval)
     }
 }

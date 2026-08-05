@@ -201,6 +201,8 @@ struct CategoriesView: View {
         self.deleting = nil
         do {
             try dataController.deleteCategory(deleting)
+        } catch CategoryError.inUse {
+            errorMessage = AppFormat.localized("categories.error.inUse", language: language)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -232,7 +234,6 @@ struct CategoriesView: View {
         CategorySuggestion(key: "category.entertainment", emoji: "🎟️", colour: "#736A62", income: false),
         CategorySuggestion(key: "category.housing", emoji: "🏠", colour: "#6B6258", income: false),
         CategorySuggestion(key: "category.education", emoji: "🎓", colour: "#5C6674", income: false),
-        CategorySuggestion(key: "category.travel", emoji: "✈️", colour: "#5F6771", income: false),
         CategorySuggestion(key: "category.insurance", emoji: "🛡️", colour: "#555F66", income: false),
         CategorySuggestion(key: "category.pets", emoji: "🐾", colour: "#78645A", income: false),
         CategorySuggestion(key: "category.personalCare", emoji: "🧴", colour: "#80616F", income: false),

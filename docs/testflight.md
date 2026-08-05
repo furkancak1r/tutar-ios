@@ -1,4 +1,4 @@
-# Tutar 1.0 (19) — TestFlight metadata
+# Tutar 1.0 (20) — TestFlight metadata
 
 ## Beta Description — Turkish
 
@@ -8,7 +8,16 @@ Tutar, Rafael Soh ve katkıda bulunanların oluşturduğu Dime temel alınarak d
 
 ## What to Test — Turkish
 
-Build 19; yeni kategori adını otomatik odaklar, tarih seçilince takvimi kapatır ve numaratörü yerel ondalık ayıracı, 0 ve kaydet oku bulunan standart 3×4 düzene getirir. Silme tuşu tutarın yanındadır. İşlem kayıtları kompakt iki satırlı düzene, hızlı gider/gelir/kategori/tekrar/taksit/yaklaşan filtrelerine ve filtreyle birlikte güncellenen özete kavuşur. Yaklaşan kayıtlar ikincil hiyerarşide ve yaklaşan net toplamıyla görünür. Bütçeler işlem oluşturmadığını açıklar ve ilerlemeyi native dairesel Gauge ile gösterir. Yeni bağımlılık veya veri migration'ı eklenmedi.
+Build 20; filtreleri açık ve koyu görünümde monokrom tutar, aktif filtreyi görünür bir satırdan tek dokunuşla temizletir ve tarih gruplarını bağımsız akordiyonlara dönüştürür. Yaklaşan kayıtların metinleri ve emojileri daha pasif görünür. Yeni kategoriler yalnız tek gerçek emoji kabul eder; kategorisiz kayıt oluşturulmaz ve eski kategorisiz veriler kayıpsız biçimde Diğer kategorisine bağlanır. Kullanılan kategoriler, işlemler başka kategoriye taşınmadan silinemez. Analiz grafiğindeki bir sütuna dokunmak ilgili gün veya aya animasyonlu olarak gider. Bütçe açıklaması kalıcı uzun metin yerine bilgi düğmesinden açılan balonda gösterilir. Tutar girişi artık tam para birimiyle başlar; 425 yazmak 425,00 oluşturur ve silme düğmesi tutarın merkezini kaydırmaz. Yeni bağımlılık veya Core Data şema değişikliği eklenmedi.
+
+1. Gider, gelir veya kategori filtresi seçin; mavi renk görünmediğini, aktif filtre satırını ve Filtreyi temizle düğmesini doğrulayın.
+2. Yaklaşanlar, Bugün, Dün ve tarih başlıklarına dokunarak her grubun diğerlerinden bağımsız açılıp kapandığını doğrulayın.
+3. Yaklaşan satırlarda emoji dahil tüm bilgi hiyerarşisinin geçmiş kayıtlardan daha pasif, fakat okunabilir olduğunu doğrulayın.
+4. Yeni kategoriye harf, sayı veya SF Symbol adı girmeyi deneyin; yalnız tek gerçek emojinin kabul edildiğini doğrulayın.
+5. İşlemlerde kullanılan bir kategoriyi silmeyi deneyin; kategori ve kayıtların değişmeden kaldığını doğrulayın.
+6. Analiz grafiğinde bir gün veya aya dokunun; Kayıtlar sekmesinin doğru ay ve tarih grubuna geçtiğini doğrulayın.
+7. Bütçeler ekranında bilgi düğmesine dokunun; açıklama balonunun açılıp dışarı dokununca kapandığını doğrulayın.
+8. İşlem ve bütçe tutarında 425 yazın; 425,00 gösterildiğini ve değerin silme düğmesine rağmen ekranın ortasında kaldığını doğrulayın.
 
 1. Ayarlar → Kategoriler ekranında Gider/Gelir seçiminin listeleri doğru ayırdığını doğrulayın.
 2. Önerilenler başlığındaki göz düğmesiyle listeyi gizleyip yeniden gösterin; düğmenin her iki durumda da erişilebilir kaldığını doğrulayın.
@@ -40,7 +49,16 @@ Tutar is a GPLv3 modified work based on Dime, originally created by Rafael Soh a
 
 ## What to Test — English
 
-Build 19 focuses a new category name automatically, dismisses calendars after date selection, and returns the keypad to a standard 3×4 layout with the locale decimal separator, zero, and a save arrow. Delete now sits beside the amount. Records use a compact two-line layout with quick expense, income, category, recurring, installment, and upcoming filters; the summary follows the same filtered data. Upcoming records use a quieter hierarchy and show their net total. Budgets explain that they do not create transactions and use a native circular Gauge. No dependency or data migration was added.
+Build 20 keeps filters monochrome in light and dark appearance, exposes the active filter with a one-tap clear control, and turns date groups into independent accordions. Upcoming record text and emoji use a quieter hierarchy. New categories accept exactly one real emoji; new uncategorized records are prevented and legacy uncategorized data is safely assigned to Other. Categories in use cannot be deleted until their records are moved. Tapping an Analysis chart bar animates to the relevant day or month in Records. The budget explanation now opens from an info button instead of occupying the screen. Amount entry now starts in whole currency units, so typing 425 produces 425.00, and the delete button no longer shifts the amount off center. No dependency or Core Data schema change was added.
+
+1. Select an expense, income, or category filter; confirm no blue tint appears and the active filter can be cleared from its visible row.
+2. Tap Upcoming, Today, Yesterday, and date headers; confirm every group expands and collapses independently.
+3. Confirm upcoming rows, including their emoji, are quieter than historical rows while remaining readable.
+4. Try a letter, number, or SF Symbol name in New Category; confirm only one real emoji is accepted.
+5. Try deleting a category used by a record; confirm the category and its records remain unchanged.
+6. Tap a day or month bar in Analysis; confirm Records opens at the correct month and date group.
+7. In Budgets, tap the info button; confirm the explanation appears in a popover and dismisses when tapping outside.
+8. Type 425 in transaction and budget amount fields; confirm 425.00 appears centered despite the delete button.
 
 1. In Settings → Categories, confirm the Expense/Income control separates the lists correctly.
 2. Hide and show the list with the eye button in Suggested; confirm the button remains accessible in both states.

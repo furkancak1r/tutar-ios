@@ -56,6 +56,7 @@
 "analysis.kind" = "Transaction type";
 "analysis.trend" = "Trend";
 "analysis.chart" = "Transaction chart";
+"analysis.chart.hint" = "Tap a bar to open the records for that date.";
 
 "empty.transactions.title" = "A clean slate";
 "empty.transactions.message" = "Add your first transaction to see your monthly flow.";
@@ -200,6 +201,7 @@
 "budgets.remaining" = "Remaining";
 "budgets.target" = "Target";
 "budgets.explanation" = "Budgets do not create transactions. Enter salary and other income only as income records. Overall budgets compare all expenses with a target; category budgets compare only that expense category. Income never consumes a budget.";
+"budgets.info" = "About budgets";
 "budgets.editorHint" = "A budget is a comparison target; it does not add income or expense records.";
 "budgets.new.title" = "New budget";
 "budgets.edit.title" = "Edit budget";
@@ -225,14 +227,15 @@
 "categories.suggested.add" = "Add %@ category";
 "categories.details.section" = "Details";
 "categories.name" = "Name";
-"categories.emoji" = "Symbol or emoji";
+"categories.emoji" = "Emoji";
 "categories.type.lockedHint" = "The type cannot be changed later because existing transactions and budget relationships must be preserved.";
 "categories.new.title" = "New category";
 "categories.edit.title" = "Edit category";
 "categories.delete.title" = "Delete category?";
-"categories.delete.message" = "Existing transactions will be kept as uncategorized. A linked budget will be removed.";
+"categories.delete.message" = "A category without linked records will be deleted. Its linked budget will also be deleted.";
+"categories.error.inUse" = "This category is used by transactions or recurring records. Move those records to another category first.";
 "categories.error.name" = "Enter a category name with no more than 80 characters.";
-"categories.error.emoji" = "Enter a short symbol or emoji.";
+"categories.error.emoji" = "Add an emoji.";
 "categories.error.duplicate" = "A category with that name already exists.";
 "categories.error.duplicateEmoji" = "This emoji is already used by another category.";
 "categories.error.add" = "The category could not be added.";
@@ -242,12 +245,13 @@
 "transactions.filter.expense" = "Expenses";
 "transactions.filter.income" = "Income";
 "transactions.filter.category" = "By category";
-"transactions.filter.uncategorized" = "Uncategorized";
 "transactions.filter.recurring" = "Recurring";
 "transactions.filter.installments" = "Installments";
 "transactions.filter.upcoming" = "Upcoming";
 "transactions.filter.empty" = "No records match this filter.";
 "transactions.filter.clear" = "Clear filter";
+"accessibility.expanded" = "Expanded";
+"accessibility.collapsed" = "Collapsed";
 
 "notification.title" = "A quick Tutar check-in";
 "notification.body" = "Record today’s spending while it is still fresh.";
@@ -289,6 +293,7 @@
 "category.rentalIncome" = "Rental Income";
 "category.refund" = "Refund";
 "category.otherIncome" = "Other Income";
+"category.other" = "Other";
 "category.uncategorized" = "Uncategorized";
 
 "error.data.title" = "Data unavailable";

@@ -11,7 +11,7 @@ struct SettingsView: View {
     @AppStorage("appLanguage", store: .tutar) private var languageRaw = AppLanguage.system.rawValue
     @AppStorage("appearance", store: .tutar) private var appearance = 0
     @AppStorage("currencyCode", store: .tutar) private var currencyCode = ""
-    @AppStorage("numberEntryType", store: .tutar) private var numberEntryType = 1
+    @AppStorage("numberEntryType", store: .tutar) private var numberEntryType = 2
     @AppStorage("haptics", store: .tutar) private var haptics = true
     @AppStorage("showSuggestions", store: .tutar) private var showSuggestions = true
     @AppStorage("showUpcoming", store: .tutar) private var showUpcoming = true

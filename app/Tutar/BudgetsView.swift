@@ -51,6 +51,7 @@ struct BudgetsView: View {
     @State private var editorTarget: BudgetEditorTarget?
     @State private var deleting: BudgetDeletion?
     @State private var errorMessage = ""
+    @State private var showingExplanation = false
 
     private var currency: String {
         AppFormat.currencyCode(language: language, preferred: preferredCurrency)
@@ -58,14 +59,6 @@ struct BudgetsView: View {
 
     var body: some View {
         List {
-            Section {
-                Label("budgets.explanation", systemImage: "info.circle")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .listRowSeparator(.hidden)
-                    .accessibilityIdentifier("budgetExplanation")
-            }
-
             if let overall = overallBudgets.first {
                 Section("budgets.overall.section") {
                     row(
@@ -147,6 +140,25 @@ struct BudgetsView: View {
         .navigationTitle("budgets.title")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    showingExplanation = true
+                } label: {
+                    Label("budgets.info", systemImage: "info.circle")
+                        .labelStyle(.iconOnly)
+                }
+                .accessibilityLabel(Text("budgets.info"))
+                .accessibilityIdentifier("budgetInfoButton")
+                .popover(isPresented: $showingExplanation, arrowEdge: .top) {
+                    Text("budgets.explanation")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .padding(18)
+                        .frame(idealWidth: 300)
+                        .presentationCompactAdaptation(.popover)
+                        .accessibilityIdentifier("budgetExplanation")
+                }
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     editorTarget = .new
@@ -346,16 +358,20 @@ private struct BudgetEditorView: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
 
-                        HStack(spacing: 8) {
+                        ZStack {
                             Text(amountText)
                                 .font(.largeTitle.weight(.semibold).monospacedDigit())
                                 .minimumScaleFactor(0.45)
                                 .lineLimit(1)
                                 .frame(maxWidth: .infinity)
+                                .padding(.horizontal, 52)
                                 .accessibilityLabel(Text("editor.amount"))
                                 .accessibilityValue(Text(verbatim: amountText))
                                 .accessibilityIdentifier("budgetAmountDisplay")
-                            AmountDeleteButton(entry: $amountEntry)
+                            HStack {
+                                Spacer()
+                                AmountDeleteButton(entry: $amountEntry)
+                            }
                         }
 
                         VStack(spacing: 0) {
@@ -436,8 +452,8 @@ private struct BudgetEditorView: View {
         self.budget = budget
         self.overallBudget = overallBudget
 
-        let rawMode = UserDefaults.tutar.object(forKey: "numberEntryType") as? Int ?? 1
-        let mode = MoneyEntry.Mode(rawValue: rawMode) ?? .automaticCents
+        let rawMode = UserDefaults.tutar.object(forKey: "numberEntryType") as? Int ?? 2
+        let mode = MoneyEntry.Mode(rawValue: rawMode) ?? .decimal
         let amount = budget?.amount ?? overallBudget?.amount ?? 0
 
         _kind = State(initialValue: budget != nil || (budget == nil && overallBudget == nil && hasOverallBudget) ? .category : .overall)

@@ -93,17 +93,21 @@ struct TransactionEditorView: View {
                             category = categories.first { $0.income == newValue }
                         }
 
-                        HStack(alignment: .center, spacing: 8) {
+                        ZStack {
                             Text(amountText)
                                 .font(.largeTitle.weight(.semibold).monospacedDigit())
                                 .minimumScaleFactor(0.45)
                                 .lineLimit(1)
                                 .frame(maxWidth: .infinity)
+                                .padding(.horizontal, 52)
                                 .contentTransition(.numericText())
                                 .accessibilityLabel(Text("editor.amount"))
                                 .accessibilityValue(Text(verbatim: amountText))
                                 .accessibilityIdentifier("amountDisplay")
-                            AmountDeleteButton(entry: $amountEntry)
+                            HStack {
+                                Spacer()
+                                AmountDeleteButton(entry: $amountEntry)
+                            }
                         }
                         .padding(.vertical, 8)
 
@@ -280,8 +284,8 @@ struct TransactionEditorView: View {
 
     init(transaction: Transaction? = nil) {
         self.transaction = transaction
-        let rawMode = UserDefaults.tutar.object(forKey: "numberEntryType") as? Int ?? 1
-        let mode = MoneyEntry.Mode(rawValue: rawMode) ?? .automaticCents
+        let rawMode = UserDefaults.tutar.object(forKey: "numberEntryType") as? Int ?? 2
+        let mode = MoneyEntry.Mode(rawValue: rawMode) ?? .decimal
 
         _note = State(initialValue: transaction?.note ?? "")
         _amountEntry = State(initialValue: MoneyEntry(minorUnits: transaction?.amountMinorUnits ?? 0, mode: mode))

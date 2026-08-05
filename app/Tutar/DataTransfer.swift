@@ -311,20 +311,21 @@ extension DataController {
         var categoriesBySystemKey = Dictionary(uniqueKeysWithValues: existingCategories.compactMap { category in
             category.systemKey.map { ($0, category) }
         })
+        var usedEmojis = Set(existingCategories.compactMap(\.emoji))
         var imported = 0
         var skipped = 0
 
         for record in backup.categories {
-            guard record.name.count <= 80, record.emoji.count <= 16, Self.validHex(record.colour) else {
+            guard record.name.count <= 80, Self.validHex(record.colour) else {
                 throw DataTransferError.invalidFormat
             }
             if let existing = categoriesByID[record.id] {
-                if !record.emoji.isEmpty { existing.emoji = record.emoji }
+                existing.emoji = try resolvedImportEmoji(record.emoji, replacing: existing.emoji, used: &usedEmojis)
                 skipped += 1
                 continue
             }
             if let key = record.systemKey, let existing = categoriesBySystemKey[key] {
-                if !record.emoji.isEmpty { existing.emoji = record.emoji }
+                existing.emoji = try resolvedImportEmoji(record.emoji, replacing: existing.emoji, used: &usedEmojis)
                 categoriesByID[record.id] = existing
                 skipped += 1
                 continue
@@ -333,7 +334,7 @@ extension DataController {
             category.id = record.id
             category.systemKey = record.systemKey?.prefix(100).description
             category.name = record.name
-            category.emoji = record.emoji
+            category.emoji = try resolvedImportEmoji(record.emoji, used: &usedEmojis)
             category.colour = record.colour
             category.income = record.income
             category.order = record.order
@@ -395,10 +396,12 @@ extension DataController {
             }
 
             let transaction = NSEntityDescription.insertNewObject(forEntityName: "Transaction", into: context) as! Transaction
+            let category = try record.categoryID.flatMap { categoriesByID[$0] }
+                ?? fallbackCategory(income: record.income)
             configure(
                 transaction,
                 note: record.note,
-                category: record.categoryID.flatMap { categoriesByID[$0] },
+                category: category,
                 income: record.income,
                 amountMinorUnits: record.amountMinorUnits,
                 date: record.date
@@ -471,7 +474,8 @@ extension DataController {
             }
             let item = NSEntityDescription.insertNewObject(forEntityName: "TemplateTransaction", into: context) as! TemplateTransaction
             item.id = record.id
-            item.category = record.categoryID.flatMap { categoriesByID[$0] }
+            item.category = try record.categoryID.flatMap { categoriesByID[$0] }
+                ?? fallbackCategory(income: record.income)
             item.note = record.note
             item.income = record.income
             item.amount = Double(record.amountMinorUnits) / 100
@@ -642,33 +646,55 @@ extension DataController {
         income: Bool,
         language: AppLanguage,
         categories: inout [Category]
-    ) throws -> Category? {
-        guard emoji.count <= 16 else { throw DataTransferError.invalidFormat }
+    ) throws -> Category {
         if let id, let match = categories.first(where: { $0.id == id }) {
-            if !emoji.isEmpty { match.emoji = emoji }
+            if CategoryEmoji.isValid(emoji), !categories.contains(where: { $0 != match && $0.emoji == emoji }) {
+                match.emoji = emoji
+            }
             return match
         }
-        guard !name.isEmpty else { return nil }
+        guard !name.isEmpty else {
+            let category = try fallbackCategory(income: income)
+            if !categories.contains(category) { categories.append(category) }
+            return category
+        }
         guard name.count <= 80 else { throw DataTransferError.invalidFormat }
         if let match = categories.first(where: {
             $0.income == income
                 && ($0.name?.localizedCaseInsensitiveCompare(name) == .orderedSame
                     || $0.displayName(language: language).localizedCaseInsensitiveCompare(name) == .orderedSame)
         }) {
-            if !emoji.isEmpty { match.emoji = emoji }
+            if CategoryEmoji.isValid(emoji), !categories.contains(where: { $0 != match && $0.emoji == emoji }) {
+                match.emoji = emoji
+            }
             return match
         }
 
+        var used = Set(categories.compactMap(\.emoji))
         let category = NSEntityDescription.insertNewObject(forEntityName: "Category", into: context) as! Category
         category.id = id ?? UUID()
         category.name = name
-        category.emoji = emoji.isEmpty ? "🗂️" : emoji
+        category.emoji = try resolvedImportEmoji(emoji, used: &used)
         category.colour = "#232326"
         category.income = income
         category.order = (categories.filter { $0.income == income }.map(\.order).max() ?? -1) + 1
         category.dateCreated = .now
         categories.append(category)
         return category
+    }
+
+    private func resolvedImportEmoji(
+        _ preferred: String,
+        replacing: String? = nil,
+        used: inout Set<String>
+    ) throws -> String {
+        if let replacing { used.remove(replacing) }
+        if CategoryEmoji.isValid(preferred), used.insert(preferred).inserted { return preferred }
+        let fallbacks = ["🗂️", "📦", "🧩", "🏷️", "📌", "🧾", "🪙", "💰", "🏦", "📁", "🧺", "🎯"]
+        guard let fallback = fallbacks.first(where: { used.insert($0).inserted }) else {
+            throw DataTransferError.invalidFormat
+        }
+        return fallback
     }
 
     private static let iso8601: ISO8601DateFormatter = {
