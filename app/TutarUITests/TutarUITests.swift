@@ -330,12 +330,15 @@ final class TutarUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Expenses"].waitForExistence(timeout: 3))
         XCTAssertFalse(app.buttons["Uncategorized"].exists)
         app.buttons["Expenses"].tap()
-        XCTAssertTrue(app.buttons["transactionFilterButton"].exists)
+        XCTAssertFalse(app.buttons["transactionFilterButton"].exists)
         XCTAssertTrue(app.buttons["clearTransactionFilterButton"].waitForExistence(timeout: 3))
-        attachScreenshot("20-records-filtered-accordion", in: app)
+        XCTAssertEqual(app.buttons.matching(identifier: "clearTransactionFilterButton").count, 1)
+        XCTAssertLessThan(app.buttons["clearTransactionFilterButton"].frame.midY, 150)
+        attachScreenshot("21-records-toolbar-filter", in: app)
         try app.performAccessibilityAudit(for: [.contrast]) { self.contrastFalsePositive($0) }
         app.buttons["clearTransactionFilterButton"].tap()
         XCTAssertFalse(app.buttons["clearTransactionFilterButton"].exists)
+        XCTAssertTrue(app.buttons["transactionFilterButton"].waitForExistence(timeout: 3))
 
         let upcomingHeader = app.buttons["upcomingSectionHeader"]
         if upcomingHeader.waitForExistence(timeout: 3) {
@@ -349,8 +352,16 @@ final class TutarUITests: XCTestCase {
         openTab("Analysis", in: app)
         let chart = app.descendants(matching: .any).matching(identifier: "analysisChart").firstMatch
         if chart.waitForExistence(timeout: 5) {
-            chart.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            attachScreenshot("21-analysis-month", in: app)
+            chart.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap()
+            XCTAssertTrue(app.navigationBars["Analysis"].exists)
+            let seededBarX = chart.frame.width > 500 ? 0.18 : 0.20
+            chart.coordinate(withNormalizedOffset: CGVector(dx: seededBarX, dy: 0.5)).tap()
             XCTAssertTrue(app.navigationBars["Records"].waitForExistence(timeout: 5))
+            XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "highlightedTransactionRow").firstMatch.exists)
+            attachScreenshot("21-analysis-highlight", in: app)
+            Thread.sleep(forTimeInterval: 3.4)
+            XCTAssertFalse(app.descendants(matching: .any).matching(identifier: "highlightedTransactionRow").firstMatch.exists)
         }
 
         openTab("Budgets", in: app)
@@ -359,7 +370,7 @@ final class TutarUITests: XCTestCase {
         XCTAssertTrue(budgetInfo.waitForExistence(timeout: 5))
         budgetInfo.tap()
         XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "budgetExplanation").firstMatch.waitForExistence(timeout: 3))
-        attachScreenshot("20-budget-info-popover", in: app)
+        attachScreenshot("21-budget-info-popover", in: app)
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.55)).tap()
         if app.buttons["emptyBudgetAddButton"].exists {
             app.buttons["emptyBudgetAddButton"].tap()
@@ -370,8 +381,34 @@ final class TutarUITests: XCTestCase {
             app.buttons["keypadSubmit"].tap()
         }
         XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "budgetGauge").firstMatch.waitForExistence(timeout: 5))
-        attachScreenshot("20-budgets-gauge-dark", in: app)
+        attachScreenshot("21-budgets-gauge-dark", in: app)
         try app.performAccessibilityAudit(for: [.contrast]) { self.contrastFalsePositive($0) }
+    }
+
+    @MainActor
+    func testNewTransactionTypeSwipesOnlyFromEmptyGutter() {
+        let app = launch(language: "en", locale: "en_US", seed: false)
+        XCTAssertTrue(app.buttons["addTransactionButton"].waitForExistence(timeout: 8))
+        app.buttons["addTransactionButton"].tap()
+
+        let scroll = app.scrollViews["transactionEditorScroll"]
+        let expense = app.segmentedControls.buttons["Expense"]
+        let income = app.segmentedControls.buttons["Income"]
+        XCTAssertTrue(scroll.waitForExistence(timeout: 5))
+        XCTAssertTrue(expense.isSelected)
+
+        scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.99, dy: 0.45))
+            .press(forDuration: 0.05, thenDragTo: scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.45)))
+        XCTAssertTrue(income.waitForExistence(timeout: 2))
+        XCTAssertTrue(income.isSelected)
+
+        app.buttons["keypad1"].press(forDuration: 0.05, thenDragTo: app.buttons["keypad3"])
+        XCTAssertTrue(income.isSelected)
+
+        scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.01, dy: 0.45))
+            .press(forDuration: 0.05, thenDragTo: scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.45)))
+        XCTAssertTrue(expense.waitForExistence(timeout: 2))
+        XCTAssertTrue(expense.isSelected)
     }
 
     @MainActor

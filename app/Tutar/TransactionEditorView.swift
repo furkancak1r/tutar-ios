@@ -23,6 +23,7 @@ struct TransactionEditorView: View {
     @EnvironmentObject private var dataController: DataController
     @Environment(\.dismiss) private var dismiss
     @Environment(\.appLanguage) private var language
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage("currencyCode", store: .tutar) private var preferredCurrency = ""
     @AppStorage("showSuggestions", store: .tutar) private var showSuggestions = true
 
@@ -240,6 +241,17 @@ struct TransactionEditorView: View {
                     .frame(maxWidth: .infinity)
                 }
                 .scrollDismissesKeyboard(.interactively)
+                .accessibilityIdentifier("transactionEditorScroll")
+                .overlay {
+                    if transaction == nil {
+                        HStack(spacing: 0) {
+                            typeSwipeGutter
+                            Spacer(minLength: 0)
+                            typeSwipeGutter
+                        }
+                        .accessibilityHidden(true)
+                    }
+                }
 
                 if !noteFocused {
                     AmountKeypad(entry: $amountEntry, submit: save)
@@ -387,6 +399,28 @@ struct TransactionEditorView: View {
         } catch {
             errorKey = "editor.error.save"
         }
+    }
+
+    private func handleTypeSwipe(_ value: DragGesture.Value) {
+        guard transaction == nil else { return }
+        let horizontal = value.translation.width
+        let vertical = value.translation.height
+        guard abs(horizontal) >= 50, abs(horizontal) > abs(vertical) * 1.25 else { return }
+        let newValue = horizontal < 0
+        guard newValue != income else { return }
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+            income = newValue
+        }
+    }
+
+    private var typeSwipeGutter: some View {
+        Color.clear
+            .frame(width: 16)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 20)
+                    .onEnded(handleTypeSwipe)
+            )
     }
 
     private func loadRemainingTotal() {

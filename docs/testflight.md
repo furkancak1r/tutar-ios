@@ -1,4 +1,4 @@
-# Tutar 1.0 (20) — TestFlight metadata
+# Tutar 1.0 (21) — TestFlight metadata
 
 ## Beta Description — Turkish
 
@@ -8,14 +8,14 @@ Tutar, Rafael Soh ve katkıda bulunanların oluşturduğu Dime temel alınarak d
 
 ## What to Test — Turkish
 
-Build 20; filtreleri açık ve koyu görünümde monokrom tutar, aktif filtreyi görünür bir satırdan tek dokunuşla temizletir ve tarih gruplarını bağımsız akordiyonlara dönüştürür. Yaklaşan kayıtların metinleri ve emojileri daha pasif görünür. Yeni kategoriler yalnız tek gerçek emoji kabul eder; kategorisiz kayıt oluşturulmaz ve eski kategorisiz veriler kayıpsız biçimde Diğer kategorisine bağlanır. Kullanılan kategoriler, işlemler başka kategoriye taşınmadan silinemez. Analiz grafiğindeki bir sütuna dokunmak ilgili gün veya aya animasyonlu olarak gider. Bütçe açıklaması kalıcı uzun metin yerine bilgi düğmesinden açılan balonda gösterilir. Tutar girişi artık tam para birimiyle başlar; 425 yazmak 425,00 oluşturur ve silme düğmesi tutarın merkezini kaydırmaz. Yeni bağımlılık veya Core Data şema değişikliği eklenmedi.
+Build 21; aktif filtre varken sağ üst filtre düğmesini tek dokunuşlu temizleme kontrolüne dönüştürür ve liste içindeki ek filtre satırını kaldırır. Yeni işlemde boş yan alanda yatay kaydırarak Gider/Gelir arasında geçilebilir; form kontrollerindeki hareketler türü değiştirmez. Aylık Analiz grafiğinin sütun ve eksen yerleşimi düzeltildi. Gerçek bir sütuna dokunmak Kayıtlar'da doğru ayı ve günü açar, kesin eşleşen işlemlere kaydırır ve bu satırları üç saniye monokrom kenarlıkla vurgular; boş grafik alanı navigasyon başlatmaz. Yeni bağımlılık veya Core Data şema değişikliği eklenmedi.
 
-1. Gider, gelir veya kategori filtresi seçin; mavi renk görünmediğini, aktif filtre satırını ve Filtreyi temizle düğmesini doğrulayın.
-2. Yaklaşanlar, Bugün, Dün ve tarih başlıklarına dokunarak her grubun diğerlerinden bağımsız açılıp kapandığını doğrulayın.
-3. Yaklaşan satırlarda emoji dahil tüm bilgi hiyerarşisinin geçmiş kayıtlardan daha pasif, fakat okunabilir olduğunu doğrulayın.
-4. Yeni kategoriye harf, sayı veya SF Symbol adı girmeyi deneyin; yalnız tek gerçek emojinin kabul edildiğini doğrulayın.
-5. İşlemlerde kullanılan bir kategoriyi silmeyi deneyin; kategori ve kayıtların değişmeden kaldığını doğrulayın.
-6. Analiz grafiğinde bir gün veya aya dokunun; Kayıtlar sekmesinin doğru ay ve tarih grubuna geçtiğini doğrulayın.
+1. Gider, gelir veya kategori filtresi seçin; sağ üst filtre simgesinin monokrom temizleme simgesine dönüştüğünü ve tek dokunuşla filtreyi kaldırdığını doğrulayın.
+2. Yeni işlemde boş sağ kenarda sola, boş sol kenarda sağa kaydırın; Gider/Gelir türünün değiştiğini, numaratör veya form üzerindeki hareketlerin türü değiştirmediğini doğrulayın.
+3. Analiz'in aylık görünümünde sütunların ve eksen etiketlerinin çakışmadığını doğrulayın; gerçek bir sütuna dokunup doğru işlem satırlarının üç saniye kenarlıkla vurgulandığını kontrol edin.
+4. Grafiğin boş bir gününe dokunun; sekmenin değişmediğini doğrulayın.
+5. Yaklaşanlar, Bugün, Dün ve tarih başlıklarına dokunarak her grubun diğerlerinden bağımsız açılıp kapandığını doğrulayın.
+6. Yaklaşan satırlarda emoji dahil tüm bilgi hiyerarşisinin geçmiş kayıtlardan daha pasif, fakat okunabilir olduğunu doğrulayın.
 7. Bütçeler ekranında bilgi düğmesine dokunun; açıklama balonunun açılıp dışarı dokununca kapandığını doğrulayın.
 8. İşlem ve bütçe tutarında 425 yazın; 425,00 gösterildiğini ve değerin silme düğmesine rağmen ekranın ortasında kaldığını doğrulayın.
 
@@ -49,14 +49,14 @@ Tutar is a GPLv3 modified work based on Dime, originally created by Rafael Soh a
 
 ## What to Test — English
 
-Build 20 keeps filters monochrome in light and dark appearance, exposes the active filter with a one-tap clear control, and turns date groups into independent accordions. Upcoming record text and emoji use a quieter hierarchy. New categories accept exactly one real emoji; new uncategorized records are prevented and legacy uncategorized data is safely assigned to Other. Categories in use cannot be deleted until their records are moved. Tapping an Analysis chart bar animates to the relevant day or month in Records. The budget explanation now opens from an info button instead of occupying the screen. Amount entry now starts in whole currency units, so typing 425 produces 425.00, and the delete button no longer shifts the amount off center. No dependency or Core Data schema change was added.
+Build 21 turns the top-right filter button into a one-tap clear control whenever a filter is active and removes the extra in-list filter row. In a new transaction, swiping horizontally in the empty side area switches between Expense and Income without intercepting form controls. Monthly Analysis chart bars and axes no longer overlap. Tapping a real bar opens the correct month and day in Records, scrolls to the exact contributing transactions, and highlights them with a monochrome border for three seconds; tapping empty chart space does not navigate. No dependency or Core Data schema change was added.
 
-1. Select an expense, income, or category filter; confirm no blue tint appears and the active filter can be cleared from its visible row.
-2. Tap Upcoming, Today, Yesterday, and date headers; confirm every group expands and collapses independently.
-3. Confirm upcoming rows, including their emoji, are quieter than historical rows while remaining readable.
-4. Try a letter, number, or SF Symbol name in New Category; confirm only one real emoji is accepted.
-5. Try deleting a category used by a record; confirm the category and its records remain unchanged.
-6. Tap a day or month bar in Analysis; confirm Records opens at the correct month and date group.
+1. Select an expense, income, or category filter; confirm the top-right filter icon becomes a monochrome clear icon and removes the filter with one tap.
+2. In a new transaction, swipe left from the empty right edge and right from the empty left edge; confirm the type changes while gestures on the keypad and form do not.
+3. In monthly Analysis, confirm bars and axis labels do not overlap; tap a real bar and verify the exact contributing Records rows receive a border for three seconds.
+4. Tap an empty day in the chart and confirm the selected tab does not change.
+5. Tap Upcoming, Today, Yesterday, and date headers; confirm every group expands and collapses independently.
+6. Confirm upcoming rows, including their emoji, are quieter than historical rows while remaining readable.
 7. In Budgets, tap the info button; confirm the explanation appears in a popover and dismisses when tapping outside.
 8. Type 425 in transaction and budget amount fields; confirm 425.00 appears centered despite the delete button.
 

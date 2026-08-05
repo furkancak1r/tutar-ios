@@ -11,6 +11,13 @@ private enum AppTab: Hashable {
     case settings
 }
 
+struct TransactionNavigationTarget: Equatable {
+    let id = UUID()
+    let interval: DateInterval
+    let income: Bool
+    let transactionIDs: Set<String>
+}
+
 @MainActor
 final class AppLockController: ObservableObject {
     enum State: Equatable {
@@ -161,7 +168,7 @@ struct RootView: View {
     @AppStorage("biometricLock", store: .tutar) private var biometricLock = false
     @State private var selectedTab = AppTab.log
     @State private var showingEditor = false
-    @State private var transactionTarget: DateInterval?
+    @State private var transactionTarget: TransactionNavigationTarget?
 
     var body: some View {
         ZStack {
@@ -347,7 +354,7 @@ struct TransactionsView: View {
     @AppStorage("currencyCode", store: .tutar) private var preferredCurrency = ""
     @AppStorage("showUpcoming", store: .tutar) private var showUpcoming = true
     @Binding var showingEditor: Bool
-    @Binding var navigationTarget: DateInterval?
+    @Binding var navigationTarget: TransactionNavigationTarget?
 
     @State private var selectedMonth = Calendar.current.date(
         from: Calendar.current.dateComponents([.year, .month], from: .now)
@@ -361,6 +368,8 @@ struct TransactionsView: View {
     @State private var collapsedDays = Set<Date>()
     @State private var upcomingCollapsed = false
     @State private var scrollTarget: String?
+    @State private var highlightedTransactionIDs = Set<String>()
+    @State private var highlightRequestID: UUID?
 
     private var currency: String {
         AppFormat.currencyCode(language: language, preferred: preferredCurrency)
@@ -422,15 +431,6 @@ struct TransactionsView: View {
                 .listRowBackground(Color.clear)
             }
 
-            if filter != .all {
-                Section {
-                    activeFilterRow
-                        .listRowInsets(EdgeInsets(top: 2, leading: 16, bottom: 6, trailing: 16))
-                        .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
-                }
-            }
-
             if !upcoming.isEmpty {
                 Section {
                     if !upcomingCollapsed {
@@ -454,12 +454,10 @@ struct TransactionsView: View {
                     ContentUnavailableView {
                         Label("empty.transactions.title", systemImage: "tray")
                     } description: {
-                        Text(filter == .all
-                            ? (searchText.isEmpty ? "empty.transactions.message" : "empty.search.message")
-                            : "transactions.filter.empty")
+                        Text(emptyMessageKey)
                     } actions: {
                         if filter != .all {
-                            Button("transactions.filter.clear") { filter = .all }
+                            Button("transactions.filter.clear", action: clearFilter)
                                 .buttonStyle(.bordered)
                         }
                     }
@@ -498,7 +496,9 @@ struct TransactionsView: View {
         .navigationTitle("transactions.title")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .primaryAction) { filterMenu }
+            ToolbarItem(placement: .primaryAction) {
+                if filter == .all { filterMenu } else { clearFilterButton }
+            }
         }
         .searchable(
             text: $searchText,
@@ -542,9 +542,21 @@ struct TransactionsView: View {
         .onChange(of: categories.map { $0.objectID.uriRepresentation().absoluteString }) { _, ids in
             if case let .category(id) = filter, !ids.contains(id) { filter = .all }
         }
+        .onChange(of: searchText) { _, _ in
+            if !highlightedTransactionIDs.isEmpty { clearHighlight() }
+        }
         .onChange(of: navigationTarget) { _, target in
             guard let target else { return }
             navigate(to: target)
+        }
+        .task(id: highlightRequestID) {
+            guard highlightRequestID != nil else { return }
+            try? await Task.sleep(for: .seconds(3))
+            guard !Task.isCancelled else { return }
+            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) {
+                highlightedTransactionIDs.removeAll()
+            }
+            highlightRequestID = nil
         }
     }
 
@@ -558,6 +570,11 @@ struct TransactionsView: View {
 
     private var errorBinding: Binding<Bool> {
         Binding(get: { !errorMessage.isEmpty }, set: { if !$0 { errorMessage = "" } })
+    }
+
+    private var emptyMessageKey: LocalizedStringKey {
+        if filter != .all { return "transactions.filter.empty" }
+        return searchText.isEmpty ? "empty.transactions.message" : "empty.search.message"
     }
 
     private func matchesSearch(_ transaction: Transaction) -> Bool {
@@ -592,7 +609,7 @@ struct TransactionsView: View {
             Menu("transactions.filter.category", systemImage: "square.grid.2x2") {
                 ForEach(categories) { category in
                     Button {
-                        filter = .category(category.objectID.uriRepresentation().absoluteString)
+                        setFilter(.category(category.objectID.uriRepresentation().absoluteString))
                     } label: {
                         HStack {
                             Text(verbatim: "\(category.wrappedEmoji) \(category.displayName(language: language))")
@@ -605,7 +622,7 @@ struct TransactionsView: View {
             filterButton("transactions.filter.installments", systemImage: "rectangle.stack", value: .installments)
             filterButton("transactions.filter.upcoming", systemImage: "clock", value: .upcoming)
         } label: {
-            Image(systemName: filter == .all ? "line.3.horizontal.decrease" : "line.3.horizontal.decrease.circle.fill")
+            Image(systemName: "line.3.horizontal.decrease")
                 .frame(width: 44, height: 44)
         }
         .tint(.primary)
@@ -615,7 +632,7 @@ struct TransactionsView: View {
     }
 
     private func filterButton(_ title: LocalizedStringKey, systemImage: String, value: TransactionFilter) -> some View {
-        Button { filter = value } label: {
+        Button { setFilter(value) } label: {
             HStack {
                 Label(title, systemImage: systemImage)
                 if filter == value { Image(systemName: "checkmark") }
@@ -623,43 +640,44 @@ struct TransactionsView: View {
         }
     }
 
-    private var activeFilterRow: some View {
-        HStack(spacing: 8) {
-            activeFilterLabel
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(.primary)
-                .lineLimit(1)
-            Spacer(minLength: 8)
-            Button {
-                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) { filter = .all }
-            } label: {
-                Image(systemName: "xmark")
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .foregroundStyle(.primary)
-            .accessibilityLabel(Text("transactions.filter.clear"))
-            .accessibilityIdentifier("clearTransactionFilterButton")
+    private var clearFilterButton: some View {
+        Button(action: clearFilter) {
+            Image(systemName: "xmark.circle.fill")
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
         }
-        .padding(.leading, 12)
-        .background(Color(.secondarySystemFill), in: Capsule())
+        .buttonStyle(.plain)
+        .foregroundStyle(.primary)
+        .accessibilityLabel(Text("transactions.filter.clear"))
+        .accessibilityValue(Text(verbatim: activeFilterName))
+        .accessibilityIdentifier("clearTransactionFilterButton")
     }
 
-    @ViewBuilder
-    private var activeFilterLabel: some View {
+    private var activeFilterName: String {
         switch filter {
-        case .all: Label("transactions.filter.all", systemImage: "tray.full")
-        case .expense: Label("transactions.filter.expense", systemImage: "arrow.up.circle")
-        case .income: Label("transactions.filter.income", systemImage: "arrow.down.circle")
-        case .recurring: Label("transactions.filter.recurring", systemImage: "repeat")
-        case .installments: Label("transactions.filter.installments", systemImage: "rectangle.stack")
-        case .upcoming: Label("transactions.filter.upcoming", systemImage: "clock")
+        case .all: AppFormat.localized("transactions.filter.all", language: language)
+        case .expense: AppFormat.localized("transactions.filter.expense", language: language)
+        case .income: AppFormat.localized("transactions.filter.income", language: language)
+        case .recurring: AppFormat.localized("transactions.filter.recurring", language: language)
+        case .installments: AppFormat.localized("transactions.filter.installments", language: language)
+        case .upcoming: AppFormat.localized("transactions.filter.upcoming", language: language)
         case let .category(id):
             if let category = categories.first(where: { $0.objectID.uriRepresentation().absoluteString == id }) {
-                Text(verbatim: "\(category.wrappedEmoji) \(category.displayName(language: language))")
+                "\(category.wrappedEmoji) \(category.displayName(language: language))"
+            } else {
+                AppFormat.localized("transactions.filter.category", language: language)
             }
         }
+    }
+
+    private func setFilter(_ value: TransactionFilter) {
+        clearHighlight()
+        filter = value
+    }
+
+    private func clearFilter() {
+        clearHighlight()
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) { filter = .all }
     }
 
     private func accordionHeader(
@@ -707,25 +725,36 @@ struct TransactionsView: View {
         "day-\(Int(Calendar.current.startOfDay(for: date).timeIntervalSince1970))"
     }
 
-    private func navigate(to interval: DateInterval) {
+    private func navigate(to target: TransactionNavigationTarget) {
+        clearHighlight()
+        searchText = ""
+        filter = .all
         selectedMonth = Calendar.current.date(
-            from: Calendar.current.dateComponents([.year, .month], from: interval.start)
-        ) ?? interval.start
+            from: Calendar.current.dateComponents([.year, .month], from: target.interval.start)
+        ) ?? target.interval.start
         Task { @MainActor in
             await Task.yield()
-            let isDay = interval.duration < 172_800
-            let day = Calendar.current.startOfDay(for: interval.start)
-            let targetDate = isDay
-                ? groupedHistory.first(where: { Calendar.current.isDate($0.date, inSameDayAs: day) })?.date
-                : groupedHistory.first?.date
-            if let targetDate {
-                collapsedDays.remove(targetDate)
-                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.3)) {
-                    scrollTarget = scrollID(targetDate)
+            await Task.yield()
+            let matches = transactions
+                .filter {
+                    target.transactionIDs.contains(transactionID($0))
+                        && $0.income == target.income
+                        && target.interval.contains($0.wrappedDate)
                 }
-            } else if !upcoming.isEmpty {
+                .sorted { $0.wrappedDate > $1.wrappedDate }
+            let targetDays = Set(matches.map { Calendar.current.startOfDay(for: $0.wrappedDate) })
+            collapsedDays.subtract(targetDays)
+
+            if matches.contains(where: { $0.wrappedDate > .now }) {
                 upcomingCollapsed = false
-                scrollTarget = "upcoming"
+            }
+
+            highlightedTransactionIDs = Set(matches.map(transactionID))
+            highlightRequestID = highlightedTransactionIDs.isEmpty ? nil : target.id
+            if let first = matches.first {
+                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.3)) {
+                    scrollTarget = transactionScrollID(first)
+                }
             }
             navigationTarget = nil
         }
@@ -733,6 +762,7 @@ struct TransactionsView: View {
 
     private func moveMonth(_ value: Int) {
         guard let month = Calendar.current.date(byAdding: .month, value: value, to: selectedMonth) else { return }
+        clearHighlight()
         monthTransitionEdge = value > 0 ? .trailing : .leading
         withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.28)) {
             selectedMonth = month
@@ -740,10 +770,25 @@ struct TransactionsView: View {
     }
 
     private func row(_ transaction: Transaction) -> some View {
-        TransactionRow(transaction: transaction, isUpcoming: transaction.wrappedDate > .now)
+        let highlighted = highlightedTransactionIDs.contains(transactionID(transaction))
+        return TransactionRow(transaction: transaction, isUpcoming: transaction.wrappedDate > .now)
+            .overlay {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(
+                        Color.primary,
+                        lineWidth: highlighted ? 1.75 : 0
+                    )
+                    .padding(.vertical, 1)
+                    .accessibilityHidden(true)
+            }
             .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
             .contentShape(Rectangle())
-            .onTapGesture { editing = transaction }
+            .id(transactionScrollID(transaction))
+            .accessibilityIdentifier(highlighted ? "highlightedTransactionRow" : "transactionRow")
+            .onTapGesture {
+                clearHighlight()
+                editing = transaction
+            }
             .tutarDeleteSwipeAction { deleting = transaction }
             .confirmationDialog(
                 "delete.title",
@@ -762,6 +807,19 @@ struct TransactionsView: View {
             }
             .accessibilityAction(named: Text("action.edit")) { editing = transaction }
             .accessibilityAction(named: Text("action.delete")) { deleting = transaction }
+    }
+
+    private func transactionID(_ transaction: Transaction) -> String {
+        transaction.objectID.uriRepresentation().absoluteString
+    }
+
+    private func transactionScrollID(_ transaction: Transaction) -> String {
+        "transaction-\(transactionID(transaction))"
+    }
+
+    private func clearHighlight() {
+        highlightRequestID = nil
+        highlightedTransactionIDs.removeAll()
     }
 
     private func performDelete(_ scope: EditScope) {
@@ -1118,16 +1176,25 @@ private enum AnalysisKind: Int, CaseIterable, Identifiable {
     var id: Int { rawValue }
 }
 
+private struct AnalysisChartPoint: Identifiable {
+    let date: Date
+    let amount: Double
+    let transactionIDs: Set<String>
+
+    var id: Date { date }
+}
+
 struct AnalysisView: View {
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Transaction.date, ascending: true)])
     private var transactions: FetchedResults<Transaction>
     @Environment(\.appLanguage) private var language
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @AppStorage("currencyCode", store: .tutar) private var preferredCurrency = ""
     @State private var period = AnalysisPeriod.month
     @State private var kind = AnalysisKind.expense
-    let onSelectInterval: (DateInterval) -> Void
+    let onSelectInterval: (TransactionNavigationTarget) -> Void
 
-    init(onSelectInterval: @escaping (DateInterval) -> Void = { _ in }) {
+    init(onSelectInterval: @escaping (TransactionNavigationTarget) -> Void = { _ in }) {
         self.onSelectInterval = onSelectInterval
     }
 
@@ -1162,12 +1229,18 @@ struct AnalysisView: View {
         periodTransactions.filter(\.income).reduce(0) { $0 + $1.amount }
     }
 
-    private var chartData: [(date: Date, amount: Double)] {
+    private var chartData: [AnalysisChartPoint] {
         let component: Calendar.Component = period == .year ? .month : .day
         return Dictionary(grouping: selectedTransactions) {
             Calendar.current.dateInterval(of: component, for: $0.wrappedDate)?.start ?? $0.wrappedDate
         }
-        .map { ($0.key, $0.value.reduce(0) { $0 + $1.amount }) }
+        .map { date, items in
+            AnalysisChartPoint(
+                date: date,
+                amount: items.reduce(0) { $0 + $1.amount },
+                transactionIDs: Set(items.map { $0.objectID.uriRepresentation().absoluteString })
+            )
+        }
         .sorted { $0.date < $1.date }
     }
 
@@ -1193,12 +1266,19 @@ struct AnalysisView: View {
                 }
                 .pickerStyle(.segmented)
 
-                HStack(spacing: 8) {
-                    summaryMetric("summary.expense", value: expense)
-                    Divider().frame(height: 34)
-                    summaryMetric("summary.income", value: income)
-                    Divider().frame(height: 34)
-                    summaryMetric("summary.net", value: income - expense, isNegative: income < expense)
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 8) {
+                        summaryMetric("summary.expense", value: expense)
+                        Divider().frame(height: 34)
+                        summaryMetric("summary.income", value: income)
+                        Divider().frame(height: 34)
+                        summaryMetric("summary.net", value: income - expense, isNegative: income < expense)
+                    }
+                    VStack(spacing: 8) {
+                        summaryMetricRow("summary.expense", value: expense)
+                        summaryMetricRow("summary.income", value: income)
+                        summaryMetricRow("summary.net", value: income - expense, isNegative: income < expense)
+                    }
                 }
                 .padding(.vertical, 4)
             }
@@ -1216,15 +1296,19 @@ struct AnalysisView: View {
                 } else {
                     Chart(chartData, id: \.date) { point in
                         BarMark(
-                            x: .value(AppFormat.localized("analysis.dateAxis", language: language), point.date),
+                            x: .value(
+                                AppFormat.localized("analysis.dateAxis", language: language),
+                                point.date,
+                                unit: period == .year ? .month : .day
+                            ),
                             y: .value(AppFormat.localized("analysis.amountAxis", language: language), point.amount),
-                            width: .fixed(20)
+                            width: .ratio(0.58)
                         )
                         .foregroundStyle(Color.primary)
                         .cornerRadius(3)
                     }
                     .chartXAxis {
-                        AxisMarks(values: .automatic(desiredCount: period == .month ? 5 : 7)) { value in
+                        AxisMarks(values: xAxisValues) { value in
                             AxisGridLine()
                             AxisTick()
                             if let date = value.as(Date.self) {
@@ -1233,14 +1317,22 @@ struct AnalysisView: View {
                         }
                     }
                     .chartYAxis {
-                        AxisMarks(position: .leading, values: .automatic(desiredCount: 4))
+                        AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) { value in
+                            AxisGridLine()
+                            AxisTick()
+                            if let amount = value.as(Double.self) {
+                                AxisValueLabel {
+                                    Text(verbatim: compactAmount(amount))
+                                        .lineLimit(1)
+                                }
+                            }
+                        }
                     }
+                    .chartXScale(domain: interval.start...interval.end)
                     .frame(height: 200)
                     .chartGesture { proxy in
                         SpatialTapGesture().onEnded { value in
-                            if let date: Date = proxy.value(atX: value.location.x) {
-                                selectChartDate(date)
-                            }
+                            selectChartPoint(at: value.location, proxy: proxy)
                         }
                     }
                     .accessibilityLabel(Text("analysis.chart"))
@@ -1291,6 +1383,21 @@ struct AnalysisView: View {
         .accessibilityElement(children: .combine)
     }
 
+    private func summaryMetricRow(_ key: LocalizedStringKey, value: Double, isNegative: Bool = false) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(key)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Spacer(minLength: 12)
+            Text(AppFormat.money(value, language: language, currencyCode: currency))
+                .font(.subheadline.monospacedDigit().weight(.semibold))
+                .foregroundStyle(isNegative ? Color.red : .primary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
     private func chartLabel(_ date: Date) -> String {
         switch period {
         case .week:
@@ -1302,16 +1409,61 @@ struct AnalysisView: View {
         }
     }
 
-    private func selectChartDate(_ date: Date) {
+    private var xAxisValues: [Date] {
+        let step: (Calendar.Component, Int)
+        switch period {
+        case .week: step = (.day, 1)
+        case .month: step = (.day, 7)
+        case .year: step = (.month, horizontalSizeClass == .regular ? 1 : 2)
+        }
+
+        var values = [Date]()
+        var date = interval.start
+        while date < interval.end {
+            values.append(date)
+            guard let next = Calendar.current.date(byAdding: step.0, value: step.1, to: date) else { break }
+            date = next
+        }
+        return values
+    }
+
+    private func compactAmount(_ amount: Double) -> String {
+        amount.formatted(
+            .number
+                .notation(.compactName)
+                .precision(.fractionLength(0...1))
+                .locale(language.locale)
+        )
+    }
+
+    private var chartHitTolerance: Double {
+        switch period {
+        case .week: 24
+        case .month: 10
+        case .year: 18
+        }
+    }
+
+    private func selectChartPoint(at location: CGPoint, proxy: ChartProxy) {
         guard
+            let date: Date = proxy.value(atX: location.x),
             let point = chartData.min(by: {
                 abs($0.date.timeIntervalSince(date)) < abs($1.date.timeIntervalSince(date))
             }),
-            let interval = Calendar.current.dateInterval(
+            let selectedInterval = Calendar.current.dateInterval(
                 of: period == .year ? .month : .day,
                 for: point.date
-            )
+            ),
+            let barX = proxy.position(forX: selectedInterval.start.addingTimeInterval(selectedInterval.duration / 2)),
+            abs(barX - location.x) <= chartHitTolerance,
+            let barY = proxy.position(forY: point.amount),
+            location.y >= barY - 10,
+            location.y <= proxy.plotSize.height + 10
         else { return }
-        onSelectInterval(interval)
+        onSelectInterval(TransactionNavigationTarget(
+            interval: selectedInterval,
+            income: kind == .income,
+            transactionIDs: point.transactionIDs
+        ))
     }
 }
