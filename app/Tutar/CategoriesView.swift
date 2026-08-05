@@ -173,12 +173,12 @@ struct CategoriesView: View {
 
     private func performDelete() {
         guard let deleting else { return }
+        self.deleting = nil
         do {
             try dataController.deleteCategory(deleting)
         } catch {
             errorMessage = error.localizedDescription
         }
-        self.deleting = nil
     }
 
     private func add(_ suggestion: CategorySuggestion) {

@@ -540,12 +540,12 @@ struct TransactionsView: View {
 
     private func performDelete(_ scope: EditScope) {
         guard let deleting else { return }
+        self.deleting = nil
         do {
             try dataController.delete(deleting, scope: scope)
         } catch {
             errorMessage = error.localizedDescription
         }
-        self.deleting = nil
     }
 }
 

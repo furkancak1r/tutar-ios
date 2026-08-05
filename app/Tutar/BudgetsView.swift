@@ -244,12 +244,12 @@ struct BudgetsView: View {
 
     private func performDelete() {
         guard let deleting else { return }
+        self.deleting = nil
         do {
             try dataController.deleteBudget(deleting.object)
         } catch {
             errorMessage = error.localizedDescription
         }
-        self.deleting = nil
     }
 }
 

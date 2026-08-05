@@ -372,8 +372,10 @@ final class TutarUITests: XCTestCase {
             XCTAssertTrue(app.staticTexts[dialogTitle].waitForExistence(timeout: 3))
             app.buttons[delete].tap()
             XCTAssertTrue(row.waitForNonExistence(timeout: 3))
+            assertRemainsAbsent(app.staticTexts[dialogTitle])
             XCTAssertTrue(firstRow.exists)
             XCTAssertTrue(followingRow.exists)
+            attachScreenshot("category-delete-complete-\(appearance.lowercased())", in: app)
             app.terminate()
         }
     }
@@ -406,6 +408,7 @@ final class TutarUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Delete transaction?"].waitForExistence(timeout: 3))
         app.buttons["Delete"].tap()
         XCTAssertTrue(targetRow.waitForNonExistence(timeout: 3))
+        assertRemainsAbsent(app.staticTexts["Delete transaction?"])
         XCTAssertTrue(firstRow.exists)
 
         app.terminate()
@@ -455,6 +458,7 @@ final class TutarUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Delete budget?"].waitForExistence(timeout: 3))
         app.buttons["Delete"].tap()
         XCTAssertTrue(targetRow.waitForNonExistence(timeout: 3))
+        assertRemainsAbsent(app.staticTexts["Delete budget?"])
         XCTAssertTrue(firstRow.exists)
     }
 
@@ -582,6 +586,20 @@ final class TutarUITests: XCTestCase {
             file: file,
             line: line
         )
+    }
+
+    @MainActor
+    private func assertRemainsAbsent(
+        _ element: XCUIElement,
+        duration: TimeInterval = 1.5,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        let deadline = Date().addingTimeInterval(duration)
+        repeat {
+            XCTAssertFalse(element.exists, file: file, line: line)
+            Thread.sleep(forTimeInterval: 0.075)
+        } while Date() < deadline
     }
 
     @MainActor
