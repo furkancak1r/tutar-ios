@@ -11,22 +11,16 @@
 "savings.total.minimum" = "Estimated value of priced assets";
 "savings.missing.count" = "No price for %d asset(s)";
 "savings.empty.title" = "No savings yet";
-"savings.empty.message" = "Add gold, silver, foreign currency, or lira to see an estimated total value.";
+"savings.empty.message" = "Add gold, silver, or foreign currency to see an estimated total in the currency selected in Settings.";
 "savings.add" = "Add savings";
 "savings.edit" = "Edit savings";
 "savings.info" = "About savings";
-"savings.info.message" = "Savings only shows an estimated TRY value of your assets. It does not create income or expense transactions and does not affect budgets or analysis. Automatic prices are not investment advice or your bank's exact buying rate.";
-"savings.location.section" = "Where is it held?";
-"savings.location.placeholder" = "For example, Enpara";
-"savings.location.physical" = "Physical";
-"savings.location.cash" = "Cash";
-"savings.location.otherBank" = "Other bank";
+"savings.info.message" = "Savings converts your assets to the %@ currency selected in Settings. If an automatic value is unavailable, you can enter a manual unit price in that same currency. Prices are estimates for reference, not investment advice or your bank’s exact buying rate. Adding savings does not create income or expense transactions and does not affect budgets or analysis.";
 "savings.asset.section" = "Asset and quantity";
 "savings.asset" = "Asset";
 "savings.quantity" = "Quantity";
-"savings.asset.gold995" = "Gram gold 995/1000";
-"savings.asset.gold1000" = "Pure gram gold 1000/1000";
-"savings.asset.silver" = "Gram silver";
+"savings.asset.gold" = "Gold";
+"savings.asset.silver" = "Silver";
 "savings.unit.gram" = "Gram";
 "savings.unit.gram.short" = "g";
 "savings.unit.currency" = "Currency";
@@ -34,8 +28,11 @@
 "savings.valuation" = "Price type";
 "savings.valuation.automatic" = "Automatic";
 "savings.valuation.manual" = "Manual";
-"savings.manual.price" = "TRY price per unit";
-"savings.manual.help" = "Enter your bank's buying rate for an estimate closer to the bank's spread.";
+"savings.manual.price" = "Unit price in %@";
+"savings.manual.help" = "Enter the %@ value of one asset unit. If you change the currency in Settings, Tutar applies a cross rate when one is available.";
+"savings.automatic.unavailable" = "No automatic value is available in %@. You can enter a manual unit price.";
+"savings.manual.enter" = "Enter manual price";
+"savings.manual.required" = "Manual %@ price needed";
 "savings.automatic.available" = "An automatic price is available.";
 "savings.automatic.use" = "Update";
 "savings.manual.keep" = "Keep manual";
@@ -46,7 +43,7 @@
 "savings.source.unavailable" = "Price unavailable";
 "savings.delete.title" = "Delete savings?";
 "savings.delete.message" = "This asset record will be permanently deleted.";
-"savings.error.invalid" = "Check the location, quantity, and manual unit price when applicable.";
+"savings.error.invalid" = "Check the quantity and, when needed, the manual unit price in the selected currency.";
 
 "action.addTransaction" = "Add transaction";
 "action.cancel" = "Cancel";
@@ -70,6 +67,8 @@
 "onboarding.planning.message" = "Use Schedule in a new transaction to create a repeat or installments. Every installment counts only toward the month it belongs to.";
 "onboarding.budgets.title" = "A Budget Is Not a Transaction";
 "onboarding.budgets.message" = "Adding a budget does not create income or an expense; it compares spending with your goal. Record your salary only as income—you do not need to enter it again as a budget. An overall budget follows every expense, while a category budget follows only its selected expense category. Analysis is calculated automatically from your records.";
+"onboarding.savings.title" = "See Your Savings Together";
+"onboarding.savings.message" = "Add amounts of gold, silver, and foreign currency to Savings. When possible, Tutar uses live prices to convert everything to the currency selected in Settings; when no automatic value exists, you can enter a manual unit price. Savings never creates income, expenses, or budgets.";
 "onboarding.privacy.title" = "Your Data Stays Yours";
 "onboarding.privacy.message" = "Your data stays on your device and, only if you enable it, in your private iCloud account. Import and export keep it portable. Tutar is ad-free, tracker-free, completely free, and open source under GPLv3.";
 
@@ -194,7 +193,7 @@
 "settings.currency" = "Currency";
 "settings.currency.automatic" = "Automatic";
 "settings.currency.search" = "Search currency or code";
-"settings.currency.footer" = "All ISO currencies are available. This changes display only; amounts are not converted using exchange rates.";
+"settings.currency.footer" = "All ISO currencies are available. Transaction and budget amounts are not converted; Savings values are converted to this currency when a rate is available.";
 "settings.entry.section" = "Quick entry";
 "settings.numberEntry" = "Number entry";
 "settings.numberEntry.automatic" = "Auto cents";
@@ -324,7 +323,7 @@
 "about.source" = "Tutar source code";
 "about.upstream" = "Dime upstream source";
 "about.privacy.section" = "Privacy";
-"about.privacy" = "Tutar contains no ads, analytics, tracking, purchases, subscriptions, donations, or paywalls. Finance data is stored locally and, only when enabled, in your private iCloud account. Savings prices request only an asset code from CBRT and Gold API; quantities and institution names are never sent.";
+"about.privacy" = "Tutar contains no ads, analytics, tracking, purchases, subscriptions, donations, or paywalls. Finance data is stored locally and, only when enabled, in your private iCloud account. Savings uses CBRT and Gold API only to request price data; saved quantities and finance data are never sent.";
 "about.version.section" = "Build";
 "about.version" = "Version";
 "about.build" = "Build";

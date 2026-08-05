@@ -88,6 +88,14 @@ final class SavingsQuoteTests: XCTestCase {
         XCTAssertEqual(NSDecimalNumber(decimal: gold995).doubleValue, NSDecimalNumber(decimal: pure * Decimal(string: "0.995")!).doubleValue, accuracy: 0.0001)
     }
 
+    func testCrossRateUsesTheCurrencySelectedInSettings() {
+        XCTAssertEqual(
+            SavingsQuoteMath.crossRate(priceInTRY: 48, targetPriceInTRY: 60),
+            Decimal(string: "0.8")
+        )
+        XCTAssertNil(SavingsQuoteMath.crossRate(priceInTRY: 48, targetPriceInTRY: 0))
+    }
+
     func testTCMBParserRespectsCurrencyUnitAndHourlyGoldCodes() throws {
         let xml = """
         <Tarih_Date Tarih="05.08.2026">
@@ -107,14 +115,14 @@ final class SavingsQuoteTests: XCTestCase {
 
 @MainActor
 final class SavingsDataTests: XCTestCase {
-    func testHoldingRoundTripsThroughVersionTwoBackup() throws {
+    func testHoldingRoundTripsThroughVersionThreeBackupWithoutLocation() throws {
         let source = DataController(inMemory: true, cloudEnabled: false)
         let holding = try source.saveHolding(
-            institution: "Enpara",
             asset: .XAU995,
             quantity: Decimal(string: "12.5")!,
             quoteMode: 1,
-            manualPrice: Decimal(string: "6400")!
+            manualPrice: Decimal(string: "6400")!,
+            manualPriceCurrencyCode: "USD"
         )
         XCTAssertEqual(holding.wrappedQuantity, Decimal(string: "12.5"))
 
@@ -122,20 +130,56 @@ final class SavingsDataTests: XCTestCase {
         let result = try destination.importData(source.exportBackup(), fileExtension: "json", language: .turkish)
         let restored = try XCTUnwrap(destination.context.fetch(SavingsHolding.fetchRequest()).first)
         XCTAssertGreaterThan(result.imported, 0)
-        XCTAssertEqual(restored.wrappedInstitution, "Enpara")
+        XCTAssertNil(restored.institution)
         XCTAssertEqual(restored.wrappedAsset, .XAU995)
         XCTAssertEqual(restored.wrappedQuantity, Decimal(string: "12.5"))
         XCTAssertEqual(restored.wrappedManualPrice, Decimal(string: "6400"))
+        XCTAssertEqual(restored.wrappedManualPriceCurrencyCode, "USD")
+    }
+
+    func testLegacyManualPriceDefaultsToTRY() throws {
+        let controller = DataController(inMemory: true, cloudEnabled: false)
+        let holding = NSEntityDescription.insertNewObject(
+            forEntityName: "SavingsHolding",
+            into: controller.context
+        ) as! SavingsHolding
+        holding.manualPriceCurrencyCode = nil
+        XCTAssertEqual(holding.wrappedManualPriceCurrencyCode, "TRY")
+    }
+
+    func testVersionTwoBackupWithoutManualCurrencyStillImportsAsTRY() throws {
+        let source = DataController(inMemory: true, cloudEnabled: false)
+        try source.saveHolding(
+            asset: .USD,
+            quantity: 100,
+            quoteMode: 1,
+            manualPrice: 48,
+            manualPriceCurrencyCode: "TRY"
+        )
+        var backup = try XCTUnwrap(JSONSerialization.jsonObject(with: source.exportBackup()) as? [String: Any])
+        backup["version"] = 2
+        var holdings = try XCTUnwrap(backup["holdings"] as? [[String: Any]])
+        holdings[0].removeValue(forKey: "manualPriceCurrencyCode")
+        backup["holdings"] = holdings
+
+        let destination = DataController(inMemory: true, cloudEnabled: false)
+        _ = try destination.importData(
+            JSONSerialization.data(withJSONObject: backup),
+            fileExtension: "json",
+            language: .turkish
+        )
+        let restored = try XCTUnwrap(destination.context.fetch(SavingsHolding.fetchRequest()).first)
+        XCTAssertEqual(restored.wrappedManualPriceCurrencyCode, "TRY")
     }
 
     func testHoldingDoesNotCreateTransactionsOrBudgets() throws {
         let controller = DataController(inMemory: true, cloudEnabled: false)
         try controller.saveHolding(
-            institution: "Cash",
             asset: .USD,
             quantity: 100,
             quoteMode: 0,
-            manualPrice: 0
+            manualPrice: 0,
+            manualPriceCurrencyCode: "TRY"
         )
         XCTAssertEqual(try controller.context.count(for: Transaction.fetchRequest()), 0)
         XCTAssertEqual(try controller.context.count(for: Budget.fetchRequest()), 0)
@@ -145,17 +189,20 @@ final class SavingsDataTests: XCTestCase {
     func testHoldingRoundTripsThroughCSVWithoutBecomingATransaction() throws {
         let source = DataController(inMemory: true, cloudEnabled: false)
         try source.saveHolding(
-            institution: "Physical",
             asset: .XAG,
             quantity: Decimal(string: "125.75")!,
             quoteMode: 0,
-            manualPrice: 0
+            manualPrice: 0,
+            manualPriceCurrencyCode: "TRY"
         )
         let destination = DataController(inMemory: true, cloudEnabled: false)
-        _ = try destination.importData(source.exportCSV(language: .english), fileExtension: "csv", language: .english)
+        let csv = try source.exportCSV(language: .english)
+        XCTAssertFalse(String(decoding: csv, as: UTF8.self).contains("Institution"))
+        _ = try destination.importData(csv, fileExtension: "csv", language: .english)
         let restored = try XCTUnwrap(destination.context.fetch(SavingsHolding.fetchRequest()).first)
         XCTAssertEqual(restored.wrappedAsset, .XAG)
         XCTAssertEqual(restored.wrappedQuantity, Decimal(string: "125.75"))
+        XCTAssertNil(restored.institution)
         XCTAssertEqual(try destination.context.count(for: Transaction.fetchRequest()), 0)
     }
 }

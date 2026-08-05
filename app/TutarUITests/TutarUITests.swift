@@ -26,6 +26,10 @@ final class TutarUITests: XCTestCase {
         attachScreenshot("23-onboarding-budgets-tr-dark", in: app)
 
         app.buttons["onboardingNextButton"].tap()
+        XCTAssertTrue(app.staticTexts["Birikimlerini Birlikte Gör"].waitForExistence(timeout: 3))
+        attachScreenshot("26-onboarding-savings-tr-dark", in: app)
+
+        app.buttons["onboardingNextButton"].tap()
         XCTAssertTrue(app.staticTexts["Verilerin Sana Ait"].waitForExistence(timeout: 3))
         XCTAssertFalse(app.buttons["onboardingSkipButton"].exists)
         attachScreenshot("23-onboarding-privacy-tr-dark", in: app)
@@ -36,8 +40,11 @@ final class TutarUITests: XCTestCase {
 
         openTab("Ayarlar", in: app)
         let showOnboarding = app.buttons["showOnboardingButton"]
-        for _ in 0 ..< 5 where !showOnboarding.isHittable { app.swipeUp() }
-        XCTAssertTrue(showOnboarding.waitForExistence(timeout: 5))
+        let tabBar = app.tabBars.firstMatch
+        for _ in 0 ..< 10 where !showOnboarding.exists || showOnboarding.frame.maxY >= tabBar.frame.minY {
+            app.swipeUp()
+        }
+        XCTAssertTrue(showOnboarding.isHittable)
         showOnboarding.tap()
         XCTAssertTrue(app.staticTexts["Tutar’a Hoş Geldin"].waitForExistence(timeout: 5))
         app.buttons["onboardingSkipButton"].tap()
@@ -743,20 +750,36 @@ final class TutarUITests: XCTestCase {
 
         app.buttons["addSavingsButton"].tap()
         XCTAssertTrue(app.navigationBars["Add savings"].waitForExistence(timeout: 5))
-        app.buttons["Enpara"].tap()
+        XCTAssertFalse(app.staticTexts["Where is it held?"].exists)
+        XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'XAU'")).firstMatch.exists)
         let quantity = app.textFields["Quantity"]
         quantity.tap()
         quantity.typeText("12.5")
         app.buttons["Manual"].tap()
-        let price = app.textFields["TRY price per unit"]
+        let price = app.textFields["Unit price in USD"]
         price.tap()
         price.typeText("6400")
         app.buttons["Save"].tap()
 
-        XCTAssertTrue(app.staticTexts["Enpara"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Gram gold 995/1000"].exists)
-        attachScreenshot("25-savings-en-dark", in: app)
+        XCTAssertTrue(app.staticTexts["Gold"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["$80,000.00"].exists)
+        attachScreenshot("26-savings-en-dark", in: app)
         try app.performAccessibilityAudit(for: [.contrast]) { self.contrastFalsePositive($0) }
+
+        openTab("Settings", in: app)
+        let currencyPicker = app.descendants(matching: .any).matching(identifier: "currencyPicker").firstMatch
+        XCTAssertTrue(currencyPicker.waitForExistence(timeout: 5))
+        currencyPicker.tap()
+        let currencySearch = app.searchFields["Search currency or code"]
+        XCTAssertTrue(currencySearch.waitForExistence(timeout: 5))
+        currencySearch.tap()
+        currencySearch.typeText("BRL")
+        let brl = app.descendants(matching: .any).matching(identifier: "currencyOption-BRL").firstMatch
+        XCTAssertTrue(brl.waitForExistence(timeout: 5))
+        brl.tap()
+
+        openTab("Savings", in: app)
+        XCTAssertTrue(app.staticTexts["Manual BRL price needed"].waitForExistence(timeout: 5))
 
         openTab("Transactions", in: app)
         XCTAssertTrue(app.staticTexts["A clean slate"].waitForExistence(timeout: 5))

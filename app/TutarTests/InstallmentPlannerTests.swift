@@ -211,6 +211,54 @@ final class InstallmentPersistenceTests: XCTestCase {
         }
     }
 
+    func testVersionFourSavingsMigrationRemovesLocationAndKeepsManualTRYPrice() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("TutarSavingsMigration-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let storeURL = directory.appendingPathComponent("Main.sqlite")
+
+        let modelDirectory = try XCTUnwrap(Bundle.main.url(forResource: "MainModel", withExtension: "momd"))
+        let oldModel = try XCTUnwrap(NSManagedObjectModel(
+            contentsOf: modelDirectory.appendingPathComponent("MainModel 4.mom")
+        ))
+        let oldContainer = NSPersistentContainer(name: "MainModel", managedObjectModel: oldModel)
+        oldContainer.persistentStoreDescriptions = [NSPersistentStoreDescription(url: storeURL)]
+        let loaded = expectation(description: "v4 store loaded")
+        var oldLoadError: Error?
+        oldContainer.loadPersistentStores { _, error in
+            oldLoadError = error
+            loaded.fulfill()
+        }
+        await fulfillment(of: [loaded], timeout: 5)
+        XCTAssertNil(oldLoadError)
+
+        let oldHolding = NSEntityDescription.insertNewObject(
+            forEntityName: "SavingsHolding",
+            into: oldContainer.viewContext
+        )
+        oldHolding.setValue(UUID(), forKey: "id")
+        oldHolding.setValue("Enpara", forKey: "institution")
+        oldHolding.setValue("XAU995", forKey: "assetCode")
+        oldHolding.setValue(NSDecimalNumber(string: "12.5"), forKey: "quantity")
+        oldHolding.setValue(1, forKey: "quoteMode")
+        oldHolding.setValue(NSDecimalNumber(string: "6400"), forKey: "manualPrice")
+        try oldContainer.viewContext.save()
+        oldContainer.persistentStoreCoordinator.persistentStores.forEach {
+            try? oldContainer.persistentStoreCoordinator.remove($0)
+        }
+
+        let migrated = DataController(storeURL: storeURL, cloudEnabled: false)
+        try await waitUntilLoaded(migrated)
+        let holding = try XCTUnwrap(migrated.context.fetch(SavingsHolding.fetchRequest()).first)
+        XCTAssertNil(holding.institution)
+        XCTAssertEqual(holding.wrappedManualPrice, Decimal(string: "6400"))
+        XCTAssertEqual(holding.wrappedManualPriceCurrencyCode, "TRY")
+        for store in migrated.container.persistentStoreCoordinator.persistentStores {
+            try migrated.container.persistentStoreCoordinator.remove(store)
+        }
+    }
+
     private func waitUntilLoaded(_ controller: DataController) async throws {
         for _ in 0 ..< 100 where !controller.isStoreLoaded && controller.loadError == nil {
             try await Task.sleep(nanoseconds: 20_000_000)

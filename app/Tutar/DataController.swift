@@ -590,6 +590,13 @@ final class DataController: ObservableObject {
         let budgetRequest = Budget.fetchRequest()
         try context.fetch(budgetRequest).forEach { $0.id = $0.id ?? UUID() }
 
+        try context.fetch(SavingsHolding.fetchRequest()).forEach { holding in
+            holding.institution = nil
+            if holding.quoteMode == 1, holding.manualPriceCurrencyCode?.isEmpty != false {
+                holding.manualPriceCurrencyCode = "TRY"
+            }
+        }
+
         try localizeKnownLegacyCategories()
         try deduplicateInstallments()
 

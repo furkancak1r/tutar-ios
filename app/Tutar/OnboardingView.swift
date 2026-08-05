@@ -213,6 +213,7 @@ private enum OnboardingPage: Int, CaseIterable, Identifiable {
     case welcome
     case planning
     case budgets
+    case savings
     case privacy
 
     var id: Int { rawValue }
@@ -222,6 +223,7 @@ private enum OnboardingPage: Int, CaseIterable, Identifiable {
         case .welcome: "onboarding.welcome.title"
         case .planning: "onboarding.planning.title"
         case .budgets: "onboarding.budgets.title"
+        case .savings: "onboarding.savings.title"
         case .privacy: "onboarding.privacy.title"
         }
     }
@@ -231,6 +233,7 @@ private enum OnboardingPage: Int, CaseIterable, Identifiable {
         case .welcome: "onboarding.welcome.message"
         case .planning: "onboarding.planning.message"
         case .budgets: "onboarding.budgets.message"
+        case .savings: "onboarding.savings.message"
         case .privacy: "onboarding.privacy.message"
         }
     }
@@ -240,6 +243,7 @@ private enum OnboardingPage: Int, CaseIterable, Identifiable {
         case .welcome: ""
         case .planning: "repeat"
         case .budgets: "chart.pie"
+        case .savings: "building.columns"
         case .privacy: "lock.shield"
         }
     }

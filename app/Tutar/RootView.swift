@@ -180,7 +180,7 @@ struct RootView: View {
                     canRetry: appLockController.canRetryAuthentication,
                     authenticate: requestAuthentication
                 )
-            } else if !hasCompletedOnboarding || showingOnboarding {
+            } else if !hasCompletedOnboarding {
                 OnboardingView(onFinish: finishOnboarding)
             } else {
                 appContent
@@ -190,6 +190,9 @@ struct RootView: View {
             Button("action.ok") { dataController.dismissLoadError() }
         } message: {
             Text("error.data.message")
+        }
+        .fullScreenCover(isPresented: $showingOnboarding) {
+            OnboardingView { showingOnboarding = false }
         }
         .onOpenURL { url in
             if url.scheme == "tutar", url.host == "add", !lockEnabled || appLockController.isUnlocked {
@@ -215,7 +218,10 @@ struct RootView: View {
             if phase == .active {
                 try? dataController.materializeRecurringTransactions()
             }
-            if phase == .background, lockEnabled { showingEditor = false }
+            if phase == .background, lockEnabled {
+                showingEditor = false
+                showingOnboarding = false
+            }
             appLockController.scenePhaseChanged(
                 to: phase,
                 lockEnabled: lockEnabled,
@@ -266,9 +272,7 @@ struct RootView: View {
 
             NavigationStack {
                 SettingsView {
-                    withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
-                        showingOnboarding = true
-                    }
+                    showingOnboarding = true
                 }
             }
             .tabItem { Label("tab.settings", systemImage: "gearshape") }
@@ -302,7 +306,6 @@ struct RootView: View {
     private func finishOnboarding() {
         withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
             hasCompletedOnboarding = true
-            showingOnboarding = false
         }
     }
 
@@ -1461,7 +1464,7 @@ struct AnalysisView: View {
     private var chartHitTolerance: Double {
         switch period {
         case .week: 24
-        case .month: 10
+        case .month: 22
         case .year: 18
         }
     }

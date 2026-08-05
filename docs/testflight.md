@@ -1,16 +1,16 @@
-# Tutar 1.0 (25) — TestFlight metadata
+# Tutar 1.0 (26) — TestFlight metadata
 
 ## Beta Description — Turkish
 
-Tutar; gelir, gider, bütçe, tekrar, taksit ve birikimleri takip etmek için tamamen ücretsiz, reklamsız ve açık kaynak bir iOS uygulamasıdır. Yeni Birikim sekmesi TL, döviz, gram altın ve gram gümüş miktarlarını banka veya saklama yerine göre düzenler; TCMB ve ücretsiz canlı değerli maden fiyatlarıyla yaklaşık TL değeri gösterir. Birikimler işlem oluşturmaz veya bütçeleri etkilemez. Dime/Tutar CSV içe/dışa aktarma, tam JSON yedekleme, yerel saklama ve isteğe bağlı özel iCloud eşzamanlaması bulunur.
+Tutar; gelir, gider, bütçe, tekrar, taksit ve birikimleri takip etmek için tamamen ücretsiz, reklamsız ve açık kaynak bir iOS uygulamasıdır. Birikim sekmesi altın, gümüş ve dövizleri Ayarlar’da seçilen para birimine TCMB çapraz kurları ve ücretsiz canlı değerli maden fiyatlarıyla çevirir; otomatik değer yoksa aynı para biriminde manuel fiyat kabul eder. Birikimler işlem oluşturmaz veya bütçeleri etkilemez. Dime/Tutar CSV içe/dışa aktarma, tam JSON yedekleme, yerel saklama ve isteğe bağlı özel iCloud eşzamanlaması bulunur.
 
 Tutar, Rafael Soh ve katkıda bulunanların oluşturduğu Dime temel alınarak değiştirilmiş GPLv3 çalışmasıdır. Bu buildin değişiklik tarihi: 5 Ağustos 2026. Tam kaynak: https://github.com/furkancak1r/tutar-ios
 
 ## What to Test — Turkish
 
-Build 25, yeni Birikim sekmesini ekler. Enpara, başka bir banka, nakit veya fiziksel saklama konumunda tutulan TL, döviz, 995/1000 ve 1000/1000 gram altın ile gram gümüş miktarlarını ekleyin. Otomatik fiyat, son başarılı fiyat ve manuel banka kuru geçişlerini; çevrimdışı davranışı ve birikimlerin işlem/bütçe toplamlarını etkilemediğini doğrulayın. Tutar, Rafael Soh ve katkıda bulunanların Dime uygulamasını temel alan GPLv3 türev çalışmadır. Değişiklik: 5 Ağustos 2026. Kaynak: https://github.com/furkancak1r/tutar-ios
+Build 26, Birikim değerlerini Ayarlar’daki para birimine bağlar. Altın, gümüş ve döviz ekleyin; TRY, USD ve EUR arasında geçerek canlı çapraz dönüşümü kontrol edin. TCMB’de bulunmayan bir hedef para biriminde açık manuel fiyat istemini, manuel fiyatın para birimiyle birlikte korunmasını, teknik XAU kodlarının ve saklama yeri alanının görünmediğini doğrulayın. Tutar, Rafael Soh ve katkıda bulunanların Dime uygulamasını temel alan GPLv3 türev çalışmadır. Değişiklik: 5 Ağustos 2026. Kaynak: https://github.com/furkancak1r/tutar-ios
 
-1. Güncellemeden sonraki ilk açılışta onboarding’in görünmesini; dört sayfanın yatay kaydırma ve İleri/Geri düğmeleriyle çalışmasını doğrulayın.
+1. Güncellemeden sonraki ilk açılışta onboarding’in görünmesini; beş sayfanın yatay kaydırma ve İleri/Geri düğmeleriyle çalışmasını ve Birikim sayfasını doğrulayın.
 2. Onboarding’i yarıda kapatıp yeniden açın; tekrar başlamalıdır. Atla veya Tutar’ı Kullanmaya Başla sonrasında yeniden görünmemelidir.
 3. Ayarlar → Bilgi → Tutar’ı Tanı ile onboarding’i tekrar açın; kapatınca Ayarlar’a dönmelidir.
 4. Uygulama Kilidi açıksa önce yalnız kilit ekranının görünmesini, doğrulama başarıyla bitince onboarding’in açılmasını kontrol edin.
@@ -49,15 +49,15 @@ Build 25, yeni Birikim sekmesini ekler. Enpara, başka bir banka, nakit veya fiz
 
 ## Beta Description — English
 
-Tutar is a completely free, ad-free, open-source iOS app for tracking income, expenses, budgets, repeats, installments, and savings. The new Savings tab groups lira, currencies, gram gold, and gram silver by bank or storage location and shows an estimated TRY value using CBRT and free live precious-metal prices. Savings do not create transactions or affect budgets. Dime/Tutar CSV import/export, complete JSON backup, local storage, and optional private iCloud sync are included.
+Tutar is a completely free, ad-free, open-source iOS app for tracking income, expenses, budgets, repeats, installments, and savings. Savings converts gold, silver, and currencies to the currency selected in Settings using CBRT cross rates and free live precious-metal prices; when no automatic value exists, it accepts a manual price in that currency. Savings do not create transactions or affect budgets. Dime/Tutar CSV import/export, complete JSON backup, local storage, and optional private iCloud sync are included.
 
 Tutar is a GPLv3 modified work based on Dime, originally created by Rafael Soh and contributors. This build was modified on 5 August 2026. Complete source: https://github.com/furkancak1r/tutar-ios
 
 ## What to Test — English
 
-Build 25 adds the Savings tab. Add TRY, currencies, 995/1000 and 1000/1000 gram gold, or gram silver held at Enpara, another bank, as cash, or physically. Verify automatic, cached, and manual bank-price fallbacks; offline behavior; and that savings never alter transaction or budget totals. Tutar is a GPLv3 derivative of Dime by Rafael Soh and contributors. Modified 5 August 2026. Source: https://github.com/furkancak1r/tutar-ios
+Build 26 ties Savings valuation to the currency selected in Settings. Add gold, silver, and currencies; switch between TRY, USD, and EUR to verify live cross conversion. Choose a target currency unavailable from CBRT and confirm the clear manual-price request, currency-aware manual prices, hidden technical XAU codes, and removal of the storage-location field. Tutar is a GPLv3 derivative of Dime by Rafael Soh and contributors. Modified 5 August 2026. Source: https://github.com/furkancak1r/tutar-ios
 
-1. After updating, confirm onboarding appears once and all four pages work with horizontal swipes and the Back/Next buttons.
+1. After updating, confirm onboarding appears once and all five pages—including Savings—work with horizontal swipes and the Back/Next buttons.
 2. Quit midway and relaunch; onboarding should return. After Skip or Start Using Tutar, it should stay completed.
 3. Reopen it from Settings → Information → How Tutar Works and confirm closing it returns to Settings.
 4. With App Lock enabled, confirm only the lock screen appears first and onboarding opens after one successful authentication.

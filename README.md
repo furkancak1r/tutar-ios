@@ -17,7 +17,7 @@ Tutar; aylık bütçe planlama, günlük gelir gider takibi, harcama analizi ve 
 - Her taksitte sıra göstergesi (`1/3`, `2/3`, `3/3`)
 - Tek taksiti veya seçili taksit ve sonrasını düzenleme/silme
 - Gelecek taksitleri geçmiş işlemlerden ayrı gösterme
-- Enpara, nakit veya fiziksel saklama gibi konumlara göre TL, döviz, gram altın ve gram gümüş birikimlerini yaklaşık TL değeriyle izleme
+- Altın, gümüş ve döviz birikimlerini Ayarlar’daki para birimine canlı çapraz kur veya manuel fiyatla dönüştürerek izleme
 - Dime/Tutar CSV içe aktarma, işlem CSV dışa aktarma ve tam JSON yedekleme/geri yükleme
 - Türkçe ve İngilizce; Sistem / Türkçe / English dil seçimi
 - Tüm ISO para birimleri; Türkçede varsayılan TRY ve seçimi koruyan yerel biçimlendirme
@@ -91,7 +91,7 @@ Installments are configured inside the transaction **Schedule** menu beside One 
 
 Tutar supports complete Turkish and English localization, locale-aware dates and money, Dynamic Type, VoiceOver, dark mode, iPhone/iPad layouts, local Core Data storage, optional private iCloud/CloudKit sync, optional device authentication, a localized widget, and local reminders.
 
-The Savings tab tracks lira, CBRT-supported currencies, gram gold, and gram silver by bank or storage location. Automatic values use CBRT and a keyless precious-metal quote service with cached and manual-price fallbacks; holdings never create transactions or change budgets and analysis.
+The Savings tab tracks gold, silver, and CBRT-supported currencies in the currency selected in Settings. Automatic cross rates use CBRT and a keyless precious-metal quote service with cached and manual-price fallbacks; holdings never create transactions or change budgets and analysis.
 
 Tutar is a modified work based on [Dime](https://github.com/rafsoh/dimeApp), originally created by Rafael Soh with contributions preserved in Git history. It was first modified as Tutar on **4 August 2026**, based on upstream revision `0463cb8caba237de781ae02e70a2ec82ae900c67`. The complete source is available in this repository and remains licensed under GNU GPLv3; see [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md).
 

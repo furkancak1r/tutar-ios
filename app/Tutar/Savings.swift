@@ -8,6 +8,9 @@ enum SavingsAsset: String, CaseIterable, Identifiable {
     case TRY, USD, EUR, GBP, CHF, AED, AUD, AZN, CAD, CNY, DKK, JPY, KRW, KWD, KZT, NOK, PKR, QAR, RON, RUB, SAR, SEK, XDR, XAU995, XAU1000, XAG
 
     var id: String { rawValue }
+    static var selectableCases: [SavingsAsset] {
+        [.XAU995, .XAG] + allCases.filter { !$0.isMetal }
+    }
     var isMetal: Bool { self == .XAU995 || self == .XAU1000 || self == .XAG }
     var unitKey: LocalizedStringKey { isMetal ? "savings.unit.gram" : "savings.unit.currency" }
     var symbol: String {
@@ -21,8 +24,7 @@ enum SavingsAsset: String, CaseIterable, Identifiable {
 
     func name(language: AppLanguage) -> String {
         switch self {
-        case .XAU995: AppFormat.localized("savings.asset.gold995", language: language)
-        case .XAU1000: AppFormat.localized("savings.asset.gold1000", language: language)
+        case .XAU995, .XAU1000: AppFormat.localized("savings.asset.gold", language: language)
         case .XAG: AppFormat.localized("savings.asset.silver", language: language)
         default: AppFormat.currencyName(rawValue, language: language)
         }
@@ -44,6 +46,11 @@ enum SavingsQuoteMath {
 
     static func metalPriceTRY(ounceUSD: Decimal, usdTRY: Decimal, purity: Decimal = 1) -> Decimal {
         ounceUSD * usdTRY / gramsPerTroyOunce * purity
+    }
+
+    static func crossRate(priceInTRY: Decimal, targetPriceInTRY: Decimal) -> Decimal? {
+        guard priceInTRY > 0, targetPriceInTRY > 0 else { return nil }
+        return priceInTRY / targetPriceInTRY
     }
 }
 
@@ -117,7 +124,51 @@ final class SavingsQuoteStore: ObservableObject {
         }
     }
 
-    func quote(for asset: SavingsAsset) -> SavingsQuote? { quotes[asset.rawValue] }
+    func quote(for asset: SavingsAsset, in currencyCode: String) -> SavingsQuote? {
+        if asset.rawValue == currencyCode {
+            return SavingsQuote(priceTRY: 1, updatedAt: .now, source: .tcmb)
+        }
+        guard let assetQuote = quotes[asset.rawValue],
+              let targetPrice = priceInTRY(for: currencyCode),
+              let price = SavingsQuoteMath.crossRate(
+                  priceInTRY: assetQuote.priceTRY,
+                  targetPriceInTRY: targetPrice.priceTRY
+              ) else { return nil }
+        return SavingsQuote(
+            priceTRY: price,
+            updatedAt: min(assetQuote.updatedAt, targetPrice.updatedAt),
+            source: assetQuote.source == .cached || targetPrice.source == .cached ? .cached : assetQuote.source
+        )
+    }
+
+    func manualQuote(
+        price: Decimal,
+        currencyCode: String,
+        targetCurrencyCode: String,
+        updatedAt: Date
+    ) -> SavingsQuote? {
+        if currencyCode == targetCurrencyCode {
+            return SavingsQuote(priceTRY: price, updatedAt: updatedAt, source: .manual)
+        }
+        guard let source = priceInTRY(for: currencyCode),
+              let target = priceInTRY(for: targetCurrencyCode),
+              let converted = SavingsQuoteMath.crossRate(
+                  priceInTRY: price * source.priceTRY,
+                  targetPriceInTRY: target.priceTRY
+              ) else { return nil }
+        return SavingsQuote(
+            priceTRY: converted,
+            updatedAt: min(updatedAt, min(source.updatedAt, target.updatedAt)),
+            source: .manual
+        )
+    }
+
+    private func priceInTRY(for currencyCode: String) -> SavingsQuote? {
+        if currencyCode == "TRY" {
+            return SavingsQuote(priceTRY: 1, updatedAt: .now, source: .tcmb)
+        }
+        return quotes[currencyCode]
+    }
 
     private func mergeAndCache(_ fresh: [String: SavingsQuote]) {
         quotes.merge(fresh) { _, new in new }
@@ -229,22 +280,22 @@ extension DataController {
     @discardableResult
     func saveHolding(
         _ holding: SavingsHolding? = nil,
-        institution: String,
         asset: SavingsAsset,
         quantity: Decimal,
         quoteMode: Int,
-        manualPrice: Decimal
+        manualPrice: Decimal,
+        manualPriceCurrencyCode: String
     ) throws -> SavingsHolding {
-        let institution = institution.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !institution.isEmpty, institution.count <= 80, quantity > 0,
+        guard quantity > 0, AppFormat.currencyCodes.contains(manualPriceCurrencyCode),
               quoteMode == 0 || (quoteMode == 1 && manualPrice > 0) else { throw SavingsError.invalidInput }
         let item = holding ?? NSEntityDescription.insertNewObject(forEntityName: "SavingsHolding", into: context) as! SavingsHolding
         item.id = item.id ?? UUID()
-        item.institution = institution
+        item.institution = nil
         item.assetCode = asset.rawValue
         item.quantity = NSDecimalNumber(decimal: quantity)
         item.quoteMode = Int16(quoteMode)
         item.manualPrice = NSDecimalNumber(decimal: manualPrice)
+        item.manualPriceCurrencyCode = manualPriceCurrencyCode
         item.manualQuoteDeclined = false
         item.createdAt = item.createdAt ?? .now
         item.updatedAt = .now
@@ -272,8 +323,11 @@ extension DataController {
 enum SavingsError: Error { case invalidInput }
 
 extension SavingsHolding {
-    var wrappedInstitution: String { institution ?? "" }
     var wrappedAsset: SavingsAsset { SavingsAsset(rawValue: assetCode ?? "") ?? .TRY }
     var wrappedQuantity: Decimal { quantity?.decimalValue ?? 0 }
     var wrappedManualPrice: Decimal { manualPrice?.decimalValue ?? 0 }
+    var wrappedManualPriceCurrencyCode: String {
+        let code = manualPriceCurrencyCode ?? ""
+        return AppFormat.currencyCodes.contains(code) ? code : "TRY"
+    }
 }

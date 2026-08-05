@@ -5,15 +5,13 @@ import SwiftUI
 
 struct SavingsView: View {
     @FetchRequest(
-        sortDescriptors: [
-            NSSortDescriptor(keyPath: \SavingsHolding.institution, ascending: true),
-            NSSortDescriptor(keyPath: \SavingsHolding.createdAt, ascending: true)
-        ],
+        sortDescriptors: [NSSortDescriptor(keyPath: \SavingsHolding.createdAt, ascending: true)],
         animation: .default
     ) private var holdings: FetchedResults<SavingsHolding>
 
     @EnvironmentObject private var dataController: DataController
     @Environment(\.appLanguage) private var language
+    @AppStorage("currencyCode", store: .tutar) private var preferredCurrency = ""
     @StateObject private var quotes = SavingsQuoteStore()
     @State private var editor: SavingsHolding?
     @State private var showingNewEditor = false
@@ -21,9 +19,8 @@ struct SavingsView: View {
     @State private var showingInfo = false
     @State private var errorMessage = ""
 
-    private var grouped: [(String, [SavingsHolding])] {
-        Dictionary(grouping: Array(holdings), by: \.wrappedInstitution)
-            .sorted { $0.key.localizedCaseInsensitiveCompare($1.key) == .orderedAscending }
+    private var currency: String {
+        AppFormat.currencyCode(language: language, preferred: preferredCurrency)
     }
 
     private var valuedHoldings: [(SavingsHolding, Decimal)] {
@@ -42,7 +39,7 @@ struct SavingsView: View {
                     Text(missingCount > 0 ? "savings.total.minimum" : "savings.total")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                    Text(SavingsFormatting.money(total, language: language))
+                    Text(SavingsFormatting.money(total, language: language, currencyCode: currency))
                         .font(.system(.largeTitle, design: .rounded, weight: .medium))
                         .monospacedDigit()
                         .minimumScaleFactor(0.65)
@@ -62,9 +59,9 @@ struct SavingsView: View {
                 .listRowBackground(Color.clear)
             }
 
-            ForEach(grouped, id: \.0) { institution, items in
-                Section(institution) {
-                    ForEach(items) { holding in
+            if !holdings.isEmpty {
+                Section {
+                    ForEach(holdings) { holding in
                         holdingRow(holding)
                             .contentShape(Rectangle())
                             .onTapGesture { editor = holding }
@@ -109,7 +106,7 @@ struct SavingsView: View {
                     Label("savings.info", systemImage: "info.circle").labelStyle(.iconOnly)
                 }
                 .popover(isPresented: $showingInfo, arrowEdge: .top) {
-                    Text("savings.info.message")
+                    Text(verbatim: AppFormat.format("savings.info.message", language: language, currency))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .padding(18)
@@ -163,7 +160,13 @@ struct SavingsView: View {
                 }
                 Spacer(minLength: 8)
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text(unitPrice(for: holding).map { SavingsFormatting.money(holding.wrappedQuantity * $0.priceTRY, language: language) } ?? "—")
+                    Text(unitPrice(for: holding).map {
+                        SavingsFormatting.money(
+                            holding.wrappedQuantity * $0.priceTRY,
+                            language: language,
+                            currencyCode: currency
+                        )
+                    } ?? "—")
                         .font(.subheadline.weight(.semibold))
                         .monospacedDigit()
                         .lineLimit(1)
@@ -171,10 +174,12 @@ struct SavingsView: View {
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.75)
                 }
             }
 
-            if holding.quoteMode == 1, !holding.manualQuoteDeclined, quotes.quote(for: holding.wrappedAsset) != nil {
+            if holding.quoteMode == 1, !holding.manualQuoteDeclined,
+               quotes.quote(for: holding.wrappedAsset, in: currency) != nil {
                 HStack(spacing: 10) {
                     Text("savings.automatic.available")
                         .font(.caption)
@@ -194,9 +199,14 @@ struct SavingsView: View {
 
     private func unitPrice(for holding: SavingsHolding) -> SavingsQuote? {
         if holding.quoteMode == 1, holding.wrappedManualPrice > 0 {
-            return SavingsQuote(priceTRY: holding.wrappedManualPrice, updatedAt: holding.updatedAt ?? .now, source: .manual)
+            return quotes.manualQuote(
+                price: holding.wrappedManualPrice,
+                currencyCode: holding.wrappedManualPriceCurrencyCode,
+                targetCurrencyCode: currency,
+                updatedAt: holding.updatedAt ?? .now
+            )
         }
-        return quotes.quote(for: holding.wrappedAsset)
+        return quotes.quote(for: holding.wrappedAsset, in: currency)
     }
 
     private func quantityText(_ holding: SavingsHolding) -> String {
@@ -207,7 +217,9 @@ struct SavingsView: View {
     }
 
     private func sourceText(for holding: SavingsHolding) -> String {
-        guard let quote = unitPrice(for: holding) else { return AppFormat.localized("savings.source.unavailable", language: language) }
+        guard let quote = unitPrice(for: holding) else {
+            return AppFormat.format("savings.manual.required", language: language, currency)
+        }
         return AppFormat.localized("savings.source.\(quote.source.rawValue)", language: language)
     }
 
@@ -238,51 +250,47 @@ private struct SavingsEditorView: View {
     @EnvironmentObject private var dataController: DataController
     @Environment(\.dismiss) private var dismiss
     @Environment(\.appLanguage) private var language
+    @AppStorage("currencyCode", store: .tutar) private var preferredCurrency = ""
     let holding: SavingsHolding?
 
-    @State private var institution: String
+    @StateObject private var quotes = SavingsQuoteStore()
     @State private var asset: SavingsAsset
     @State private var quantity: String
     @State private var quoteMode: Int
     @State private var manualPrice: String
+    @State private var manualPriceCurrencyCode: String
+    @State private var didCheckQuotes = false
     @State private var errorMessage = ""
     @FocusState private var focusedField: Field?
 
-    private enum Field { case institution, quantity, price }
+    private enum Field { case quantity, price }
+
+    private var currency: String {
+        AppFormat.currencyCode(language: language, preferred: preferredCurrency)
+    }
+
+    private var pickerAssets: [SavingsAsset] {
+        asset == .XAU1000
+            ? [.XAU1000] + SavingsAsset.selectableCases.filter { $0 != .XAU995 }
+            : SavingsAsset.selectableCases
+    }
 
     init(holding: SavingsHolding? = nil) {
         self.holding = holding
-        _institution = State(initialValue: holding?.wrappedInstitution ?? "")
         _asset = State(initialValue: holding?.wrappedAsset ?? .XAU995)
         _quantity = State(initialValue: holding.map { SavingsFormatting.editable($0.wrappedQuantity) } ?? "")
         _quoteMode = State(initialValue: Int(holding?.quoteMode ?? 0))
         _manualPrice = State(initialValue: holding.map { SavingsFormatting.editable($0.wrappedManualPrice) } ?? "")
+        _manualPriceCurrencyCode = State(initialValue: holding?.wrappedManualPriceCurrencyCode ?? "TRY")
     }
 
     var body: some View {
         NavigationStack {
             Form {
-                Section("savings.location.section") {
-                    TextField("savings.location.placeholder", text: $institution)
-                        .focused($focusedField, equals: .institution)
-                        .textInputAutocapitalization(.words)
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack {
-                            ForEach(["Enpara", "savings.location.physical", "savings.location.cash", "savings.location.otherBank"], id: \.self) { key in
-                                Button(key.hasPrefix("savings.") ? AppFormat.localized(key, language: language) : key) {
-                                    institution = key.hasPrefix("savings.") ? AppFormat.localized(key, language: language) : key
-                                }
-                                .buttonStyle(.bordered)
-                                .controlSize(.small)
-                            }
-                        }
-                    }
-                }
-
                 Section("savings.asset.section") {
                     Picker("savings.asset", selection: $asset) {
-                        ForEach(SavingsAsset.allCases) { item in
-                            Text("\(item.name(language: language)) (\(item.rawValue))").tag(item)
+                        ForEach(pickerAssets) { item in
+                            Text(item.name(language: language)).tag(item)
                         }
                     }
                     TextField("savings.quantity", text: $quantity)
@@ -297,12 +305,24 @@ private struct SavingsEditorView: View {
                     }
                     .pickerStyle(.segmented)
                     if quoteMode == 1 {
-                        TextField("savings.manual.price", text: $manualPrice)
+                        TextField(
+                            AppFormat.format("savings.manual.price", language: language, currency),
+                            text: $manualPrice
+                        )
                             .keyboardType(.decimalPad)
                             .focused($focusedField, equals: .price)
-                        Text("savings.manual.help")
+                        Text(verbatim: AppFormat.format("savings.manual.help", language: language, currency))
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                    } else if didCheckQuotes,
+                              quotes.quote(for: asset, in: currency) == nil {
+                        Text(verbatim: AppFormat.format("savings.automatic.unavailable", language: language, currency))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Button("savings.manual.enter") {
+                            quoteMode = 1
+                            focusedField = .price
+                        }
                     }
                 }
             }
@@ -312,7 +332,28 @@ private struct SavingsEditorView: View {
                 ToolbarItem(placement: .cancellationAction) { Button("action.cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) { Button("action.save", action: save) }
             }
-            .onAppear { if holding == nil { focusedField = .institution } }
+            .onAppear {
+                if holding == nil {
+                    manualPriceCurrencyCode = currency
+                    focusedField = .quantity
+                } else if quoteMode == 1, manualPriceCurrencyCode != currency {
+                    manualPrice = ""
+                }
+            }
+            .task(id: asset) {
+                await quotes.refresh()
+                if quoteMode == 1, manualPriceCurrencyCode != currency,
+                   let converted = quotes.manualQuote(
+                       price: holding?.wrappedManualPrice ?? 0,
+                       currencyCode: manualPriceCurrencyCode,
+                       targetCurrencyCode: currency,
+                       updatedAt: holding?.updatedAt ?? .now
+                   ) {
+                    manualPrice = SavingsFormatting.editable(converted.priceTRY)
+                    manualPriceCurrencyCode = currency
+                }
+                didCheckQuotes = true
+            }
             .alert("error.save.title", isPresented: Binding(
                 get: { !errorMessage.isEmpty }, set: { if !$0 { errorMessage = "" } }
             )) { Button("action.ok") { errorMessage = "" } } message: { Text(verbatim: errorMessage) }
@@ -328,11 +369,11 @@ private struct SavingsEditorView: View {
         do {
             try dataController.saveHolding(
                 holding,
-                institution: institution,
                 asset: asset,
                 quantity: quantity,
                 quoteMode: quoteMode,
-                manualPrice: price
+                manualPrice: price,
+                manualPriceCurrencyCode: quoteMode == 1 ? currency : manualPriceCurrencyCode
             )
             dismiss()
         } catch {
@@ -342,11 +383,11 @@ private struct SavingsEditorView: View {
 }
 
 enum SavingsFormatting {
-    static func money(_ amount: Decimal, language: AppLanguage) -> String {
+    static func money(_ amount: Decimal, language: AppLanguage, currencyCode: String) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.locale = language.locale
-        formatter.currencyCode = "TRY"
+        formatter.currencyCode = currencyCode
         formatter.minimumFractionDigits = 2
         formatter.maximumFractionDigits = 2
         return formatter.string(from: NSDecimalNumber(decimal: amount)) ?? "—"
