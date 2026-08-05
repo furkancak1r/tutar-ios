@@ -22,6 +22,14 @@ final class MoneyEntryTests: XCTestCase {
         entry.deleteLast()
         XCTAssertEqual(entry.minorUnits, 300_020)
     }
+
+    func testAutomaticEntryCanSwitchToLocalizedDecimalInput() {
+        var entry = MoneyEntry(mode: .automaticCents)
+        [3, 0, 0].forEach { entry.append($0) }
+        entry.insertDecimalSeparator()
+        [2, 5].forEach { entry.append($0) }
+        XCTAssertEqual(entry.minorUnits, 30_025)
+    }
 }
 
 final class AppFormatTests: XCTestCase {
@@ -399,6 +407,33 @@ final class DataFeatureTests: XCTestCase {
             systemKey: "category.housing"
         )) { error in
             XCTAssertEqual(error as? CategoryError, .duplicate)
+        }
+    }
+
+    func testCategoryEmojiMustBeUnique() async throws {
+        let controller = DataController(inMemory: true, cloudEnabled: false)
+        try await waitUntilLoaded(controller)
+        let category = try controller.saveCategory(
+            name: "Books",
+            emoji: "📚",
+            colour: "#232326",
+            income: false
+        )
+
+        _ = try controller.saveCategory(
+            category,
+            name: "Reading",
+            emoji: "📚",
+            colour: "#232326",
+            income: false
+        )
+        XCTAssertThrowsError(try controller.saveCategory(
+            name: "Library",
+            emoji: "📚",
+            colour: "#232326",
+            income: true
+        )) { error in
+            XCTAssertEqual(error as? CategoryError, .duplicateEmoji)
         }
     }
 

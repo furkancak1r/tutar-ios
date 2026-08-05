@@ -13,9 +13,11 @@ struct CategoriesView: View {
     @Environment(\.appLanguage) private var language
     @State private var showingNew = false
     @State private var showingIncome = false
+    @State private var showingSuggestions = true
     @State private var editing: Category?
     @State private var deleting: Category?
     @State private var errorMessage = ""
+    @State private var editMode: EditMode = .inactive
 
     private var selectedCategories: [Category] {
         categories.filter { $0.income == showingIncome }
@@ -47,7 +49,9 @@ struct CategoriesView: View {
             categorySection("categories.yours.section", items: selectedCategories)
 
             Section {
-                if availableSuggestions.isEmpty {
+                if !showingSuggestions {
+                    EmptyView()
+                } else if availableSuggestions.isEmpty {
                     Text("categories.suggested.empty")
                         .foregroundStyle(.secondary)
                 } else {
@@ -79,11 +83,25 @@ struct CategoriesView: View {
                     }
                 }
             } header: {
-                Text("categories.suggested.section")
+                HStack {
+                    Text("categories.suggested.section")
+                    Spacer()
+                    Button {
+                        withAnimation { showingSuggestions.toggle() }
+                    } label: {
+                        Image(systemName: showingSuggestions ? "eye.slash" : "eye")
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("suggestedCategoriesVisibilityButton")
+                    .accessibilityLabel(showingSuggestions
+                        ? Text("categories.suggested.hide")
+                        : Text("categories.suggested.show"))
+                }
             } footer: {
-                Text("categories.suggested.footer")
+                if showingSuggestions { Text("categories.suggested.footer") }
             }
         }
+        .environment(\.editMode, $editMode)
         .navigationTitle("categories.title")
         .navigationBarTitleDisplayMode(.inline)
         .scrollContentBackground(.hidden)
@@ -91,15 +109,22 @@ struct CategoriesView: View {
         .frame(maxWidth: 760)
         .frame(maxWidth: .infinity)
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItemGroup(placement: .primaryAction) {
                 Button {
                     showingNew = true
                 } label: {
                     Label("categories.add", systemImage: "plus")
                 }
-            }
-            ToolbarItem(placement: .secondaryAction) {
-                EditButton()
+                Button {
+                    withAnimation { editMode = editMode.isEditing ? .inactive : .active }
+                } label: {
+                    if editMode.isEditing {
+                        Label("action.done", systemImage: "checkmark")
+                    } else {
+                        Label("action.edit", systemImage: "pencil")
+                    }
+                }
+                .accessibilityIdentifier("categoryEditModeButton")
             }
         }
         .sheet(isPresented: $showingNew) {
@@ -190,6 +215,8 @@ struct CategoriesView: View {
                 income: suggestion.income,
                 systemKey: suggestion.key
             )
+        } catch CategoryError.duplicateEmoji {
+            errorMessage = AppFormat.localized("categories.error.duplicateEmoji", language: language)
         } catch {
             errorMessage = AppFormat.localized("categories.error.add", language: language)
         }
@@ -240,14 +267,8 @@ private struct CategoryEditorView: View {
 
     @State private var name: String
     @State private var emoji: String
-    @State private var colour: String
     @State private var income: Bool
     @State private var errorKey: String?
-
-    private let colours = [
-        "#232326", "#5C5A57", "#736A62", "#5F6B5C",
-        "#9A7B4F", "#9B554D", "#7A6068", "#8E8E93"
-    ]
 
     var body: some View {
         NavigationStack {
@@ -266,33 +287,6 @@ private struct CategoryEditorView: View {
                     }
                     .pickerStyle(.segmented)
                     .disabled(category != nil)
-                }
-
-                Section("categories.colour.section") {
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 16) {
-                        ForEach(colours, id: \.self) { option in
-                            Button {
-                                colour = option
-                            } label: {
-                                Circle()
-                                    .fill(Color(hex: option))
-                                    .frame(width: 36, height: 36)
-                                    .overlay {
-                                        if colour == option {
-                                            Image(systemName: "checkmark")
-                                                .font(.caption.bold())
-                                                .foregroundStyle(.white)
-                                        }
-                                    }
-                                    .frame(minWidth: 44, minHeight: 44)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel(Text("categories.colour"))
-                            .accessibilityValue(Text(verbatim: option))
-                            .accessibilityAddTraits(colour == option ? .isSelected : [])
-                        }
-                    }
-                    .padding(.vertical, 6)
                 }
 
                 if let errorKey {
@@ -322,7 +316,6 @@ private struct CategoryEditorView: View {
         self.initialName = initialName
         _name = State(initialValue: initialName)
         _emoji = State(initialValue: category?.emoji ?? "")
-        _colour = State(initialValue: category?.colour ?? "#232326")
         _income = State(initialValue: category?.income ?? false)
     }
 
@@ -332,7 +325,7 @@ private struct CategoryEditorView: View {
                 category,
                 name: name,
                 emoji: emoji,
-                colour: colour,
+                colour: category?.colour ?? "#232326",
                 income: income,
                 replacesSystemName: category?.systemKey != nil && name != initialName
             )
@@ -343,6 +336,8 @@ private struct CategoryEditorView: View {
             errorKey = "categories.error.emoji"
         } catch CategoryError.duplicate {
             errorKey = "categories.error.duplicate"
+        } catch CategoryError.duplicateEmoji {
+            errorKey = "categories.error.duplicateEmoji"
         } catch {
             errorKey = "editor.error.save"
         }

@@ -216,13 +216,13 @@
 "categories.yours.section" = "Your categories";
 "categories.suggested.section" = "Suggested";
 "categories.suggested.footer" = "Tap a category to add it to your list.";
+"categories.suggested.hide" = "Hide suggested categories";
+"categories.suggested.show" = "Show suggested categories";
 "categories.suggested.empty" = "All suggestions added.";
 "categories.suggested.add" = "Add %@ category";
 "categories.details.section" = "Details";
 "categories.name" = "Name";
 "categories.emoji" = "Symbol or emoji";
-"categories.colour.section" = "Colour";
-"categories.colour" = "Category colour";
 "categories.new.title" = "New category";
 "categories.edit.title" = "Edit category";
 "categories.delete.title" = "Delete category?";
@@ -230,6 +230,7 @@
 "categories.error.name" = "Enter a category name with no more than 80 characters.";
 "categories.error.emoji" = "Enter a short symbol or emoji.";
 "categories.error.duplicate" = "A category with that name already exists.";
+"categories.error.duplicateEmoji" = "This emoji is already used by another category.";
 "categories.error.add" = "The category could not be added.";
 
 "notification.title" = "A quick Tutar check-in";

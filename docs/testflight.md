@@ -1,4 +1,4 @@
-# Tutar 1.0 (17) — TestFlight metadata
+# Tutar 1.0 (18) — TestFlight metadata
 
 ## Beta Description — Turkish
 
@@ -8,12 +8,15 @@ Tutar, Rafael Soh ve katkıda bulunanların oluşturduğu Dime temel alınarak d
 
 ## What to Test — Turkish
 
-Build 17, kategori, kayıt ve bütçe silme onaylarında Sil'e basıldıktan sonra görülen kapanma–yeniden açılma–kapanma sıçramasını giderir. Onay durumu veri silinmeden önce kapatılır; popup tek seferde kaybolur, yalnız hedef satır silinir ve komşu satırlar sabit kalır. İptal davranışı ile taksitli işlemlerde tek taksit ve bu ve sonraki taksitler seçenekleri korunur. Yeni bağımlılık, gecikme veya özel popup eklenmedi.
+Build 18, kategori ekleme ve düzenleme ekranındaki gereksiz renk seçimini kaldırır. Kategori adı, emoji ve gelir/gider türü yeterlidir; emoji klavyesi otomatik açılmaya devam eder ve aynı emoji ikinci bir kategoriye kaydedilemez. Kategoriler ekranındaki üç noktalı düzenleme menüsünün yerini doğrudan kalem düğmesi alır ve sıralama modunda onay işaretine dönüşür. Önerilenler başlığındaki göz düğmesi öneri listesini açıp kapatır. Tutar klavyesinde Türkçe virgül dâhil yerel ondalık ayıracı ve silme tuşu her giriş modunda görünür. Mevcut kategorilerin, içe aktarılan yedeklerin ve eski renk verilerinin uyumluluğu korunur. Yeni bağımlılık veya veri migration'ı eklenmedi.
 
 1. Ayarlar → Kategoriler ekranında Gider/Gelir seçiminin listeleri doğru ayırdığını doğrulayın.
-2. Önerilenler bölümünden Konut ve Serbest Çalışma kategorilerini ekleyin; tek dokunuşla Kategorilerin bölümüne taşındıklarını ve önerilerden kaybolduklarını doğrulayın.
-3. Uygulama dilini Türkçe ve English arasında değiştirin; öneriden eklenen kategori adlarının çevrildiğini doğrulayın.
-4. Kategori ekranını açık/koyu modda, büyük metinde, VoiceOver ile ve iPhone/iPad üzerinde kontrol edin; satıra dokunmanın düzenleyiciyi açtığını doğrulayın.
+2. Önerilenler başlığındaki göz düğmesiyle listeyi gizleyip yeniden gösterin; düğmenin her iki durumda da erişilebilir kaldığını doğrulayın.
+3. Önerilenler bölümünden Konut ve Serbest Çalışma kategorilerini ekleyin; tek dokunuşla Kategorilerin bölümüne taşındıklarını ve önerilerden kaybolduklarını doğrulayın.
+4. Yeni kategori ekranında renk seçiminin bulunmadığını, emoji klavyesinin açıldığını ve kullanımda olan bir emojinin ikinci kez kaydedilemediğini doğrulayın.
+5. Kalem düğmesine dokunun; sıralama sırasında onay işaretine dönüştüğünü ve tamamlanınca yeniden kalem olduğunu doğrulayın.
+6. Uygulama dilini Türkçe ve English arasında değiştirin; öneriden eklenen kategori adlarının çevrildiğini doğrulayın.
+7. Kategori ekranını açık/koyu modda, büyük metinde, VoiceOver ile ve iPhone/iPad üzerinde kontrol edin; satıra dokunmanın düzenleyiciyi açtığını doğrulayın.
 5. Kayıtlar ekranında net toplamın birincil odak olduğunu; seçili ay rozetinin, monokrom eğilim çizgisinin ve ikincil harcama/gelir değerlerinin açık ve koyu modda okunabildiğini doğrulayın.
 6. Yeni kayıt düğmesinin sağ altta, sekme çubuğunun üstünde ve kolay erişilebilir kaldığını doğrulayın.
 7. İşlem satırında notun üstte; kategori, kısa gün/ay tarihi ve taksit sırasının altta; tutarın sağda okunaklı göründüğünü kontrol edin. Tarihte yıl görünmemeli.
@@ -37,12 +40,15 @@ Tutar is a GPLv3 modified work based on Dime, originally created by Rafael Soh a
 
 ## What to Test — English
 
-Build 17 fixes the dismiss–reappear–dismiss flicker that could occur after confirming deletion of a category, record, or budget. Confirmation state now closes before data is removed, so the popup disappears once, only the selected row is deleted, and neighbouring rows stay stable. Cancellation and the single-installment and this-and-following choices remain unchanged. No dependency, delay, or custom popup was added.
+Build 18 removes the unnecessary colour picker from category creation and editing. A category name, emoji, and expense/income type are sufficient; the emoji keyboard still opens automatically, and the same emoji cannot be saved to a second category. The categories screen now shows a direct pencil button instead of a three-dot edit menu, changing to a checkmark while reordering. An eye button in Suggested shows or hides the suggestion list. The amount keypad now keeps the locale-appropriate decimal separator and delete keys visible in every entry mode. Existing categories, imported backups, and legacy colour data remain compatible. No dependency or data migration was added.
 
 1. In Settings → Categories, confirm the Expense/Income control separates the lists correctly.
-2. Add Housing and Freelance from Suggested; confirm each moves into Your categories with one tap and disappears from Suggested.
-3. Switch the app between Turkish and English; confirm suggested categories that were added change to the correct localized name.
-4. Check Categories in light/dark appearance, large text, VoiceOver, and iPhone/iPad layouts; confirm tapping a row opens its editor.
+2. Hide and show the list with the eye button in Suggested; confirm the button remains accessible in both states.
+3. Add Housing and Freelance from Suggested; confirm each moves into Your categories with one tap and disappears from Suggested.
+4. In New Category, confirm there is no colour picker, the emoji keyboard opens, and an emoji already in use cannot be saved again.
+5. Tap the pencil button; confirm it changes to a checkmark while reordering and returns to a pencil when finished.
+6. Switch the app between Turkish and English; confirm suggested categories that were added change to the correct localized name.
+7. Check Categories in light/dark appearance, large text, VoiceOver, and iPhone/iPad layouts; confirm tapping a row opens its editor.
 5. Confirm net total is the primary focus and that the selected-month pill, monochrome trend, and secondary spent/income values remain readable in light and dark appearance.
 6. Confirm the add button stays at the bottom-right above the tab bar and remains easy to reach.
 7. In each record, verify the note is on top; category, abbreviated day/month date, and installment position are below; and the amount is readable on the right. The date must not include a year.

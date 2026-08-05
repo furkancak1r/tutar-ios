@@ -22,6 +22,7 @@ enum CategoryError: Error, Equatable {
     case invalidEmoji
     case invalidColour
     case duplicate
+    case duplicateEmoji
 }
 
 @MainActor
@@ -390,14 +391,17 @@ final class DataController: ObservableObject {
             throw CategoryError.invalidColour
         }
 
-        let request = Category.fetchRequest()
-        request.predicate = NSPredicate(format: "income == %@", NSNumber(value: income))
-        let duplicate = try context.fetch(request).contains {
+        let allCategories = try context.fetch(Category.fetchRequest())
+        let categoriesInType = allCategories.filter { $0.income == income }
+        let duplicate = categoriesInType.contains {
             $0 != category
                 && ((systemKey != nil && $0.systemKey == systemKey)
                     || $0.name?.localizedCaseInsensitiveCompare(cleanedName) == .orderedSame)
         }
         guard !duplicate else { throw CategoryError.duplicate }
+        guard !allCategories.contains(where: { $0 != category && $0.emoji == cleanedEmoji }) else {
+            throw CategoryError.duplicateEmoji
+        }
 
         let item = category ?? (NSEntityDescription.insertNewObject(
             forEntityName: "Category",
@@ -411,7 +415,7 @@ final class DataController: ObservableObject {
         item.income = income
         if category == nil {
             item.systemKey = systemKey
-            item.order = (try context.fetch(request).map(\.order).max() ?? -1) + 1
+            item.order = (categoriesInType.map(\.order).max() ?? -1) + 1
         } else if replacesSystemName {
             item.systemKey = nil
         }

@@ -104,19 +104,6 @@ struct TransactionEditorView: View {
                                 .accessibilityValue(Text(verbatim: amountText))
                                 .accessibilityIdentifier("amountDisplay")
 
-                            if amountEntry.mode == .decimal {
-                                Button {
-                                    amountEntry.deleteLast()
-                                } label: {
-                                    Image(systemName: "delete.left")
-                                        .font(.body.weight(.semibold))
-                                        .frame(width: 44, height: 44)
-                                        .contentShape(Rectangle())
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel(Text("keypad.delete"))
-                                .accessibilityIdentifier("amountDeleteButton")
-                            }
                         }
                         .padding(.vertical, 8)
 

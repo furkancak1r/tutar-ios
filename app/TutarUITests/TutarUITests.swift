@@ -202,6 +202,9 @@ final class TutarUITests: XCTestCase {
         add.tap()
 
         XCTAssertTrue(app.otherElements["amountKeypad"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["keypadDecimal"].exists)
+        XCTAssertTrue(app.buttons["keypadDelete"].exists)
+        attachScreenshot("08-keypad-decimal-and-delete", in: app)
         app.buttons["keypad3"].tap()
         for _ in 0 ..< 5 { app.buttons["keypad0"].tap() }
 
@@ -262,13 +265,42 @@ final class TutarUITests: XCTestCase {
         openTab("Settings", in: app)
         for _ in 0 ..< 4 where !app.buttons["Categories"].exists { app.swipeUp() }
         app.buttons["Categories"].tap()
+
+        let suggestions = app.buttons["suggestedCategoriesVisibilityButton"]
+        let housing = app.descendants(matching: .any)
+            .matching(identifier: "suggestedCategory-category.housing").firstMatch
+        XCTAssertTrue(suggestions.waitForExistence(timeout: 5))
+        XCTAssertEqual(suggestions.label, "Hide suggested categories")
+        XCTAssertTrue(housing.exists)
+        suggestions.tap()
+        XCTAssertTrue(housing.waitForNonExistence(timeout: 3))
+        XCTAssertEqual(suggestions.label, "Show suggested categories")
+        suggestions.tap()
+        XCTAssertTrue(housing.waitForExistence(timeout: 3))
+        XCTAssertEqual(suggestions.label, "Hide suggested categories")
+
+        let editMode = app.buttons["categoryEditModeButton"]
+        XCTAssertTrue(editMode.waitForExistence(timeout: 5))
+        XCTAssertEqual(editMode.label, "Edit")
+        editMode.tap()
+        XCTAssertEqual(editMode.label, "Done")
+        editMode.tap()
+        XCTAssertEqual(editMode.label, "Edit")
         app.buttons["Add category"].tap()
 
         let emoji = app.textFields["categoryEmojiField"]
         XCTAssertTrue(emoji.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Colour"].exists)
+        XCTAssertFalse(app.staticTexts["Category colour"].exists)
         emoji.tap()
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 3))
         XCTAssertTrue(app.keys["😀"].waitForExistence(timeout: 3))
+        emoji.typeText("🛒")
+        let name = app.textFields["categoryNameField"]
+        name.tap()
+        name.typeText("Duplicate Emoji")
+        app.buttons["Save"].tap()
+        XCTAssertTrue(app.staticTexts["This emoji is already used by another category."].waitForExistence(timeout: 3))
     }
 
     @MainActor
@@ -315,9 +347,9 @@ final class TutarUITests: XCTestCase {
 
     @MainActor
     func testCategoryDeleteActionPassesContrastInLightAndDark() throws {
-        for (language, locale, appearance, settings, categories, delete, dialogTitle, edit) in [
-            ("en", "en_US", "Light", "Settings", "Categories", "Delete", "Delete category?", "Edit"),
-            ("tr", "tr_TR", "Dark", "Ayarlar", "Kategoriler", "Sil", "Kategori silinsin mi?", "Düzenle")
+        for (language, locale, appearance, settings, categories, delete, dialogTitle) in [
+            ("en", "en_US", "Light", "Settings", "Categories", "Delete", "Delete category?"),
+            ("tr", "tr_TR", "Dark", "Ayarlar", "Kategoriler", "Sil", "Kategori silinsin mi?")
         ] {
             let app = launch(language: language, locale: locale, seed: false, appearance: appearance)
             openTab(settings, in: app)
@@ -335,7 +367,6 @@ final class TutarUITests: XCTestCase {
             XCTAssertTrue(followingRow.waitForExistence(timeout: 5))
             swipeDeleteRow(row, in: app)
             XCTAssertTrue(app.buttons[delete].waitForExistence(timeout: 3))
-            XCTAssertFalse(app.buttons[edit].exists)
             Thread.sleep(forTimeInterval: 0.5)
             attachScreenshot("category-delete-\(appearance.lowercased())", in: app)
 

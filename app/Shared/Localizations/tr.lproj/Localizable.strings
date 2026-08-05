@@ -216,13 +216,13 @@
 "categories.yours.section" = "Kategorilerin";
 "categories.suggested.section" = "Önerilenler";
 "categories.suggested.footer" = "Kendine eklemek için bir kategoriye dokun.";
+"categories.suggested.hide" = "Önerilen kategorileri gizle";
+"categories.suggested.show" = "Önerilen kategorileri göster";
 "categories.suggested.empty" = "Tüm öneriler eklendi.";
 "categories.suggested.add" = "%@ kategorisini ekle";
 "categories.details.section" = "Ayrıntılar";
 "categories.name" = "Ad";
 "categories.emoji" = "Simge veya emoji";
-"categories.colour.section" = "Renk";
-"categories.colour" = "Kategori rengi";
 "categories.new.title" = "Yeni kategori";
 "categories.edit.title" = "Kategoriyi düzenle";
 "categories.delete.title" = "Kategori silinsin mi?";
@@ -230,6 +230,7 @@
 "categories.error.name" = "En fazla 80 karakterlik bir kategori adı gir.";
 "categories.error.emoji" = "Kısa bir simge veya emoji gir.";
 "categories.error.duplicate" = "Bu ada sahip bir kategori zaten var.";
+"categories.error.duplicateEmoji" = "Bu emoji başka bir kategoride zaten kullanılıyor.";
 "categories.error.add" = "Kategori eklenemedi.";
 
 "notification.title" = "Kısa bir Tutar kontrolü";

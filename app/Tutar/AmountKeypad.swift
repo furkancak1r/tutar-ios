@@ -10,9 +10,10 @@ struct MoneyEntry: Equatable {
 
     static let maximumMinorUnits: Int64 = 99_999_999_999
 
-    let mode: Mode
+    private(set) var mode: Mode
     private(set) var automaticMinorUnits: Int64
     private(set) var decimalText: String
+    private var hasAutomaticInput = false
 
     init(minorUnits: Int64 = 0, mode: Mode = .automaticCents) {
         self.mode = mode
@@ -43,6 +44,7 @@ struct MoneyEntry: Equatable {
         case .automaticCents:
             guard automaticMinorUnits <= (Self.maximumMinorUnits - Int64(digit)) / 10 else { return }
             automaticMinorUnits = automaticMinorUnits * 10 + Int64(digit)
+            hasAutomaticInput = true
         case .decimal:
             let fractionCount = decimalText.split(separator: ".", omittingEmptySubsequences: false).dropFirst().first?.count ?? 0
             guard !decimalText.contains(".") || fractionCount < 2 else { return }
@@ -61,7 +63,11 @@ struct MoneyEntry: Equatable {
     }
 
     mutating func insertDecimalSeparator() {
-        guard mode == .decimal, !decimalText.contains(".") else { return }
+        if mode == .automaticCents {
+            mode = .decimal
+            decimalText = hasAutomaticInput ? String(automaticMinorUnits) : decimalText
+        }
+        guard !decimalText.contains(".") else { return }
         decimalText = decimalText.isEmpty ? "0." : decimalText + "."
     }
 
@@ -112,31 +118,28 @@ struct AmountKeypad: View {
                 }
 
                 GridRow {
-                    if entry.mode == .automaticCents {
-                        keypadButton(systemImage: "delete.left", identifier: "keypadDelete") {
-                            entry.deleteLast()
-                        }
-                        .accessibilityLabel(Text("keypad.delete"))
-                    } else {
-                        keypadButton(title: decimalSeparator, identifier: "keypadDecimal") {
-                            entry.insertDecimalSeparator()
-                        }
-                        .accessibilityLabel(Text("keypad.decimal"))
+                    keypadButton(title: decimalSeparator, identifier: "keypadDecimal") {
+                        entry.insertDecimalSeparator()
                     }
+                    .accessibilityLabel(Text("keypad.decimal"))
 
                     digitButton(0)
 
-                    Button(action: submit) {
-                        Image(systemName: "checkmark")
-                            .font(.title3.weight(.semibold))
-                            .frame(maxWidth: .infinity, minHeight: 48)
-                            .foregroundStyle(Color(.systemBackground))
-                            .background(Color.primary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    keypadButton(systemImage: "delete.left", identifier: "keypadDelete") {
+                        entry.deleteLast()
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(Text("action.save"))
-                    .accessibilityIdentifier("keypadSubmit")
+                    .accessibilityLabel(Text("keypad.delete"))
                 }
+
+                Button(action: submit) {
+                    Label("action.save", systemImage: "checkmark")
+                        .font(.body.weight(.semibold))
+                        .frame(maxWidth: .infinity, minHeight: 48)
+                        .foregroundStyle(Color(.systemBackground))
+                        .background(Color.primary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("keypadSubmit")
             }
             .frame(maxWidth: 620)
             .padding(.horizontal, 16)
