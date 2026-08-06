@@ -835,6 +835,70 @@ final class TutarUITests: XCTestCase {
     }
 
     @MainActor
+    func testAppStoreScreenshotsTurkish() {
+        captureAppStoreScreenshots(language: "tr", locale: "tr_TR", suffix: "tr")
+    }
+
+    @MainActor
+    func testAppStoreScreenshotsEnglish() {
+        captureAppStoreScreenshots(language: "en", locale: "en_US", suffix: "en")
+    }
+
+    @MainActor
+    private func captureAppStoreScreenshots(language: String, locale: String, suffix: String) {
+        let app = launch(
+            language: language,
+            locale: locale,
+            seed: false,
+            appearance: "Dark",
+            appStoreSeed: true
+        )
+        let labels = suffix == "tr"
+            ? (records: "Kayıtlar", analysis: "Analiz", budgets: "Bütçeler", savings: "Birikim", installments: "Taksit")
+            : (records: "Records", analysis: "Analysis", budgets: "Budgets", savings: "Savings", installments: "Installments")
+
+        XCTAssertTrue(app.navigationBars[labels.records].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "transactionRow").firstMatch.waitForExistence(timeout: 5))
+        attachScreenshot("store-01-overview-\(suffix)", in: app)
+
+        app.buttons["addTransactionButton"].tap()
+        XCTAssertTrue(app.buttons["keypad4"].waitForExistence(timeout: 5))
+        app.buttons["keypad4"].tap()
+        app.buttons["keypad2"].tap()
+        app.buttons["keypad5"].tap()
+        attachScreenshot("store-02-entry-\(suffix)", in: app)
+        app.buttons[suffix == "tr" ? "Vazgeç" : "Cancel"].tap()
+
+        openTab(labels.analysis, in: app)
+        XCTAssertTrue(app.navigationBars[labels.analysis].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "analysisChart").firstMatch.waitForExistence(timeout: 5))
+        attachScreenshot("store-03-analysis-\(suffix)", in: app)
+
+        openTab(labels.budgets, in: app)
+        XCTAssertTrue(app.navigationBars[labels.budgets].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "budgetGauge").firstMatch.waitForExistence(timeout: 5))
+        attachScreenshot("store-04-budgets-\(suffix)", in: app)
+
+        openTab(labels.savings, in: app)
+        XCTAssertTrue(app.navigationBars[labels.savings].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["addSavingsButton"].waitForExistence(timeout: 5))
+        attachScreenshot("store-06-savings-\(suffix)", in: app)
+
+        openTab(labels.records == "Kayıtlar" ? "İşlemler" : "Transactions", in: app)
+        app.buttons["addTransactionButton"].tap()
+        XCTAssertTrue(app.buttons["keypad3"].waitForExistence(timeout: 5))
+        app.buttons["keypad3"].tap()
+        app.buttons["keypad0"].tap()
+        app.buttons["keypad0"].tap()
+        app.buttons["keypad0"].tap()
+        app.buttons["scheduleButton"].tap()
+        XCTAssertTrue(app.buttons[labels.installments].waitForExistence(timeout: 5))
+        app.buttons[labels.installments].tap()
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "installmentCountStepper").firstMatch.waitForExistence(timeout: 5))
+        attachScreenshot("store-05-installments-\(suffix)", in: app)
+    }
+
+    @MainActor
     private func launch(
         language: String,
         locale: String,
@@ -842,7 +906,8 @@ final class TutarUITests: XCTestCase {
         largestText: Bool = false,
         appearance: String? = nil,
         lockAuthenticationSucceeds: Bool? = nil,
-        showOnboarding: Bool = false
+        showOnboarding: Bool = false,
+        appStoreSeed: Bool = false
     ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [
@@ -865,6 +930,7 @@ final class TutarUITests: XCTestCase {
             }
         }
         if seed { app.launchArguments.append("-seed-installments") }
+        if appStoreSeed { app.launchArguments.append("-seed-app-store-screenshots") }
         app.launch()
         return app
     }

@@ -95,6 +95,9 @@ final class DataController: ObservableObject {
                     if ProcessInfo.processInfo.arguments.contains("-seed-installments") {
                         try self.seedUITestInstallmentsIfNeeded()
                     }
+                    if ProcessInfo.processInfo.arguments.contains("-seed-app-store-screenshots") {
+                        try self.seedAppStoreScreenshotsIfNeeded()
+                    }
                     self.isStoreLoaded = true
                 } catch {
                     self.loadError = error
@@ -727,6 +730,103 @@ final class DataController: ObservableObject {
             firstDate: Date.now,
             intervalMonths: 1
         )
+    }
+
+    private func seedAppStoreScreenshotsIfNeeded() throws {
+        guard try context.count(for: Transaction.fetchRequest()) == 0 else { return }
+
+        let arguments = ProcessInfo.processInfo.arguments
+        let language = arguments.firstIndex(of: "-appLanguage")
+            .flatMap { arguments.indices.contains($0 + 1) ? arguments[$0 + 1] : nil } ?? "en"
+        let isTurkish = language == "tr"
+        let text: (String, String) -> String = { isTurkish ? $0 : $1 }
+        let amount: (Int64, Int64) -> Int64 = { isTurkish ? $0 : $1 }
+        let currency = isTurkish ? "TRY" : "USD"
+        UserDefaults.tutar.set(currency, forKey: "currencyCode")
+        UserDefaults.tutar.set(true, forKey: "showUpcoming")
+
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: .now)
+        let date: (Int) -> Date = { calendar.date(byAdding: .day, value: $0, to: today)! }
+
+        func category(_ key: String) throws -> Category {
+            let request = Category.fetchRequest()
+            request.fetchLimit = 1
+            request.predicate = NSPredicate(format: "systemKey == %@", key)
+            guard let category = try context.fetch(request).first else {
+                throw CocoaError(.validationMissingMandatoryProperty)
+            }
+            return category
+        }
+
+        func customCategory(_ tr: String, _ en: String, emoji: String, income: Bool) throws -> Category {
+            try saveCategory(
+                name: text(tr, en),
+                emoji: emoji,
+                colour: "#5C5A57",
+                income: income
+            )
+        }
+
+        let market = try category("category.market")
+        let transport = try category("category.transport")
+        let bills = try category("category.bills")
+        let health = try category("category.health")
+        let entertainment = try category("category.entertainment")
+        let salary = try category("category.salary")
+        let housing = try customCategory("Konut", "Housing", emoji: "🏠", income: false)
+        let insurance = try customCategory("Sigorta", "Insurance", emoji: "🛡️", income: false)
+        let subscriptions = try customCategory("Abonelikler", "Subscriptions", emoji: "🔁", income: false)
+        let freelance = try customCategory("Serbest çalışma", "Freelance", emoji: "🧑‍💻", income: true)
+
+        let entries: [(String, Category, Bool, Int64, Int)] = [
+            (text("Maaş", "Salary"), salary, true, amount(8_000_000, 520_000), -5),
+            (text("Proje geliri", "Project income"), freelance, true, amount(1_850_000, 85_000), -2),
+            (text("Kira", "Rent"), housing, false, amount(2_250_000, 165_000), -4),
+            (text("Haftalık market", "Weekly groceries"), market, false, amount(428_000, 41_000), -3),
+            (text("Ulaşım kartı", "Transit pass"), transport, false, amount(235_000, 26_000), -1),
+            (text("Eczane", "Pharmacy"), health, false, amount(120_000, 12_000), 0),
+            (text("Dijital servisler", "Digital services"), subscriptions, false, amount(68_900, 3_200), 0),
+            (text("Konser", "Concert"), entertainment, false, amount(95_000, 7_500), 4),
+            (text("Elektrik faturası", "Electric bill"), bills, false, amount(185_000, 14_000), 7)
+        ]
+        for entry in entries {
+            _ = try createTransaction(
+                note: entry.0,
+                category: entry.1,
+                income: entry.2,
+                amountMinorUnits: entry.3,
+                date: date(entry.4),
+                recurringType: entry.1 == subscriptions ? 3 : 0
+            )
+        }
+        _ = try createInstallments(
+            note: text("Yıllık sigorta", "Annual insurance"),
+            category: insurance,
+            income: false,
+            totalMinorUnits: amount(2_520_000, 120_000),
+            count: 6,
+            firstDate: date(-1),
+            intervalMonths: 1
+        )
+
+        _ = try saveOverallBudget(amountMinorUnits: amount(6_000_000, 420_000), type: 3, startDate: today)
+        _ = try saveCategoryBudget(category: market, amountMinorUnits: amount(900_000, 75_000), type: 3, startDate: today)
+        _ = try saveCategoryBudget(category: transport, amountMinorUnits: amount(650_000, 55_000), type: 3, startDate: today)
+
+        let holdings: [(SavingsAsset, Decimal, Decimal)] = isTurkish
+            ? [(.XAU995, 12.5, 5_200), (.XAG, 250, 41), (.USD, 1_250, 41.5)]
+            : [(.XAU995, 12.5, 103), (.XAG, 250, 1.1), (.EUR, 850, 1.16)]
+        for item in holdings {
+            let holding = try saveHolding(
+                asset: item.0,
+                quantity: item.1,
+                quoteMode: 1,
+                manualPrice: item.2,
+                manualPriceCurrencyCode: currency
+            )
+            try keepManualQuote(holding)
+        }
     }
 
     private func updateWidgetSnapshot() {
