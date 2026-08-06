@@ -36,6 +36,14 @@ final class MoneyEntryTests: XCTestCase {
         [2, 5].forEach { entry.append($0) }
         XCTAssertEqual(entry.minorUnits, 30_025)
     }
+
+    func testSavingsEntryKeepsSixDecimalPlaces() {
+        var entry = MoneyEntry(decimal: 0, maximumFractionDigits: 6)
+        [1, 2].forEach { entry.append($0) }
+        entry.insertDecimalSeparator()
+        [3, 4, 5, 6, 7, 8, 9].forEach { entry.append($0) }
+        XCTAssertEqual(entry.decimalValue, Decimal(string: "12.345678"))
+    }
 }
 
 final class AppFormatTests: XCTestCase {

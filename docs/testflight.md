@@ -1,14 +1,14 @@
-# Tutar 1.0 (26) — TestFlight metadata
+# Tutar 1.0 (27) — TestFlight metadata
 
 ## Beta Description — Turkish
 
 Tutar; gelir, gider, bütçe, tekrar, taksit ve birikimleri takip etmek için tamamen ücretsiz, reklamsız ve açık kaynak bir iOS uygulamasıdır. Birikim sekmesi altın, gümüş ve dövizleri Ayarlar’da seçilen para birimine TCMB çapraz kurları ve ücretsiz canlı değerli maden fiyatlarıyla çevirir; otomatik değer yoksa aynı para biriminde manuel fiyat kabul eder. Birikimler işlem oluşturmaz veya bütçeleri etkilemez. Dime/Tutar CSV içe/dışa aktarma, tam JSON yedekleme, yerel saklama ve isteğe bağlı özel iCloud eşzamanlaması bulunur.
 
-Tutar, Rafael Soh ve katkıda bulunanların oluşturduğu Dime temel alınarak değiştirilmiş GPLv3 çalışmasıdır. Bu buildin değişiklik tarihi: 5 Ağustos 2026. Tam kaynak: https://github.com/furkancak1r/tutar-ios
+Tutar, Rafael Soh ve katkıda bulunanların oluşturduğu Dime temel alınarak değiştirilmiş GPLv3 çalışmasıdır. Bu buildin değişiklik tarihi: 6 Ağustos 2026. Tam kaynak: https://github.com/furkancak1r/tutar-ios
 
 ## What to Test — Turkish
 
-Build 26, Birikim değerlerini Ayarlar’daki para birimine bağlar. Altın, gümüş ve döviz ekleyin; TRY, USD ve EUR arasında geçerek canlı çapraz dönüşümü kontrol edin. TCMB’de bulunmayan bir hedef para biriminde açık manuel fiyat istemini, manuel fiyatın para birimiyle birlikte korunmasını, teknik XAU kodlarının ve saklama yeri alanının görünmediğini doğrulayın. Tutar, Rafael Soh ve katkıda bulunanların Dime uygulamasını temel alan GPLv3 türev çalışmadır. Değişiklik: 5 Ağustos 2026. Kaynak: https://github.com/furkancak1r/tutar-ios
+Build 27, Birikim miktarı ve manuel birim fiyat girişini işlem ve bütçelerdeki ortak numaratöre taşır. Yerel ondalık ayıracını, silme ve sağ ok eylemlerini, Tuş titreşimi ayarını ve miktarda altı ondalığa kadar hassasiyetin korunmasını doğrulayın. Tutar, Rafael Soh ve katkıda bulunanların Dime uygulamasını temel alan GPLv3 türev çalışmadır. Değişiklik: 6 Ağustos 2026. Kaynak: https://github.com/furkancak1r/tutar-ios
 
 1. Güncellemeden sonraki ilk açılışta onboarding’in görünmesini; beş sayfanın yatay kaydırma ve İleri/Geri düğmeleriyle çalışmasını ve Birikim sayfasını doğrulayın.
 2. Onboarding’i yarıda kapatıp yeniden açın; tekrar başlamalıdır. Atla veya Tutar’ı Kullanmaya Başla sonrasında yeniden görünmemelidir.
@@ -51,11 +51,11 @@ Build 26, Birikim değerlerini Ayarlar’daki para birimine bağlar. Altın, gü
 
 Tutar is a completely free, ad-free, open-source iOS app for tracking income, expenses, budgets, repeats, installments, and savings. Savings converts gold, silver, and currencies to the currency selected in Settings using CBRT cross rates and free live precious-metal prices; when no automatic value exists, it accepts a manual price in that currency. Savings do not create transactions or affect budgets. Dime/Tutar CSV import/export, complete JSON backup, local storage, and optional private iCloud sync are included.
 
-Tutar is a GPLv3 modified work based on Dime, originally created by Rafael Soh and contributors. This build was modified on 5 August 2026. Complete source: https://github.com/furkancak1r/tutar-ios
+Tutar is a GPLv3 modified work based on Dime, originally created by Rafael Soh and contributors. This build was modified on 6 August 2026. Complete source: https://github.com/furkancak1r/tutar-ios
 
 ## What to Test — English
 
-Build 26 ties Savings valuation to the currency selected in Settings. Add gold, silver, and currencies; switch between TRY, USD, and EUR to verify live cross conversion. Choose a target currency unavailable from CBRT and confirm the clear manual-price request, currency-aware manual prices, hidden technical XAU codes, and removal of the storage-location field. Tutar is a GPLv3 derivative of Dime by Rafael Soh and contributors. Modified 5 August 2026. Source: https://github.com/furkancak1r/tutar-ios
+Build 27 moves Savings quantity and manual unit-price entry to the shared keypad used by Transactions and Budgets. Verify the localized decimal key, delete and arrow actions, the Key haptics setting, and preservation of up to six decimal places for quantities. Tutar is a GPLv3 derivative of Dime by Rafael Soh and contributors. Modified 6 August 2026. Source: https://github.com/furkancak1r/tutar-ios
 
 1. After updating, confirm onboarding appears once and all five pages—including Savings—work with horizontal swipes and the Back/Next buttons.
 2. Quit midway and relaunch; onboarding should return. After Skip or Start Using Tutar, it should stay completed.

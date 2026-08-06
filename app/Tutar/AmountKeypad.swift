@@ -13,10 +13,12 @@ struct MoneyEntry: Equatable {
     private(set) var mode: Mode
     private(set) var automaticMinorUnits: Int64
     private(set) var decimalText: String
+    private let maximumFractionDigits: Int
     private var hasAutomaticInput = false
 
-    init(minorUnits: Int64 = 0, mode: Mode = .decimal) {
+    init(minorUnits: Int64 = 0, mode: Mode = .decimal, maximumFractionDigits: Int = 2) {
         self.mode = mode
+        self.maximumFractionDigits = maximumFractionDigits
         automaticMinorUnits = max(0, min(minorUnits, Self.maximumMinorUnits))
 
         let whole = automaticMinorUnits / 100
@@ -24,6 +26,13 @@ struct MoneyEntry: Equatable {
         decimalText = fraction == 0
             ? String(whole)
             : String(format: "%lld.%02lld", whole, fraction)
+    }
+
+    init(decimal: Decimal, maximumFractionDigits: Int) {
+        mode = .decimal
+        self.maximumFractionDigits = maximumFractionDigits
+        automaticMinorUnits = 0
+        decimalText = NSDecimalNumber(decimal: decimal).stringValue
     }
 
     var minorUnits: Int64 {
@@ -37,6 +46,15 @@ struct MoneyEntry: Equatable {
 
     var isEmpty: Bool { minorUnits == 0 }
 
+    var decimalValue: Decimal {
+        switch mode {
+        case .automaticCents:
+            Decimal(automaticMinorUnits) / 100
+        case .decimal:
+            Decimal(string: decimalText, locale: Locale(identifier: "en_US_POSIX")) ?? 0
+        }
+    }
+
     mutating func append(_ digit: Int) {
         guard (0 ... 9).contains(digit) else { return }
 
@@ -47,7 +65,7 @@ struct MoneyEntry: Equatable {
             hasAutomaticInput = true
         case .decimal:
             let fractionCount = decimalText.split(separator: ".", omittingEmptySubsequences: false).dropFirst().first?.count ?? 0
-            guard !decimalText.contains(".") || fractionCount < 2 else { return }
+            guard !decimalText.contains(".") || fractionCount < maximumFractionDigits else { return }
 
             let candidate: String
             if decimalText == "0" && digit != 0 {
@@ -57,7 +75,11 @@ struct MoneyEntry: Equatable {
             } else {
                 candidate = decimalText + String(digit)
             }
-            guard let value = Self.minorUnits(fromInvariantText: candidate), value <= Self.maximumMinorUnits else { return }
+            if maximumFractionDigits == 2 {
+                guard let value = Self.minorUnits(fromInvariantText: candidate), value <= Self.maximumMinorUnits else { return }
+            } else {
+                guard Decimal(string: candidate, locale: Locale(identifier: "en_US_POSIX")) != nil else { return }
+            }
             decimalText = candidate
         }
     }

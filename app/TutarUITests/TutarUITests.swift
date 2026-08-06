@@ -752,18 +752,22 @@ final class TutarUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Add savings"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.staticTexts["Where is it held?"].exists)
         XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'XAU'")).firstMatch.exists)
-        let quantity = app.textFields["Quantity"]
+        let quantity = app.buttons["savingsQuantityInput"]
+        XCTAssertTrue(quantity.waitForExistence(timeout: 5))
         quantity.tap()
-        quantity.typeText("12.5")
+        app.buttons["keypad1"].tap()
+        app.buttons["keypad2"].tap()
+        app.buttons["keypadDecimal"].tap()
+        app.buttons["keypad5"].tap()
         app.buttons["Manual"].tap()
-        let price = app.textFields["Unit price in USD"]
-        price.tap()
-        price.typeText("6400")
-        app.buttons["Save"].tap()
+        let price = app.buttons["savingsManualPriceInput"]
+        XCTAssertTrue(price.waitForExistence(timeout: 5))
+        [6, 4, 0, 0].forEach { app.buttons["keypad\($0)"].tap() }
+        app.buttons["keypadSubmit"].tap()
 
         XCTAssertTrue(app.staticTexts["Gold"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["$80,000.00"].exists)
-        attachScreenshot("26-savings-en-dark", in: app)
+        attachScreenshot("27-savings-en-dark", in: app)
         try app.performAccessibilityAudit(for: [.contrast]) { self.contrastFalsePositive($0) }
 
         openTab("Settings", in: app)

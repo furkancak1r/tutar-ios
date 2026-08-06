@@ -255,13 +255,13 @@ private struct SavingsEditorView: View {
 
     @StateObject private var quotes = SavingsQuoteStore()
     @State private var asset: SavingsAsset
-    @State private var quantity: String
+    @State private var quantityEntry: MoneyEntry
     @State private var quoteMode: Int
-    @State private var manualPrice: String
+    @State private var manualPriceEntry: MoneyEntry
     @State private var manualPriceCurrencyCode: String
     @State private var didCheckQuotes = false
     @State private var errorMessage = ""
-    @FocusState private var focusedField: Field?
+    @State private var activeField = Field.quantity
 
     private enum Field { case quantity, price }
 
@@ -275,56 +275,76 @@ private struct SavingsEditorView: View {
             : SavingsAsset.selectableCases
     }
 
+    private var activeEntry: Binding<MoneyEntry> {
+        activeField == .price ? $manualPriceEntry : $quantityEntry
+    }
+
     init(holding: SavingsHolding? = nil) {
         self.holding = holding
         _asset = State(initialValue: holding?.wrappedAsset ?? .XAU995)
-        _quantity = State(initialValue: holding.map { SavingsFormatting.editable($0.wrappedQuantity) } ?? "")
+        _quantityEntry = State(initialValue: MoneyEntry(
+            decimal: holding?.wrappedQuantity ?? 0,
+            maximumFractionDigits: 6
+        ))
         _quoteMode = State(initialValue: Int(holding?.quoteMode ?? 0))
-        _manualPrice = State(initialValue: holding.map { SavingsFormatting.editable($0.wrappedManualPrice) } ?? "")
+        _manualPriceEntry = State(initialValue: MoneyEntry(
+            decimal: holding?.wrappedManualPrice ?? 0,
+            maximumFractionDigits: 6
+        ))
         _manualPriceCurrencyCode = State(initialValue: holding?.wrappedManualPriceCurrencyCode ?? "TRY")
     }
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("savings.asset.section") {
-                    Picker("savings.asset", selection: $asset) {
-                        ForEach(pickerAssets) { item in
-                            Text(item.name(language: language)).tag(item)
+            VStack(spacing: 0) {
+                Form {
+                    Section("savings.asset.section") {
+                        Picker("savings.asset", selection: $asset) {
+                            ForEach(pickerAssets) { item in
+                                Text(item.name(language: language)).tag(item)
+                            }
+                        }
+                        decimalInput(
+                            title: Text("savings.quantity"),
+                            field: .quantity,
+                            entry: $quantityEntry,
+                            identifier: "savingsQuantityInput"
+                        )
+                    }
+
+                    Section("savings.valuation.section") {
+                        Picker("savings.valuation", selection: $quoteMode) {
+                            Text("savings.valuation.automatic").tag(0)
+                            Text("savings.valuation.manual").tag(1)
+                        }
+                        .pickerStyle(.segmented)
+                        .onChange(of: quoteMode) { _, mode in
+                            activeField = mode == 1 ? .price : .quantity
+                        }
+                        if quoteMode == 1 {
+                            decimalInput(
+                                title: Text(verbatim: AppFormat.format("savings.manual.price", language: language, currency)),
+                                field: .price,
+                                entry: $manualPriceEntry,
+                                identifier: "savingsManualPriceInput"
+                            )
+                            Text(verbatim: AppFormat.format("savings.manual.help", language: language, currency))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        } else if didCheckQuotes,
+                                  quotes.quote(for: asset, in: currency) == nil {
+                            Text(verbatim: AppFormat.format("savings.automatic.unavailable", language: language, currency))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Button("savings.manual.enter") {
+                                quoteMode = 1
+                                activeField = .price
+                            }
                         }
                     }
-                    TextField("savings.quantity", text: $quantity)
-                        .keyboardType(.decimalPad)
-                        .focused($focusedField, equals: .quantity)
                 }
 
-                Section("savings.valuation.section") {
-                    Picker("savings.valuation", selection: $quoteMode) {
-                        Text("savings.valuation.automatic").tag(0)
-                        Text("savings.valuation.manual").tag(1)
-                    }
-                    .pickerStyle(.segmented)
-                    if quoteMode == 1 {
-                        TextField(
-                            AppFormat.format("savings.manual.price", language: language, currency),
-                            text: $manualPrice
-                        )
-                            .keyboardType(.decimalPad)
-                            .focused($focusedField, equals: .price)
-                        Text(verbatim: AppFormat.format("savings.manual.help", language: language, currency))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    } else if didCheckQuotes,
-                              quotes.quote(for: asset, in: currency) == nil {
-                        Text(verbatim: AppFormat.format("savings.automatic.unavailable", language: language, currency))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        Button("savings.manual.enter") {
-                            quoteMode = 1
-                            focusedField = .price
-                        }
-                    }
-                }
+                AmountKeypad(entry: activeEntry, submit: advanceOrSave)
             }
             .navigationTitle(holding == nil ? "savings.add" : "savings.edit")
             .navigationBarTitleDisplayMode(.inline)
@@ -335,9 +355,8 @@ private struct SavingsEditorView: View {
             .onAppear {
                 if holding == nil {
                     manualPriceCurrencyCode = currency
-                    focusedField = .quantity
                 } else if quoteMode == 1, manualPriceCurrencyCode != currency {
-                    manualPrice = ""
+                    manualPriceEntry = MoneyEntry(decimal: 0, maximumFractionDigits: 6)
                 }
             }
             .task(id: asset) {
@@ -349,7 +368,7 @@ private struct SavingsEditorView: View {
                        targetCurrencyCode: currency,
                        updatedAt: holding?.updatedAt ?? .now
                    ) {
-                    manualPrice = SavingsFormatting.editable(converted.priceTRY)
+                    manualPriceEntry = MoneyEntry(decimal: converted.priceTRY, maximumFractionDigits: 6)
                     manualPriceCurrencyCode = currency
                 }
                 didCheckQuotes = true
@@ -360,19 +379,56 @@ private struct SavingsEditorView: View {
         }
     }
 
-    private func save() {
-        guard let quantity = SavingsFormatting.parse(quantity, language: language),
-              let price = SavingsFormatting.parse(manualPrice.isEmpty ? "0" : manualPrice, language: language) else {
-            errorMessage = AppFormat.localized("savings.error.invalid", language: language)
-            return
+    private func decimalInput(
+        title: Text,
+        field: Field,
+        entry: Binding<MoneyEntry>,
+        identifier: String
+    ) -> some View {
+        LabeledContent {
+            HStack(spacing: 2) {
+                Button {
+                    activeField = field
+                } label: {
+                    Text(verbatim: displayText(entry.wrappedValue))
+                        .monospacedDigit()
+                        .foregroundStyle(activeField == field ? Color.primary : .secondary)
+                        .frame(minHeight: 44)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(title)
+                .accessibilityValue(Text(verbatim: displayText(entry.wrappedValue)))
+                .accessibilityIdentifier(identifier)
+
+                if activeField == field {
+                    AmountDeleteButton(entry: entry)
+                }
+            }
+        } label: {
+            title
         }
+    }
+
+    private func displayText(_ entry: MoneyEntry) -> String {
+        entry.decimalText.replacingOccurrences(of: ".", with: language.locale.decimalSeparator ?? ".")
+    }
+
+    private func advanceOrSave() {
+        if quoteMode == 1, activeField == .quantity {
+            activeField = .price
+        } else {
+            save()
+        }
+    }
+
+    private func save() {
         do {
             try dataController.saveHolding(
                 holding,
                 asset: asset,
-                quantity: quantity,
+                quantity: quantityEntry.decimalValue,
                 quoteMode: quoteMode,
-                manualPrice: price,
+                manualPrice: manualPriceEntry.decimalValue,
                 manualPriceCurrencyCode: quoteMode == 1 ? currency : manualPriceCurrencyCode
             )
             dismiss()
