@@ -1,4 +1,4 @@
-# Tutar 1.0 (28) — TestFlight metadata
+# Tutar 1.0 (29) — TestFlight and App Store metadata
 
 ## Beta Description — Turkish
 
@@ -8,7 +8,7 @@ Tutar, Rafael Soh ve katkıda bulunanların oluşturduğu Dime temel alınarak d
 
 ## What to Test — Turkish
 
-Build 28, Birikim ekleme/düzenleme ekranını İşlem editörüyle aynı sade sistem arka planına, yuvarlatılmış karta ve ortalanmış sayı alanlarına taşır. Miktar ile manuel fiyatın ortak numaratörle çalıştığını ve İşlemler sekmesinin beşli alt menünün tam ortasında, başlangıçta seçili olduğunu doğrulayın. Tutar, Rafael Soh ve katkıda bulunanların Dime uygulamasını temel alan GPLv3 türev çalışmadır. Değişiklik: 6 Ağustos 2026. Kaynak: https://github.com/furkancak1r/tutar-ios
+Build 29, Birikim ekleme/düzenleme ekranını İşlem editörüyle aynı sade sistem arka planına, yuvarlatılmış karta ve ortalanmış sayı alanlarına taşır. Miktar ile manuel fiyatın ortak numaratörle çalıştığını ve İşlemler sekmesinin beşli alt menünün tam ortasında, başlangıçta seçili olduğunu doğrulayın. Tutar, Rafael Soh ve katkıda bulunanların Dime uygulamasını temel alan GPLv3 türev çalışmadır. Değişiklik: 6 Ağustos 2026. Kaynak: https://github.com/furkancak1r/tutar-ios
 
 1. Güncellemeden sonraki ilk açılışta onboarding’in görünmesini; beş sayfanın yatay kaydırma ve İleri/Geri düğmeleriyle çalışmasını ve Birikim sayfasını doğrulayın.
 2. Onboarding’i yarıda kapatıp yeniden açın; tekrar başlamalıdır. Atla veya Tutar’ı Kullanmaya Başla sonrasında yeniden görünmemelidir.
@@ -55,7 +55,7 @@ Tutar is a GPLv3 modified work based on Dime, originally created by Rafael Soh a
 
 ## What to Test — English
 
-Build 28 gives the Savings editor the same clean system background, rounded card, and centered numeric fields as the Transaction editor. Verify that quantity and manual price use the shared keypad and that Transactions is the selected center item in the five-tab bar. Tutar is a GPLv3 derivative of Dime by Rafael Soh and contributors. Modified 6 August 2026. Source: https://github.com/furkancak1r/tutar-ios
+Build 29 gives the Savings editor the same clean system background, rounded card, and centered numeric fields as the Transaction editor. Verify that quantity and manual price use the shared keypad and that Transactions is the selected center item in the five-tab bar. Tutar is a GPLv3 derivative of Dime by Rafael Soh and contributors. Modified 6 August 2026. Source: https://github.com/furkancak1r/tutar-ios
 
 1. After updating, confirm onboarding appears once and all five pages—including Savings—work with horizontal swipes and the Back/Next buttons.
 2. Quit midway and relaunch; onboarding should return. After Skip or Start Using Tutar, it should stay completed.
