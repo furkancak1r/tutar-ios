@@ -279,6 +279,12 @@ private struct SavingsEditorView: View {
         activeField == .price ? $manualPriceEntry : $quantityEntry
     }
 
+    private var quantityUnit: String {
+        asset.isMetal
+            ? AppFormat.localized("savings.unit.gram.short", language: language)
+            : asset.rawValue
+    }
+
     init(holding: SavingsHolding? = nil) {
         self.holding = holding
         _asset = State(initialValue: holding?.wrappedAsset ?? .XAU995)
@@ -297,22 +303,33 @@ private struct SavingsEditorView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                Form {
-                    Section("savings.asset.section") {
-                        Picker("savings.asset", selection: $asset) {
-                            ForEach(pickerAssets) { item in
-                                Text(item.name(language: language)).tag(item)
+                ScrollView {
+                    VStack(spacing: 16) {
+                        LabeledContent("savings.asset") {
+                            Picker("savings.asset", selection: $asset) {
+                                ForEach(pickerAssets) { item in
+                                    Text(item.name(language: language)).tag(item)
+                                }
                             }
+                            .labelsHidden()
+                            .pickerStyle(.menu)
+                            .accessibilityIdentifier("savingsAssetPicker")
                         }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .background(
+                            Color(.secondarySystemBackground),
+                            in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        )
+
                         decimalInput(
                             title: Text("savings.quantity"),
+                            unit: quantityUnit,
                             field: .quantity,
                             entry: $quantityEntry,
                             identifier: "savingsQuantityInput"
                         )
-                    }
 
-                    Section("savings.valuation.section") {
                         Picker("savings.valuation", selection: $quoteMode) {
                             Text("savings.valuation.automatic").tag(0)
                             Text("savings.valuation.manual").tag(1)
@@ -321,9 +338,12 @@ private struct SavingsEditorView: View {
                         .onChange(of: quoteMode) { _, mode in
                             activeField = mode == 1 ? .price : .quantity
                         }
+                        .accessibilityIdentifier("savingsValuationPicker")
+
                         if quoteMode == 1 {
                             decimalInput(
                                 title: Text(verbatim: AppFormat.format("savings.manual.price", language: language, currency)),
+                                unit: currency,
                                 field: .price,
                                 entry: $manualPriceEntry,
                                 identifier: "savingsManualPriceInput"
@@ -333,19 +353,33 @@ private struct SavingsEditorView: View {
                                 .foregroundStyle(.secondary)
                         } else if didCheckQuotes,
                                   quotes.quote(for: asset, in: currency) == nil {
-                            Text(verbatim: AppFormat.format("savings.automatic.unavailable", language: language, currency))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Button("savings.manual.enter") {
-                                quoteMode = 1
-                                activeField = .price
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text(verbatim: AppFormat.format("savings.automatic.unavailable", language: language, currency))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Button("savings.manual.enter") {
+                                    quoteMode = 1
+                                    activeField = .price
+                                }
+                                .buttonStyle(.bordered)
                             }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(14)
+                            .background(
+                                Color(.secondarySystemBackground),
+                                in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            )
                         }
                     }
+                    .padding(16)
+                    .frame(maxWidth: 620)
+                    .frame(maxWidth: .infinity)
                 }
+                .accessibilityIdentifier("savingsEditorScroll")
 
                 AmountKeypad(entry: activeEntry, submit: advanceOrSave)
             }
+            .background(Color(.systemBackground))
             .navigationTitle(holding == nil ? "savings.add" : "savings.edit")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -381,32 +415,42 @@ private struct SavingsEditorView: View {
 
     private func decimalInput(
         title: Text,
+        unit: String,
         field: Field,
         entry: Binding<MoneyEntry>,
         identifier: String
     ) -> some View {
-        LabeledContent {
-            HStack(spacing: 2) {
-                Button {
-                    activeField = field
-                } label: {
-                    Text(verbatim: displayText(entry.wrappedValue))
-                        .monospacedDigit()
+        VStack(spacing: 4) {
+            title
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+
+            ZStack {
+                Button { activeField = field } label: {
+                    Text(verbatim: "\(displayText(entry.wrappedValue)) \(unit)")
+                        .font(.largeTitle.weight(.semibold).monospacedDigit())
+                        .minimumScaleFactor(0.45)
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity, minHeight: 52)
+                        .padding(.horizontal, 52)
                         .foregroundStyle(activeField == field ? Color.primary : .secondary)
-                        .frame(minHeight: 44)
+                        .contentTransition(.numericText())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(title)
-                .accessibilityValue(Text(verbatim: displayText(entry.wrappedValue)))
+                .accessibilityValue(Text(verbatim: "\(displayText(entry.wrappedValue)) \(unit)"))
                 .accessibilityIdentifier(identifier)
 
                 if activeField == field {
-                    AmountDeleteButton(entry: entry)
+                    HStack {
+                        Spacer()
+                        AmountDeleteButton(entry: entry)
+                    }
                 }
             }
-        } label: {
-            title
         }
+        .padding(.vertical, 6)
     }
 
     private func displayText(_ entry: MoneyEntry) -> String {

@@ -81,6 +81,22 @@ final class TutarUITests: XCTestCase {
     }
 
     @MainActor
+    func testTransactionsTabIsCenteredAndSelectedInBothLanguages() {
+        for (language, locale, label) in [
+            ("en", "en_US", "Transactions"),
+            ("tr", "tr_TR", "İşlemler")
+        ] {
+            let app = launch(language: language, locale: locale, seed: false)
+            let buttons = app.tabBars.firstMatch.buttons
+            XCTAssertEqual(buttons.count, 5)
+            let center = buttons.element(boundBy: 2)
+            XCTAssertEqual(center.label, label)
+            XCTAssertTrue(center.isSelected)
+            app.terminate()
+        }
+    }
+
+    @MainActor
     func testAppLockTakesPriorityOverOnboarding() {
         let failed = launch(
             language: "en",
@@ -750,10 +766,14 @@ final class TutarUITests: XCTestCase {
 
         app.buttons["addSavingsButton"].tap()
         XCTAssertTrue(app.navigationBars["Add savings"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "savingsEditorScroll").firstMatch.exists)
+        XCTAssertTrue(app.otherElements["amountKeypad"].exists)
+        XCTAssertFalse(app.keyboards.firstMatch.exists)
         XCTAssertFalse(app.staticTexts["Where is it held?"].exists)
         XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'XAU'")).firstMatch.exists)
         let quantity = app.buttons["savingsQuantityInput"]
         XCTAssertTrue(quantity.waitForExistence(timeout: 5))
+        XCTAssertEqual(quantity.frame.midX, app.windows.firstMatch.frame.midX, accuracy: 2)
         quantity.tap()
         app.buttons["keypad1"].tap()
         app.buttons["keypad2"].tap()
@@ -762,12 +782,15 @@ final class TutarUITests: XCTestCase {
         app.buttons["Manual"].tap()
         let price = app.buttons["savingsManualPriceInput"]
         XCTAssertTrue(price.waitForExistence(timeout: 5))
+        XCTAssertEqual(price.frame.midX, app.windows.firstMatch.frame.midX, accuracy: 2)
         [6, 4, 0, 0].forEach { app.buttons["keypad\($0)"].tap() }
+        attachScreenshot("28-savings-editor-en-dark", in: app)
+        try app.performAccessibilityAudit(for: [.contrast]) { self.contrastFalsePositive($0) }
         app.buttons["keypadSubmit"].tap()
 
         XCTAssertTrue(app.staticTexts["Gold"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["$80,000.00"].exists)
-        attachScreenshot("27-savings-en-dark", in: app)
+        attachScreenshot("28-savings-en-dark", in: app)
         try app.performAccessibilityAudit(for: [.contrast]) { self.contrastFalsePositive($0) }
 
         openTab("Settings", in: app)
@@ -787,6 +810,28 @@ final class TutarUITests: XCTestCase {
 
         openTab("Transactions", in: app)
         XCTAssertTrue(app.staticTexts["A clean slate"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testTurkishLightSavingsEditorSupportsLargestText() throws {
+        let app = launch(
+            language: "tr",
+            locale: "tr_TR",
+            seed: false,
+            largestText: true,
+            appearance: "Light"
+        )
+        openTab("Birikim", in: app)
+        app.buttons["addSavingsButton"].tap()
+
+        XCTAssertTrue(app.navigationBars["Birikim ekle"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "savingsEditorScroll").firstMatch.exists)
+        XCTAssertTrue(app.buttons["savingsQuantityInput"].exists)
+        XCTAssertTrue(app.buttons["keypad0"].isHittable)
+        XCTAssertTrue(app.buttons["keypadSubmit"].isHittable)
+        XCTAssertFalse(app.keyboards.firstMatch.exists)
+        attachScreenshot("28-savings-editor-tr-light-largest", in: app)
+        try app.performAccessibilityAudit(for: [.contrast]) { self.contrastFalsePositive($0) }
     }
 
     @MainActor

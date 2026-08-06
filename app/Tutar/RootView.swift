@@ -242,12 +242,6 @@ struct RootView: View {
     private var tabContent: some View {
         TabView(selection: $selectedTab) {
             NavigationStack {
-                TransactionsView(showingEditor: $showingEditor, navigationTarget: $transactionTarget)
-            }
-            .tabItem { Label("tab.transactions", systemImage: "list.bullet") }
-            .tag(AppTab.log)
-
-            NavigationStack {
                 AnalysisView { interval in
                     transactionTarget = interval
                     withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.25)) {
@@ -263,6 +257,12 @@ struct RootView: View {
             }
             .tabItem { Label("tab.budgets", systemImage: "gauge.with.dots.needle.50percent") }
             .tag(AppTab.budgets)
+
+            NavigationStack {
+                TransactionsView(showingEditor: $showingEditor, navigationTarget: $transactionTarget)
+            }
+            .tabItem { Label("tab.transactions", systemImage: "list.bullet") }
+            .tag(AppTab.log)
 
             NavigationStack {
                 SavingsView()
