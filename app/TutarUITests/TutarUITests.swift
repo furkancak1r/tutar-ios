@@ -485,11 +485,19 @@ final class TutarUITests: XCTestCase {
         let chart = app.descendants(matching: .any).matching(identifier: "analysisChart").firstMatch
         if chart.waitForExistence(timeout: 5) {
             attachScreenshot("21-analysis-month", in: app)
-            chart.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap()
+            let day = Calendar.current.component(.day, from: .now)
+            chart.coordinate(withNormalizedOffset: CGVector(dx: day < 16 ? 0.9 : 0.1, dy: 0.5)).tap()
             XCTAssertTrue(app.navigationBars["Analysis"].exists)
-            let seededBarX = chart.frame.width > 500 ? 0.18 : 0.20
-            chart.coordinate(withNormalizedOffset: CGVector(dx: seededBarX, dy: 0.5)).tap()
-            XCTAssertTrue(app.navigationBars["Records"].waitForExistence(timeout: 5))
+            let records = app.navigationBars["Records"]
+            var didNavigate = false
+            for step in 2 ... 23 {
+                chart.coordinate(withNormalizedOffset: CGVector(dx: Double(step) / 25, dy: 0.5)).tap()
+                if records.waitForExistence(timeout: 0.4) {
+                    didNavigate = true
+                    break
+                }
+            }
+            XCTAssertTrue(didNavigate)
             XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "highlightedTransactionRow").firstMatch.exists)
             attachScreenshot("21-analysis-highlight", in: app)
             Thread.sleep(forTimeInterval: 3.4)

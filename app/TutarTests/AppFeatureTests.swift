@@ -623,6 +623,81 @@ final class DataFeatureTests: XCTestCase {
         }
     }
 
+    func testDuplicateCloudCategoriesMergeWithoutLosingRelatedData() async throws {
+        let controller = DataController(inMemory: true, cloudEnabled: false)
+        try await waitUntilLoaded(controller)
+        let original = try XCTUnwrap(
+            try controller.context.fetch(Category.fetchRequest()).first { $0.systemKey == "category.market" }
+        )
+        let initialCategoryCount = try controller.context.count(for: Category.fetchRequest())
+        original.id = UUID(uuidString: "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF")
+        original.emoji = "🧺"
+        original.dateCreated = Date(timeIntervalSince1970: 1)
+
+        let duplicate = NSEntityDescription.insertNewObject(
+            forEntityName: "Category",
+            into: controller.context
+        ) as! Tutar.Category
+        let survivorID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+        duplicate.id = survivorID
+        duplicate.systemKey = original.systemKey
+        duplicate.name = original.name
+        duplicate.emoji = "🛒"
+        duplicate.colour = original.colour
+        duplicate.income = original.income
+        duplicate.order = original.order
+        duplicate.dateCreated = Date(timeIntervalSince1970: 2)
+
+        for (category, note) in [(original, "Local"), (duplicate, "Cloud")] {
+            let transaction = NSEntityDescription.insertNewObject(
+                forEntityName: "Transaction",
+                into: controller.context
+            ) as! Transaction
+            controller.configure(
+                transaction,
+                note: note,
+                category: category,
+                income: false,
+                amountMinorUnits: 1_000,
+                date: .now
+            )
+        }
+        let template = NSEntityDescription.insertNewObject(
+            forEntityName: "TemplateTransaction",
+            into: controller.context
+        ) as! TemplateTransaction
+        template.id = UUID()
+        template.note = "Recurring"
+        template.amount = 10
+        template.category = original
+
+        for (category, date, amount) in [
+            (original, Date(timeIntervalSince1970: 1), 100.0),
+            (duplicate, Date(timeIntervalSince1970: 2), 200.0)
+        ] {
+            let budget = NSEntityDescription.insertNewObject(forEntityName: "Budget", into: controller.context) as! Budget
+            budget.id = UUID()
+            budget.dateCreated = date
+            budget.amount = amount
+            budget.category = category
+        }
+
+        XCTAssertEqual(try controller.deduplicateCategories(), 1)
+        try controller.save()
+
+        let categories = try controller.context.fetch(Category.fetchRequest())
+        let survivor = try XCTUnwrap(categories.first { $0.systemKey == "category.market" })
+        let transactions = try controller.context.fetch(Transaction.fetchRequest())
+        XCTAssertEqual(categories.count, initialCategoryCount)
+        XCTAssertEqual(survivor.id, survivorID)
+        XCTAssertEqual(survivor.emoji, "🧺")
+        XCTAssertEqual(transactions.count, 2)
+        XCTAssertTrue(transactions.allSatisfy { $0.category == survivor })
+        XCTAssertEqual(try controller.context.fetch(TemplateTransaction.fetchRequest()).first?.category, survivor)
+        XCTAssertEqual(try controller.context.fetch(Budget.fetchRequest()).filter { $0.category == survivor }.map(\.amount), [200])
+        XCTAssertEqual(try controller.deduplicateCategories(), 0)
+    }
+
     private func waitUntilLoaded(_ controller: DataController) async throws {
         for _ in 0 ..< 100 where !controller.isStoreLoaded && controller.loadError == nil {
             try await Task.sleep(nanoseconds: 20_000_000)

@@ -52,6 +52,8 @@ final class DataController: ObservableObject {
     let container: NSPersistentCloudKitContainer
     @Published private(set) var loadError: Error?
     @Published private(set) var isStoreLoaded = false
+    private var remoteChangeObserver: NSObjectProtocol?
+    private var isReconcilingCategories = false
 
     var context: NSManagedObjectContext { container.viewContext }
 
@@ -107,6 +109,17 @@ final class DataController: ObservableObject {
 
         context.automaticallyMergesChangesFromParent = true
         context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        remoteChangeObserver = NotificationCenter.default.addObserver(
+            forName: .NSPersistentStoreRemoteChange,
+            object: container.persistentStoreCoordinator,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.reconcileCategoriesAfterRemoteChange() }
+        }
+    }
+
+    deinit {
+        if let remoteChangeObserver { NotificationCenter.default.removeObserver(remoteChangeObserver) }
     }
 
     private static var defaultStoreURL: URL {
@@ -601,6 +614,7 @@ final class DataController: ObservableObject {
         }
 
         try localizeKnownLegacyCategories()
+        try deduplicateCategories()
         try deduplicateInstallments()
 
         if try context.count(for: categoryRequest) == 0 {
@@ -634,6 +648,115 @@ final class DataController: ObservableObject {
         try repairUncategorizedRecords()
 
         try save()
+    }
+
+    @discardableResult
+    func deduplicateCategories() throws -> Int {
+        let categories = try context.fetch(Category.fetchRequest())
+        guard categories.count > 1 else { return 0 }
+
+        let stableKey: (Category) -> String = {
+            $0.id?.uuidString ?? $0.objectID.uriRepresentation().absoluteString
+        }
+        let keyProviders: [(Category) -> String?] = [
+            { category in
+                guard let key = category.systemKey?.trimmingCharacters(in: .whitespacesAndNewlines), !key.isEmpty else {
+                    return nil
+                }
+                return "system:\(key)"
+            },
+            { category in
+                guard let emoji = category.emoji, CategoryEmoji.isValid(emoji) else { return nil }
+                return "emoji:\(category.income):\(emoji)"
+            },
+            { category in
+                guard let name = category.name?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty else {
+                    return nil
+                }
+                let normalized = name.folding(
+                    options: [.caseInsensitive, .diacriticInsensitive],
+                    locale: Locale(identifier: "en_US_POSIX")
+                )
+                return "name:\(category.income):\(normalized)"
+            }
+        ]
+        var replacements = [NSManagedObjectID: Category]()
+
+        for keyFor in keyProviders {
+            var groups = [String: [Category]]()
+            for category in categories where replacements[category.objectID] == nil {
+                if let key = keyFor(category) { groups[key, default: []].append(category) }
+            }
+            for group in groups.values where group.count > 1 {
+                let keeper = group.min { stableKey($0) < stableKey($1) }!
+                let content = group.min {
+                    let lhs = $0.dateCreated ?? .distantFuture
+                    let rhs = $1.dateCreated ?? .distantFuture
+                    return lhs == rhs ? stableKey($0) < stableKey($1) : lhs < rhs
+                }!
+                keeper.systemKey = content.systemKey
+                keeper.name = content.name
+                keeper.emoji = content.emoji
+                keeper.colour = content.colour
+                keeper.income = content.income
+                keeper.order = content.order
+                keeper.dateCreated = content.dateCreated
+                group.filter { $0 != keeper }.forEach { replacements[$0.objectID] = keeper }
+            }
+        }
+
+        guard !replacements.isEmpty else { return 0 }
+        func survivor(for category: Category) -> Category {
+            var survivor = category
+            while let replacement = replacements[survivor.objectID] { survivor = replacement }
+            return survivor
+        }
+
+        for transaction in try context.fetch(Transaction.fetchRequest()) {
+            if let category = transaction.category {
+                let keeper = survivor(for: category)
+                if keeper != category { transaction.category = keeper }
+            }
+        }
+        for template in try context.fetch(TemplateTransaction.fetchRequest()) {
+            if let category = template.category {
+                let keeper = survivor(for: category)
+                if keeper != category { template.category = keeper }
+            }
+        }
+
+        var budgetsByCategory = [NSManagedObjectID: (Category, [Budget])]()
+        for budget in try context.fetch(Budget.fetchRequest()) {
+            guard let category = budget.category else { continue }
+            let keeper = survivor(for: category)
+            budgetsByCategory[keeper.objectID, default: (keeper, [])].1.append(budget)
+        }
+        for (category, budgets) in budgetsByCategory.values {
+            let ordered = budgets.sorted {
+                let lhs = $0.dateCreated ?? .distantPast
+                let rhs = $1.dateCreated ?? .distantPast
+                if lhs != rhs { return lhs > rhs }
+                return ($0.id?.uuidString ?? "") < ($1.id?.uuidString ?? "")
+            }
+            ordered.first?.category = category
+            ordered.dropFirst().forEach(context.delete)
+        }
+
+        context.processPendingChanges()
+        categories.filter { replacements[$0.objectID] != nil }.forEach(context.delete)
+        return replacements.count
+    }
+
+    private func reconcileCategoriesAfterRemoteChange() {
+        guard isStoreLoaded, !isReconcilingCategories else { return }
+        isReconcilingCategories = true
+        defer { isReconcilingCategories = false }
+        do {
+            try deduplicateCategories()
+            try save()
+        } catch {
+            loadError = error
+        }
     }
 
     func fallbackCategory(income: Bool) throws -> Category {

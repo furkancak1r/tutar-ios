@@ -107,6 +107,7 @@
 		BA43D5E60619F8A47B58A074 /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = tr; path = tr.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		C0E01F89BB6264AD22700ED5 /* AmountKeypad.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmountKeypad.swift; sourceTree = "<group>"; };
 		C1EC38EE1A5375A47A788499 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		E8BE0873776244DF5A1FD8A9 /* MainModel 6.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "MainModel 6.xcdatamodel"; sourceTree = "<group>"; };
 		EC8530FABA3F64642C4ADA1E /* TutarApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TutarApp.swift; sourceTree = "<group>"; };
 		ECD403C6742FF3E8CCE092D2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F16079640051B2058B6BD086 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -518,7 +519,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 29;
+				CURRENT_PROJECT_VERSION = 30;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 9LYL5R6LS4;
 				ENABLE_APP_INTENTS_METADATA_EXTRACTION = NO;
@@ -647,7 +648,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 29;
+				CURRENT_PROJECT_VERSION = 30;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 9LYL5R6LS4;
 				ENABLE_APP_INTENTS_METADATA_EXTRACTION = NO;
@@ -843,9 +844,10 @@
 				31AB43924B3C3337B5BFE512 /* MainModel 3.xcdatamodel */,
 				662A4BBE6CB4D995AC13CC8D /* MainModel 4.xcdatamodel */,
 				F35A111C2A703736A7A6C4AD /* MainModel 5.xcdatamodel */,
+				E8BE0873776244DF5A1FD8A9 /* MainModel 6.xcdatamodel */,
 				77718213FB560780D40C32B9 /* MainModel.xcdatamodel */,
 			);
-			currentVersion = F35A111C2A703736A7A6C4AD /* MainModel 5.xcdatamodel */;
+			currentVersion = E8BE0873776244DF5A1FD8A9 /* MainModel 6.xcdatamodel */;
 			path = MainModel.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;
