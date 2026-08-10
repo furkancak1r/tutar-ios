@@ -338,22 +338,37 @@ final class TutarUITests: XCTestCase {
         XCTAssertTrue(app.buttons["amountDeleteButton"].exists)
         XCTAssertFalse(app.buttons["keypadDelete"].exists)
         attachScreenshot("08-keypad-decimal-arrow-and-delete", in: app)
+
+        let note = app.textFields["noteField"]
+        note.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 3))
+        XCTAssertTrue(app.otherElements["amountKeypad"].waitForNonExistence(timeout: 3))
+
+        let amount = app.buttons["amountDisplay"]
+        XCTAssertTrue(amount.isHittable)
+        amount.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 3))
+        XCTAssertTrue(app.otherElements["amountKeypad"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons["keypad4"].isHittable)
+
         app.buttons["keypad4"].tap()
         app.buttons["keypad2"].tap()
         app.buttons["keypad5"].tap()
-        let amount = app.descendants(matching: .any).matching(identifier: "amountDisplay").firstMatch
-        XCTAssertTrue(amount.waitForExistence(timeout: 3))
         XCTAssertTrue("\(amount.label) \(String(describing: amount.value))".contains("425.00"))
         XCTAssertEqual(amount.frame.midX, app.windows.firstMatch.frame.midX, accuracy: 2)
         attachScreenshot("20-amount-425-centered", in: app)
+
+        app.buttons["amountDeleteButton"].tap()
+        XCTAssertTrue("\(amount.label) \(String(describing: amount.value))".contains("42.00"))
+        app.buttons["keypad5"].tap()
         for _ in 0 ..< 3 { app.buttons["amountDeleteButton"].tap() }
         app.buttons["keypad3"].tap()
         for _ in 0 ..< 5 { app.buttons["keypad0"].tap() }
 
-        let note = app.textFields["noteField"]
         note.tap()
         note.typeText("Laptop")
-        app.buttons["keyboardDoneButton"].tap()
+        amount.tap()
+        XCTAssertTrue(app.otherElements["amountKeypad"].waitForExistence(timeout: 3))
 
         app.buttons["scheduleButton"].tap()
         XCTAssertTrue(app.buttons["Installments"].waitForExistence(timeout: 5))
@@ -379,7 +394,7 @@ final class TutarUITests: XCTestCase {
         add.tap()
 
         XCTAssertTrue(app.otherElements["amountKeypad"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["amountDisplay"].exists)
+        XCTAssertTrue(app.buttons["amountDisplay"].exists)
         XCTAssertTrue(app.buttons["keypad0"].isHittable)
         XCTAssertTrue(app.buttons["keypadSubmit"].isHittable)
     }

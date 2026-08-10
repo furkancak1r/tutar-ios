@@ -95,16 +95,22 @@ struct TransactionEditorView: View {
                         }
 
                         ZStack {
-                            Text(amountText)
-                                .font(.largeTitle.weight(.semibold).monospacedDigit())
-                                .minimumScaleFactor(0.45)
-                                .lineLimit(1)
-                                .frame(maxWidth: .infinity)
-                                .padding(.horizontal, 52)
-                                .contentTransition(.numericText())
-                                .accessibilityLabel(Text("editor.amount"))
-                                .accessibilityValue(Text(verbatim: amountText))
-                                .accessibilityIdentifier("amountDisplay")
+                            Button {
+                                noteFocused = false
+                            } label: {
+                                Text(amountText)
+                                    .font(.largeTitle.weight(.semibold).monospacedDigit())
+                                    .minimumScaleFactor(0.45)
+                                    .lineLimit(1)
+                                    .foregroundStyle(.primary)
+                                    .frame(maxWidth: .infinity, minHeight: 44)
+                                    .padding(.horizontal, 52)
+                                    .contentTransition(.numericText())
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel(Text("editor.amount"))
+                            .accessibilityValue(Text(verbatim: amountText))
+                            .accessibilityIdentifier("amountDisplay")
                             HStack {
                                 Spacer()
                                 AmountDeleteButton(entry: $amountEntry)
