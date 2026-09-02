@@ -124,7 +124,7 @@
 "empty.installments.title" = "Henüz taksit planı yok";
 "empty.installments.message" = "Gider eklerken Taksitli seçeneğini aç. Tutar yalnızca belirlediğin sayıda bağlı ödeme oluşturur.";
 "empty.analysis.title" = "Henüz karşılaştırılacak veri yok";
-"empty.analysis.message" = "Bu ay gider kaydettiğinde analiz burada görünür.";
+"empty.analysis.message" = "Seçili dönemde bu işlem türüne ait kayıt yok.";
 "empty.search.message" = "Aramanla eşleşen kayıt yok.";
 "empty.budgets.title" = "Henüz bütçe yok";
 "empty.budgets.message" = "Harcamalarını hedefinle karşılaştırmak için genel veya kategori bütçesi belirle.";

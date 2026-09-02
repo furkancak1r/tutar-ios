@@ -627,6 +627,50 @@ final class TutarUITests: XCTestCase {
     }
 
     @MainActor
+    func testHiddenUpcomingCanBeOpenedByRecurringFilterAndChartNavigation() {
+        let app = launch(
+            language: "en",
+            locale: "en_US",
+            seed: false,
+            showUpcoming: false
+        )
+
+        app.buttons["addTransactionButton"].tap()
+        app.buttons["keypad1"].tap()
+        let note = app.textFields["noteField"]
+        note.tap()
+        note.typeText("Recurring Target")
+        app.buttons["keyboardDoneButton"].tap()
+        app.buttons["scheduleButton"].tap()
+        app.buttons["Repeat"].tap()
+        app.buttons["Done"].tap()
+        app.buttons["keypadSubmit"].tap()
+        XCTAssertTrue(app.navigationBars["Records"].waitForExistence(timeout: 5))
+
+        goToNextMonth(in: app)
+        XCTAssertFalse(app.staticTexts["Recurring Target"].exists)
+        app.buttons["transactionFilterButton"].tap()
+        app.buttons["Recurring"].tap()
+        XCTAssertTrue(app.staticTexts["Recurring Target"].waitForExistence(timeout: 5))
+        app.buttons["clearTransactionFilterButton"].tap()
+        XCTAssertTrue(app.staticTexts["Recurring Target"].waitForNonExistence(timeout: 3))
+
+        openTab("Analysis", in: app)
+        app.buttons["analysisNextPeriodButton"].tap()
+        let chart = app.descendants(matching: .any).matching(identifier: "analysisChart").firstMatch
+        XCTAssertTrue(chart.waitForExistence(timeout: 5))
+        let records = app.navigationBars["Records"]
+        for step in 2 ... 23 where !records.exists {
+            chart.coordinate(withNormalizedOffset: CGVector(dx: Double(step) / 25, dy: 0.5)).tap()
+            _ = records.waitForExistence(timeout: 0.4)
+        }
+        XCTAssertTrue(records.exists)
+        XCTAssertTrue(app.staticTexts["Recurring Target"].waitForExistence(timeout: 3))
+        Thread.sleep(forTimeInterval: 3.4)
+        XCTAssertTrue(app.staticTexts["Recurring Target"].exists)
+    }
+
+    @MainActor
     func testNewTransactionTypeSwipesOnlyFromEmptyGutter() {
         let app = launch(language: "en", locale: "en_US", seed: false)
         XCTAssertTrue(app.buttons["addTransactionButton"].waitForExistence(timeout: 8))
@@ -1016,7 +1060,8 @@ final class TutarUITests: XCTestCase {
         appearance: String? = nil,
         lockAuthenticationSucceeds: Bool? = nil,
         showOnboarding: Bool = false,
-        appStoreSeed: Bool = false
+        appStoreSeed: Bool = false,
+        showUpcoming: Bool = true
     ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [
@@ -1024,7 +1069,8 @@ final class TutarUITests: XCTestCase {
             showOnboarding ? "-ui-test-reset-onboarding" : "-ui-test-skip-onboarding",
             "-appLanguage", language,
             "-AppleLanguages", "(\(language))",
-            "-AppleLocale", locale
+            "-AppleLocale", locale,
+            showUpcoming ? "-ui-test-show-upcoming" : "-ui-test-hide-upcoming"
         ]
         if largestText {
             app.launchArguments.append("-ui-test-largest-text")

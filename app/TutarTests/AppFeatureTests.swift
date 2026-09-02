@@ -82,6 +82,26 @@ final class AppFormatTests: XCTestCase {
 }
 
 final class AnalysisPeriodTests: XCTestCase {
+    func testLocalizedCalendarUsesTheSelectedLanguageWeekBoundary() throws {
+        let timeZone = try XCTUnwrap(TimeZone(secondsFromGMT: 0))
+        let turkish = AnalysisPeriod.localizedCalendar(
+            locale: Locale(identifier: "tr_TR"),
+            timeZone: timeZone
+        )
+        let americanEnglish = AnalysisPeriod.localizedCalendar(
+            locale: Locale(identifier: "en_US"),
+            timeZone: timeZone
+        )
+        let date = try self.date(year: 2026, month: 9, day: 2, calendar: turkish)
+
+        let turkishWeek = AnalysisPeriod.week.interval(containing: date, calendar: turkish)
+        let americanWeek = AnalysisPeriod.week.interval(containing: date, calendar: americanEnglish)
+
+        XCTAssertEqual(turkish.component(.weekday, from: turkishWeek.start), 2)
+        XCTAssertEqual(americanEnglish.component(.weekday, from: americanWeek.start), 1)
+        XCTAssertNotEqual(turkishWeek.start, americanWeek.start)
+    }
+
     func testCalendarPeriodNavigationHandlesBoundariesLeapYearWeeksAndDST() throws {
         var calendar = Calendar(identifier: .gregorian)
         calendar.locale = Locale(identifier: "en_GB")

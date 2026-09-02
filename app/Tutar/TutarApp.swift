@@ -57,6 +57,11 @@ struct TutarApp: App {
             if let index = arguments.firstIndex(of: "-appLanguage"), arguments.indices.contains(index + 1) {
                 UserDefaults.tutar.set(arguments[index + 1], forKey: "appLanguage")
             }
+            if arguments.contains("-ui-test-hide-upcoming") {
+                UserDefaults.tutar.set(false, forKey: "showUpcoming")
+            } else if arguments.contains("-ui-test-show-upcoming") {
+                UserDefaults.tutar.set(true, forKey: "showUpcoming")
+            }
             if let index = arguments.firstIndex(of: "-AppleInterfaceStyle"), arguments.indices.contains(index + 1) {
                 UserDefaults.tutar.set(arguments[index + 1] == "Dark" ? 2 : 1, forKey: "appearance")
             }

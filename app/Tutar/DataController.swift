@@ -268,20 +268,34 @@ final class DataController: ObservableObject {
             firstDate: date,
             intervalMonths: intervalMonths
         )
+        let selectedIndex = Int(transaction.installmentIndex)
+        let calendar = Calendar.current
+        let dates = try remaining.map { item in
+            let monthOffset = (Int(item.installmentIndex) - selectedIndex) * intervalMonths
+            guard let plannedDate = InstallmentPlanner.monthlyDate(
+                from: date,
+                monthOffset: monthOffset,
+                calendar: calendar
+            ) else {
+                throw InstallmentError.invalidDate
+            }
+            return plannedDate
+        }
         let priorTotal = try totalMinorUnits(
             groupID: groupID,
             beforeIndex: Int(transaction.installmentIndex)
         )
         let newGroupTotal = priorTotal + amountMinorUnits
 
-        for (item, slice) in zip(remaining, plan) {
+        for index in remaining.indices {
+            let item = remaining[index]
             configure(
                 item,
                 note: note,
                 category: category,
                 income: income,
-                amountMinorUnits: slice.amountMinorUnits,
-                date: slice.date
+                amountMinorUnits: plan[index].amountMinorUnits,
+                date: dates[index]
             )
             item.installmentIntervalMonths = Int16(intervalMonths)
         }

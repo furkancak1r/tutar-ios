@@ -163,6 +163,43 @@ final class InstallmentPersistenceTests: XCTestCase {
         XCTAssertEqual(Set(group.map(\.installmentOriginalTotalMinorUnits)), [320_001])
     }
 
+    func testInstallmentEditPreservesGapLeftBySingleDelete() async throws {
+        let controller = DataController(inMemory: true, cloudEnabled: false)
+        try await waitUntilLoaded(controller)
+        let category = try XCTUnwrap(try controller.context.fetch(Category.fetchRequest()).first)
+        let groupID = UUID()
+        let calendar = Calendar.current
+        let firstDate = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 8, day: 18)))
+        let created = try controller.createInstallments(
+            note: "Computer",
+            category: category,
+            income: false,
+            totalMinorUnits: 300_000,
+            count: 3,
+            firstDate: firstDate,
+            intervalMonths: 1,
+            groupID: groupID
+        )
+        let thirdDate = created[2].wrappedDate
+
+        try controller.delete(created[1], scope: .one)
+        try controller.update(
+            created[0],
+            note: "Computer updated",
+            category: category,
+            income: false,
+            amountMinorUnits: 200_000,
+            date: firstDate,
+            intervalMonths: 1
+        )
+
+        let group = try controller.installments(groupID: groupID)
+        XCTAssertEqual(group.map(\.installmentIndex), [1, 3])
+        XCTAssertEqual(group.map(\.wrappedDate), [firstDate, thirdDate])
+        XCTAssertEqual(group.map(\.amountMinorUnits), [100_000, 100_000])
+        XCTAssertEqual(group.map(\.note), ["Computer updated", "Computer updated"])
+    }
+
     func testRegularTransactionEditDoesNotChangeAnotherTransaction() async throws {
         let controller = DataController(inMemory: true, cloudEnabled: false)
         try await waitUntilLoaded(controller)
@@ -317,6 +354,17 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(
             AppFormat.localized("editor.installment.remainderNote", language: .english),
             "Any rounding difference is added to the last installment, so the total always stays exact. Enter the product’s full price, not a single installment amount."
+        )
+    }
+
+    func testAnalysisEmptyStateDescribesTheSelectedPeriod() {
+        XCTAssertEqual(
+            AppFormat.localized("empty.analysis.message", language: .turkish),
+            "Seçili dönemde bu işlem türüne ait kayıt yok."
+        )
+        XCTAssertEqual(
+            AppFormat.localized("empty.analysis.message", language: .english),
+            "There are no transactions of this type in the selected period."
         )
     }
 }

@@ -395,6 +395,7 @@ struct TransactionsView: View {
     @State private var scrollTarget: String?
     @State private var highlightedTransactionIDs = Set<String>()
     @State private var highlightRequestID: UUID?
+    @State private var navigationRevealsUpcoming = false
 
     private var currency: String {
         AppFormat.currencyCode(language: language, preferred: preferredCurrency)
@@ -416,7 +417,9 @@ struct TransactionsView: View {
     }
 
     private var upcoming: [Transaction] {
-        guard showUpcoming || filter == .upcoming else { return [] }
+        guard showUpcoming || filter == .upcoming || filter == .recurring || navigationRevealsUpcoming else {
+            return []
+        }
         return monthTransactions
             .filter { $0.wrappedDate > Date.now }
             .sorted { $0.wrappedDate < $1.wrappedDate }
@@ -568,6 +571,7 @@ struct TransactionsView: View {
             if case let .category(id) = filter, !ids.contains(id) { filter = .all }
         }
         .onChange(of: searchText) { _, _ in
+            navigationRevealsUpcoming = false
             if !highlightedTransactionIDs.isEmpty { clearHighlight() }
         }
         .onChange(of: navigationTarget) { _, target in
@@ -696,11 +700,13 @@ struct TransactionsView: View {
     }
 
     private func setFilter(_ value: TransactionFilter) {
+        navigationRevealsUpcoming = false
         clearHighlight()
         filter = value
     }
 
     private func clearFilter() {
+        navigationRevealsUpcoming = false
         clearHighlight()
         withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) { filter = .all }
     }
@@ -773,6 +779,8 @@ struct TransactionsView: View {
             if matches.contains(where: { $0.wrappedDate > .now }) {
                 upcomingCollapsed = false
             }
+            navigationRevealsUpcoming = matches.contains { $0.wrappedDate > .now }
+            if navigationRevealsUpcoming { await Task.yield() }
 
             highlightedTransactionIDs = Set(matches.map(transactionID))
             highlightRequestID = highlightedTransactionIDs.isEmpty ? nil : target.id
@@ -787,6 +795,7 @@ struct TransactionsView: View {
 
     private func moveMonth(_ value: Int) {
         guard let month = Calendar.current.date(byAdding: .month, value: value, to: selectedMonth) else { return }
+        navigationRevealsUpcoming = false
         clearHighlight()
         monthTransitionEdge = value > 0 ? .trailing : .leading
         withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.28)) {
@@ -1193,6 +1202,16 @@ enum AnalysisPeriod: Int, CaseIterable, Identifiable {
 
     var id: Int { rawValue }
 
+    static func localizedCalendar(
+        locale: Locale,
+        timeZone: TimeZone = .autoupdatingCurrent
+    ) -> Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.locale = locale
+        calendar.timeZone = timeZone
+        return calendar
+    }
+
     var component: Calendar.Component {
         switch self {
         case .week: .weekOfYear
@@ -1248,8 +1267,12 @@ struct AnalysisView: View {
         AppFormat.currencyCode(language: language, preferred: preferredCurrency)
     }
 
+    private var analysisCalendar: Calendar {
+        AnalysisPeriod.localizedCalendar(locale: language.locale)
+    }
+
     private var interval: DateInterval {
-        period.interval(containing: selectedAnalysisDate)
+        period.interval(containing: selectedAnalysisDate, calendar: analysisCalendar)
     }
 
     private var periodTransactions: [Transaction] {
@@ -1271,7 +1294,7 @@ struct AnalysisView: View {
     private var chartData: [AnalysisChartPoint] {
         let component: Calendar.Component = period == .year ? .month : .day
         return Dictionary(grouping: selectedTransactions) {
-            Calendar.current.dateInterval(of: component, for: $0.wrappedDate)?.start ?? $0.wrappedDate
+            analysisCalendar.dateInterval(of: component, for: $0.wrappedDate)?.start ?? $0.wrappedDate
         }
         .map { date, items in
             AnalysisChartPoint(
@@ -1412,7 +1435,11 @@ struct AnalysisView: View {
     private var periodNavigation: some View {
         HStack(spacing: 8) {
             Button {
-                selectedAnalysisDate = period.date(byMoving: -1, from: selectedAnalysisDate)
+                selectedAnalysisDate = period.date(
+                    byMoving: -1,
+                    from: selectedAnalysisDate,
+                    calendar: analysisCalendar
+                )
             } label: {
                 Image(systemName: "chevron.left")
                     .frame(width: 44, height: 44)
@@ -1475,7 +1502,11 @@ struct AnalysisView: View {
             }
 
             Button {
-                selectedAnalysisDate = period.date(byMoving: 1, from: selectedAnalysisDate)
+                selectedAnalysisDate = period.date(
+                    byMoving: 1,
+                    from: selectedAnalysisDate,
+                    calendar: analysisCalendar
+                )
             } label: {
                 Image(systemName: "chevron.right")
                     .frame(width: 44, height: 44)
@@ -1491,9 +1522,10 @@ struct AnalysisView: View {
         case .week:
             let formatter = DateIntervalFormatter()
             formatter.locale = language.locale
+            formatter.timeZone = analysisCalendar.timeZone
             formatter.dateStyle = .medium
             formatter.timeStyle = .none
-            let inclusiveEnd = Calendar.current.date(byAdding: .day, value: -1, to: interval.end) ?? interval.end
+            let inclusiveEnd = analysisCalendar.date(byAdding: .day, value: -1, to: interval.end) ?? interval.end
             return formatter.string(from: interval.start, to: inclusiveEnd)
         case .month:
             return interval.start.formatted(.dateTime.month(.wide).year().locale(language.locale))
@@ -1555,7 +1587,7 @@ struct AnalysisView: View {
         var date = interval.start
         while date < interval.end {
             values.append(date)
-            guard let next = Calendar.current.date(byAdding: step.0, value: step.1, to: date) else { break }
+            guard let next = analysisCalendar.date(byAdding: step.0, value: step.1, to: date) else { break }
             date = next
         }
         return values
@@ -1584,7 +1616,7 @@ struct AnalysisView: View {
             let point = chartData.min(by: {
                 abs($0.date.timeIntervalSince(date)) < abs($1.date.timeIntervalSince(date))
             }),
-            let selectedInterval = Calendar.current.dateInterval(
+            let selectedInterval = analysisCalendar.dateInterval(
                 of: period == .year ? .month : .day,
                 for: point.date
             ),

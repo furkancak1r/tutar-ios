@@ -124,7 +124,7 @@
 "empty.installments.title" = "No installment plans yet";
 "empty.installments.message" = "Turn on Installments while adding an expense. Tutar will create only the exact number of linked payments.";
 "empty.analysis.title" = "Nothing to compare yet";
-"empty.analysis.message" = "Analysis appears after you record expenses for this month.";
+"empty.analysis.message" = "There are no transactions of this type in the selected period.";
 "empty.search.message" = "No records match your search.";
 "empty.budgets.title" = "No budgets yet";
 "empty.budgets.message" = "Set an overall or category budget to compare spending with your goal.";
