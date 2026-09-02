@@ -39,7 +39,7 @@ struct TransactionEditorView: View {
     @State private var recurringCoefficient: Int
     @State private var installmentCount: Int
     @State private var intervalMonths: Int
-    @State private var editScope = EditScope.one
+    @State private var installmentTotalLoaded = false
     @State private var showingSchedule = false
     @State private var errorKey: String?
     @FocusState private var noteFocused: Bool
@@ -207,31 +207,10 @@ struct TransactionEditorView: View {
                         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
 
                         if isEditingInstallment {
-                            VStack(alignment: .leading, spacing: 10) {
-                                Text("editor.apply.section")
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(.secondary)
-
-                                Picker("editor.apply.label", selection: $editScope) {
-                                    Text("editor.apply.one").tag(EditScope.one)
-                                    Text("editor.apply.following").tag(EditScope.thisAndFollowing)
-                                }
-                                .pickerStyle(.segmented)
-                                .accessibilityIdentifier("editScopePicker")
-                                .onChange(of: editScope) { _, scope in
-                                    if scope == .thisAndFollowing {
-                                        loadRemainingTotal()
-                                    } else if let transaction {
-                                        amountEntry = MoneyEntry(minorUnits: transaction.amountMinorUnits, mode: amountEntry.mode)
-                                    }
-                                }
-
-                                if editScope == .thisAndFollowing {
-                                    Text("editor.apply.totalHint")
-                                        .font(.footnote)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
+                            Text("editor.apply.totalHint")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
 
                         if let errorKey {
@@ -297,6 +276,9 @@ struct TransactionEditorView: View {
         .interactiveDismissDisabled(false)
         .onAppear {
             if category == nil { category = matchingCategories.first }
+            if isEditingInstallment, !installmentTotalLoaded {
+                loadRemainingTotal()
+            }
         }
     }
 
@@ -310,7 +292,8 @@ struct TransactionEditorView: View {
         _date = State(initialValue: transaction?.wrappedDate ?? .now)
         _income = State(initialValue: transaction?.income ?? false)
         _category = State(initialValue: transaction?.category)
-        _recurringType = State(initialValue: max(Int(transaction?.recurringType ?? 0), 1))
+        let storedRecurringType = Int(transaction?.recurringType ?? 0)
+        _recurringType = State(initialValue: storedRecurringType > 0 ? storedRecurringType : 3)
         _recurringCoefficient = State(initialValue: max(Int(transaction?.recurringCoefficient ?? 1), 1))
         _installmentCount = State(initialValue: max(Int(transaction?.installmentCount ?? 3), 2))
         _intervalMonths = State(initialValue: max(Int(transaction?.installmentIntervalMonths ?? 1), 1))
@@ -353,6 +336,10 @@ struct TransactionEditorView: View {
 
     private func save() {
         let amount = amountEntry.minorUnits
+        guard !isEditingInstallment || installmentTotalLoaded else {
+            errorKey = "editor.error.save"
+            return
+        }
         guard amount > 0 else {
             errorKey = "editor.error.amount"
             return
@@ -373,8 +360,7 @@ struct TransactionEditorView: View {
                     date: date,
                     intervalMonths: intervalMonths,
                     recurringType: schedule == .recurring ? recurringType : 0,
-                    recurringCoefficient: recurringCoefficient,
-                    scope: editScope
+                    recurringCoefficient: recurringCoefficient
                 )
             } else if schedule == .installments {
                 try dataController.createInstallments(
@@ -440,6 +426,7 @@ struct TransactionEditorView: View {
             .filter { $0.installmentIndex >= transaction.installmentIndex }
             .reduce(Int64(0)) { $0 + $1.amountMinorUnits }
         amountEntry = MoneyEntry(minorUnits: total, mode: amountEntry.mode)
+        installmentTotalLoaded = true
     }
 }
 
@@ -486,6 +473,7 @@ private struct SchedulePickerView: View {
                             Text("schedule.unit.month").tag(3)
                         }
                         .pickerStyle(.segmented)
+                        .accessibilityIdentifier("recurringUnitPicker")
                     } header: {
                         Text("schedule.recurring.section")
                     } footer: {
@@ -512,7 +500,11 @@ private struct SchedulePickerView: View {
                     } header: {
                         Text("editor.installment.section")
                     } footer: {
-                        Text("editor.installment.remainderNote")
+                        if locksScheduleKind {
+                            Text("editor.apply.totalHint")
+                        } else {
+                            Text("editor.installment.remainderNote")
+                        }
                     }
                 }
             }

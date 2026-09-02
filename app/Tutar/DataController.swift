@@ -227,13 +227,11 @@ final class DataController: ObservableObject {
         date: Date,
         intervalMonths: Int,
         recurringType: Int = 0,
-        recurringCoefficient: Int = 1,
-        scope: EditScope
+        recurringCoefficient: Int = 1
     ) throws {
         guard amountMinorUnits > 0 else { throw InstallmentError.invalidAmount }
 
         guard
-            scope == .thisAndFollowing,
             let groupID = transaction.installmentGroupID,
             transaction.installmentIndex > 0
         else {
@@ -293,11 +291,11 @@ final class DataController: ObservableObject {
         try save()
     }
 
-    func materializeRecurringTransactions() throws {
+    func materializeRecurringTransactions(through date: Date = .now) throws {
         let request = Transaction.fetchRequest()
         request.predicate = NSPredicate(format: "recurringType > 0")
         for transaction in try context.fetch(request) {
-            try materializeRecurringTransaction(transaction)
+            try materializeRecurringTransaction(transaction, through: date)
         }
         try save()
     }
@@ -536,12 +534,14 @@ final class DataController: ObservableObject {
         let limit = calendar.startOfDay(for: date)
         var marker = transaction
 
-        while let nextDate = nextRecurringDate(
-            after: marker.wrappedDate,
-            type: type,
-            coefficient: coefficient,
-            calendar: calendar
-        ), calendar.startOfDay(for: nextDate) <= limit {
+        while calendar.startOfDay(for: marker.wrappedDate) <= limit,
+              let nextDate = nextRecurringDate(
+                  after: marker.wrappedDate,
+                  type: type,
+                  coefficient: coefficient,
+                  calendar: calendar
+              )
+        {
             marker.recurringType = 0
             marker.recurringCoefficient = 0
 

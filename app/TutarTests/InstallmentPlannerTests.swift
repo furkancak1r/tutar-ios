@@ -98,7 +98,7 @@ final class InstallmentPersistenceTests: XCTestCase {
         XCTAssertEqual(survivors.map(\.installmentIndex), [1])
     }
 
-    func testFollowingEditRedistributesNewRemainingTotal() async throws {
+    func testInstallmentEditRedistributesNewRemainingTotal() async throws {
         let controller = DataController(inMemory: true, cloudEnabled: false)
         try await waitUntilLoaded(controller)
         let category = try XCTUnwrap(try controller.context.fetch(Category.fetchRequest()).first)
@@ -121,8 +121,7 @@ final class InstallmentPersistenceTests: XCTestCase {
             income: false,
             amountMinorUnits: 210_001,
             date: created[1].wrappedDate,
-            intervalMonths: 1,
-            scope: .thisAndFollowing
+            intervalMonths: 1
         )
 
         let group = try controller.installments(groupID: groupID)
@@ -131,7 +130,7 @@ final class InstallmentPersistenceTests: XCTestCase {
         XCTAssertEqual(Set(group.map(\.installmentOriginalTotalMinorUnits)), [310_001])
     }
 
-    func testFollowingEditOnFinalInstallmentUpdatesThatInstallment() async throws {
+    func testFinalInstallmentEditUpdatesOnlyThatInstallment() async throws {
         let controller = DataController(inMemory: true, cloudEnabled: false)
         try await waitUntilLoaded(controller)
         let category = try XCTUnwrap(try controller.context.fetch(Category.fetchRequest()).first)
@@ -154,8 +153,7 @@ final class InstallmentPersistenceTests: XCTestCase {
             income: false,
             amountMinorUnits: 120_001,
             date: created[2].wrappedDate,
-            intervalMonths: 2,
-            scope: .thisAndFollowing
+            intervalMonths: 2
         )
 
         let group = try controller.installments(groupID: groupID)
@@ -163,6 +161,41 @@ final class InstallmentPersistenceTests: XCTestCase {
         XCTAssertEqual(group.last?.note, "Tablet updated")
         XCTAssertEqual(group.last?.installmentIntervalMonths, 2)
         XCTAssertEqual(Set(group.map(\.installmentOriginalTotalMinorUnits)), [320_001])
+    }
+
+    func testRegularTransactionEditDoesNotChangeAnotherTransaction() async throws {
+        let controller = DataController(inMemory: true, cloudEnabled: false)
+        try await waitUntilLoaded(controller)
+        let category = try XCTUnwrap(try controller.context.fetch(Category.fetchRequest()).first)
+        let first = try controller.createTransaction(
+            note: "First",
+            category: category,
+            income: false,
+            amountMinorUnits: 1_000,
+            date: .now
+        )
+        let second = try controller.createTransaction(
+            note: "Second",
+            category: category,
+            income: false,
+            amountMinorUnits: 2_000,
+            date: .now
+        )
+
+        try controller.update(
+            first,
+            note: "Updated",
+            category: category,
+            income: false,
+            amountMinorUnits: 3_000,
+            date: first.wrappedDate,
+            intervalMonths: 1
+        )
+
+        XCTAssertEqual(first.note, "Updated")
+        XCTAssertEqual(first.amountMinorUnits, 3_000)
+        XCTAssertEqual(second.note, "Second")
+        XCTAssertEqual(second.amountMinorUnits, 2_000)
     }
 
     func testVersionTwoStoreMigratesWithoutChangingExistingTransaction() async throws {
@@ -274,5 +307,16 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(AppFormat.plural("installments.remaining", count: 2, language: .english), "2 installments remaining")
         XCTAssertEqual(AppFormat.plural("installments.remaining", count: 2, language: .turkish), "2 taksit kaldı")
         XCTAssertEqual(AppFormat.plural("schedule.every.months", count: 2, language: .turkish), "2 ayda bir")
+    }
+
+    func testInstallmentTotalPriceGuidanceIsLocalized() {
+        XCTAssertEqual(
+            AppFormat.localized("editor.installment.remainderNote", language: .turkish),
+            "Kuruş farkı son taksite eklenir; toplam tutar her zaman korunur. Girdiğin tutar ürünün toplam fiyatı olmalıdır."
+        )
+        XCTAssertEqual(
+            AppFormat.localized("editor.installment.remainderNote", language: .english),
+            "Any rounding difference is added to the last installment, so the total always stays exact. Enter the product’s full price, not a single installment amount."
+        )
     }
 }

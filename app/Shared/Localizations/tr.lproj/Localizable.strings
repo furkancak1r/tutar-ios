@@ -109,6 +109,11 @@
 "analysis.period.week" = "Hafta";
 "analysis.period.month" = "Ay";
 "analysis.period.year" = "Yıl";
+"analysis.period.previous" = "Önceki dönem";
+"analysis.period.next" = "Sonraki dönem";
+"analysis.period.choose" = "Analiz tarihini seç";
+"analysis.period.chooseHint" = "Takvimi açar. Analiz, seçilen tarihin bulunduğu hafta, ay veya yılı kullanır.";
+"analysis.period.current" = "Bu döneme dön";
 "analysis.kind" = "İşlem türü";
 "analysis.trend" = "Değişim";
 "analysis.chart" = "İşlem grafiği";
@@ -142,12 +147,8 @@
 "editor.installment.toggle" = "Taksitli";
 "editor.installment.count" = "Taksit sayısı";
 "editor.installment.interval" = "Aylık aralık";
-"editor.installment.remainderNote" = "Kuruş farkı son taksite eklenir; toplam tutar her zaman korunur.";
+"editor.installment.remainderNote" = "Kuruş farkı son taksite eklenir; toplam tutar her zaman korunur. Girdiğin tutar ürünün toplam fiyatı olmalıdır.";
 "editor.installment.futureNote" = "Gelecek taksitler ayrı gösterilir ve yalnızca ait oldukları ayın harcamasına katılır.";
-"editor.apply.section" = "Değişikliği uygula";
-"editor.apply.label" = "Düzenleme kapsamı";
-"editor.apply.one" = "Yalnız bu";
-"editor.apply.following" = "Bu ve sonrası";
 "editor.apply.totalHint" = "Yukarıdaki tutar, bu ve sonraki taksitlerin yeni toplamıdır.";
 "editor.error.amount" = "En fazla iki ondalık basamak içeren geçerli bir tutar gir.";
 "editor.error.category" = "Bir kategori seç.";
@@ -165,7 +166,7 @@
 "schedule.unit.day" = "Gün";
 "schedule.unit.week" = "Hafta";
 "schedule.unit.month" = "Ay";
-"schedule.recurring.footer" = "Zamanı gelen tekrar kayıtları Tutar açıldığında otomatik oluşturulur.";
+"schedule.recurring.footer" = "Tutar, sıradaki tekrar kaydını otomatik olarak önceden hazırlar.";
 
 "keypad.delete" = "Son rakamı sil";
 "keypad.decimal" = "Ondalık ayırıcı";

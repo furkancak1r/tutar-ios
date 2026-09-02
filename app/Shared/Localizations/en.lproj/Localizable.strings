@@ -109,6 +109,11 @@
 "analysis.period.week" = "Week";
 "analysis.period.month" = "Month";
 "analysis.period.year" = "Year";
+"analysis.period.previous" = "Previous period";
+"analysis.period.next" = "Next period";
+"analysis.period.choose" = "Choose analysis date";
+"analysis.period.chooseHint" = "Opens a calendar. The analysis uses the week, month, or year containing the selected date.";
+"analysis.period.current" = "Current period";
 "analysis.kind" = "Transaction type";
 "analysis.trend" = "Trend";
 "analysis.chart" = "Transaction chart";
@@ -142,12 +147,8 @@
 "editor.installment.toggle" = "Installments";
 "editor.installment.count" = "Number of installments";
 "editor.installment.interval" = "Monthly interval";
-"editor.installment.remainderNote" = "Any rounding difference is added to the last installment, so the total always stays exact.";
+"editor.installment.remainderNote" = "Any rounding difference is added to the last installment, so the total always stays exact. Enter the product’s full price, not a single installment amount.";
 "editor.installment.futureNote" = "Future installments are shown separately and count toward spending only in their own month.";
-"editor.apply.section" = "Apply changes";
-"editor.apply.label" = "Edit scope";
-"editor.apply.one" = "This one";
-"editor.apply.following" = "This & next";
 "editor.apply.totalHint" = "The amount above is the new total for this and all following installments.";
 "editor.error.amount" = "Enter a valid amount with no more than two decimal places.";
 "editor.error.category" = "Choose a category.";
@@ -165,7 +166,7 @@
 "schedule.unit.day" = "Day";
 "schedule.unit.week" = "Week";
 "schedule.unit.month" = "Month";
-"schedule.recurring.footer" = "Due repeated entries are created automatically when Tutar opens.";
+"schedule.recurring.footer" = "Tutar automatically prepares the next repeated entry in advance.";
 
 "keypad.delete" = "Delete last digit";
 "keypad.decimal" = "Decimal separator";

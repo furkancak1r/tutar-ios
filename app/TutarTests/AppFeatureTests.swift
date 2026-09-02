@@ -81,6 +81,46 @@ final class AppFormatTests: XCTestCase {
     }
 }
 
+final class AnalysisPeriodTests: XCTestCase {
+    func testCalendarPeriodNavigationHandlesBoundariesLeapYearWeeksAndDST() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.locale = Locale(identifier: "en_GB")
+        calendar.timeZone = try XCTUnwrap(TimeZone(identifier: "Europe/Istanbul"))
+        calendar.firstWeekday = 2
+        calendar.minimumDaysInFirstWeek = 4
+
+        let december = try date(year: 2026, month: 12, day: 15, calendar: calendar)
+        let january = AnalysisPeriod.month.date(byMoving: 1, from: december, calendar: calendar)
+        XCTAssertEqual(calendar.dateComponents([.year, .month, .day], from: january), DateComponents(year: 2027, month: 1, day: 1))
+        XCTAssertEqual(
+            calendar.dateComponents(
+                [.year, .month, .day],
+                from: AnalysisPeriod.month.date(byMoving: -1, from: january, calendar: calendar)
+            ),
+            DateComponents(year: 2026, month: 12, day: 1)
+        )
+
+        let leapDay = try date(year: 2028, month: 2, day: 29, calendar: calendar)
+        XCTAssertTrue(AnalysisPeriod.month.interval(containing: leapDay, calendar: calendar).contains(leapDay))
+        let nextYear = AnalysisPeriod.year.date(byMoving: 1, from: december, calendar: calendar)
+        XCTAssertEqual(calendar.component(.year, from: nextYear), 2027)
+
+        let yearEnd = try date(year: 2026, month: 12, day: 31, calendar: calendar)
+        let week = AnalysisPeriod.week.interval(containing: yearEnd, calendar: calendar)
+        XCTAssertTrue(week.contains(try date(year: 2027, month: 1, day: 1, calendar: calendar)))
+
+        calendar.timeZone = try XCTUnwrap(TimeZone(identifier: "America/Los_Angeles"))
+        let dstDate = try date(year: 2026, month: 3, day: 8, calendar: calendar)
+        let dstWeek = AnalysisPeriod.week.interval(containing: dstDate, calendar: calendar)
+        let followingWeek = AnalysisPeriod.week.date(byMoving: 1, from: dstDate, calendar: calendar)
+        XCTAssertEqual(followingWeek, dstWeek.end)
+    }
+
+    private func date(year: Int, month: Int, day: Int, calendar: Calendar) throws -> Date {
+        try XCTUnwrap(calendar.date(from: DateComponents(year: year, month: month, day: day)))
+    }
+}
+
 final class SavingsQuoteTests: XCTestCase {
     func testGoldOunceConvertsToPureAnd995GramTRY() {
         let pure = SavingsQuoteMath.metalPriceTRY(
@@ -488,26 +528,100 @@ final class DataFeatureTests: XCTestCase {
         )
     }
 
-    func testRecurringEntryMaterializesOncePerDueDate() async throws {
+    func testMonthlyRecurringEntriesKeepExactlyOneUpcomingOccurrence() async throws {
         let controller = DataController(inMemory: true, cloudEnabled: false)
         try await waitUntilLoaded(controller)
         let category = try XCTUnwrap(try controller.context.fetch(Category.fetchRequest()).first { !$0.income })
-        let start = try XCTUnwrap(Calendar.current.date(byAdding: .day, value: -2, to: Calendar.current.startOfDay(for: .now)))
+        let calendar = Calendar.current
+        let start = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 8, day: 31)))
+        let reference = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 9, day: 2, hour: 12)))
+        let expected = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 9, day: 30)))
 
-        try controller.createTransaction(
-            note: "Coffee",
+        insertRecurring(in: controller, category: category, note: "Rent", date: start, type: 3)
+        insertRecurring(in: controller, category: category, note: "Insurance", date: start, type: 3)
+        try controller.save()
+        try controller.materializeRecurringTransactions(through: reference)
+        try controller.materializeRecurringTransactions(through: reference)
+
+        let items = try controller.context.fetch(Transaction.fetchRequest())
+            .filter { $0.note == "Rent" || $0.note == "Insurance" }
+        XCTAssertEqual(items.count, 4)
+        XCTAssertEqual(items.filter { $0.wrappedDate > reference }.count, 2)
+        XCTAssertEqual(items.filter { $0.recurringType > 0 }.count, 2)
+        XCTAssertTrue(items.filter { $0.wrappedDate > reference }.allSatisfy { $0.wrappedDate == expected })
+        XCTAssertEqual(items.filter { $0.note == "Rent" }.count, 2)
+        XCTAssertEqual(items.filter { $0.note == "Insurance" }.count, 2)
+    }
+
+    func testDailyRecurringEntryCatchesUpAndKeepsTomorrowUpcoming() async throws {
+        let controller = DataController(inMemory: true, cloudEnabled: false)
+        try await waitUntilLoaded(controller)
+        let category = try XCTUnwrap(try controller.context.fetch(Category.fetchRequest()).first { !$0.income })
+        let calendar = Calendar.current
+        let start = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 8, day: 31)))
+        let reference = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 9, day: 2, hour: 12)))
+
+        insertRecurring(in: controller, category: category, note: "Coffee", date: start, type: 1)
+        try controller.save()
+        try controller.materializeRecurringTransactions(through: reference)
+        try controller.materializeRecurringTransactions(through: reference)
+
+        let items = try controller.context.fetch(Transaction.fetchRequest())
+            .filter { $0.note == "Coffee" }
+            .sorted { $0.wrappedDate < $1.wrappedDate }
+        XCTAssertEqual(items.count, 4)
+        XCTAssertEqual(
+            items.map { calendar.dateComponents([.month, .day], from: $0.wrappedDate) },
+            [
+                DateComponents(month: 8, day: 31),
+                DateComponents(month: 9, day: 1),
+                DateComponents(month: 9, day: 2),
+                DateComponents(month: 9, day: 3)
+            ]
+        )
+        XCTAssertEqual(items.filter { $0.wrappedDate > reference }.count, 1)
+        XCTAssertEqual(items.filter { $0.recurringType > 0 }.count, 1)
+    }
+
+    func testFutureRecurringEntryDoesNotMaterializeAnotherOccurrence() async throws {
+        let controller = DataController(inMemory: true, cloudEnabled: false)
+        try await waitUntilLoaded(controller)
+        let category = try XCTUnwrap(try controller.context.fetch(Category.fetchRequest()).first { !$0.income })
+        let calendar = Calendar.current
+        let reference = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 9, day: 2, hour: 12)))
+        let future = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 9, day: 30)))
+
+        insertRecurring(in: controller, category: category, note: "Future", date: future, type: 3)
+        try controller.save()
+        try controller.materializeRecurringTransactions(through: reference)
+
+        let items = try controller.context.fetch(Transaction.fetchRequest()).filter { $0.note == "Future" }
+        XCTAssertEqual(items.count, 1)
+        XCTAssertEqual(items.first?.recurringType, 3)
+    }
+
+    private func insertRecurring(
+        in controller: DataController,
+        category: Tutar.Category,
+        note: String,
+        date: Date,
+        type: Int
+    ) {
+        let transaction = NSEntityDescription.insertNewObject(
+            forEntityName: "Transaction",
+            into: controller.context
+        ) as! Transaction
+        controller.configure(
+            transaction,
+            note: note,
             category: category,
             income: false,
             amountMinorUnits: 1_000,
-            date: start,
-            recurringType: 1,
-            recurringCoefficient: 1
+            date: date
         )
-        try controller.materializeRecurringTransactions()
-
-        let items = try controller.context.fetch(Transaction.fetchRequest()).filter { $0.note == "Coffee" }
-        XCTAssertEqual(items.count, 3)
-        XCTAssertEqual(items.filter { $0.recurringType > 0 }.count, 1)
+        transaction.onceRecurring = true
+        transaction.recurringType = Int16(type)
+        transaction.recurringCoefficient = 1
     }
 
     func testDeletingUsedCategoryIsRejectedWithoutChangingTransactions() async throws {

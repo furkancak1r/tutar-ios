@@ -1186,12 +1186,31 @@ struct TransactionRow: View {
     }
 }
 
-private enum AnalysisPeriod: Int, CaseIterable, Identifiable {
+enum AnalysisPeriod: Int, CaseIterable, Identifiable {
     case week
     case month
     case year
 
     var id: Int { rawValue }
+
+    var component: Calendar.Component {
+        switch self {
+        case .week: .weekOfYear
+        case .month: .month
+        case .year: .year
+        }
+    }
+
+    func interval(containing date: Date, calendar: Calendar = .current) -> DateInterval {
+        calendar.dateInterval(of: component, for: date)
+            ?? calendar.dateInterval(of: .day, for: date)
+            ?? DateInterval(start: date, duration: 86_400)
+    }
+
+    func date(byMoving offset: Int, from date: Date, calendar: Calendar = .current) -> Date {
+        calendar.date(byAdding: component, value: offset, to: interval(containing: date, calendar: calendar).start)
+            ?? date
+    }
 }
 
 private enum AnalysisKind: Int, CaseIterable, Identifiable {
@@ -1217,6 +1236,8 @@ struct AnalysisView: View {
     @AppStorage("currencyCode", store: .tutar) private var preferredCurrency = ""
     @State private var period = AnalysisPeriod.month
     @State private var kind = AnalysisKind.expense
+    @State private var selectedAnalysisDate = Date.now
+    @State private var isSelectingAnalysisDate = false
     let onSelectInterval: (TransactionNavigationTarget) -> Void
 
     init(onSelectInterval: @escaping (TransactionNavigationTarget) -> Void = { _ in }) {
@@ -1228,14 +1249,7 @@ struct AnalysisView: View {
     }
 
     private var interval: DateInterval {
-        let component: Calendar.Component
-        switch period {
-        case .week: component = .weekOfYear
-        case .month: component = .month
-        case .year: component = .year
-        }
-        return Calendar.current.dateInterval(of: component, for: .now)
-            ?? DateInterval(start: .now, duration: 86_400)
+        period.interval(containing: selectedAnalysisDate)
     }
 
     private var periodTransactions: [Transaction] {
@@ -1290,6 +1304,8 @@ struct AnalysisView: View {
                     Text("analysis.period.year").tag(AnalysisPeriod.year)
                 }
                 .pickerStyle(.segmented)
+
+                periodNavigation
 
                 ViewThatFits(in: .horizontal) {
                     HStack(spacing: 8) {
@@ -1391,6 +1407,99 @@ struct AnalysisView: View {
         .frame(maxWidth: .infinity)
         .navigationTitle("analysis.title")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var periodNavigation: some View {
+        HStack(spacing: 8) {
+            Button {
+                selectedAnalysisDate = period.date(byMoving: -1, from: selectedAnalysisDate)
+            } label: {
+                Image(systemName: "chevron.left")
+                    .frame(width: 44, height: 44)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("analysis.period.previous"))
+            .accessibilityIdentifier("analysisPreviousPeriodButton")
+
+            Button {
+                isSelectingAnalysisDate = true
+            } label: {
+                Text(verbatim: periodLabel)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("analysis.period.choose"))
+            .accessibilityValue(Text(verbatim: periodLabel))
+            .accessibilityHint(Text("analysis.period.chooseHint"))
+            .accessibilityIdentifier("analysisPeriodButton")
+            .popover(isPresented: $isSelectingAnalysisDate) {
+                VStack(spacing: 0) {
+                    DatePicker(
+                        "analysis.period.choose",
+                        selection: Binding(
+                            get: { selectedAnalysisDate },
+                            set: {
+                                selectedAnalysisDate = $0
+                                isSelectingAnalysisDate = false
+                            }
+                        ),
+                        displayedComponents: .date
+                    )
+                    .datePickerStyle(.graphical)
+                    .labelsHidden()
+                    .padding()
+                    .accessibilityIdentifier("analysisDatePicker")
+
+                    Divider()
+
+                    Button {
+                        selectedAnalysisDate = .now
+                        isSelectingAnalysisDate = false
+                    } label: {
+                        Label("analysis.period.current", systemImage: "arrow.counterclockwise")
+                            .font(.subheadline.weight(.semibold))
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
+                    .accessibilityIdentifier("analysisCurrentPeriodButton")
+                }
+                .tint(.primary)
+                .presentationCompactAdaptation(.sheet)
+            }
+
+            Button {
+                selectedAnalysisDate = period.date(byMoving: 1, from: selectedAnalysisDate)
+            } label: {
+                Image(systemName: "chevron.right")
+                    .frame(width: 44, height: 44)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("analysis.period.next"))
+            .accessibilityIdentifier("analysisNextPeriodButton")
+        }
+    }
+
+    private var periodLabel: String {
+        switch period {
+        case .week:
+            let formatter = DateIntervalFormatter()
+            formatter.locale = language.locale
+            formatter.dateStyle = .medium
+            formatter.timeStyle = .none
+            let inclusiveEnd = Calendar.current.date(byAdding: .day, value: -1, to: interval.end) ?? interval.end
+            return formatter.string(from: interval.start, to: inclusiveEnd)
+        case .month:
+            return interval.start.formatted(.dateTime.month(.wide).year().locale(language.locale))
+        case .year:
+            return interval.start.formatted(.dateTime.year().locale(language.locale))
+        }
     }
 
     private func summaryMetric(_ key: LocalizedStringKey, value: Double, isNegative: Bool = false) -> some View {

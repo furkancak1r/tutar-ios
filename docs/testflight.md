@@ -1,14 +1,20 @@
-# Tutar 1.0 (31) — TestFlight and App Store metadata
+# Tutar 1.0.1 (32) — TestFlight metadata
 
 ## Beta Description — Turkish
 
 Tutar; gelir, gider, bütçe, tekrar, taksit ve birikimleri takip etmek için tamamen ücretsiz, reklamsız ve açık kaynak bir iOS uygulamasıdır. Birikim sekmesi altın, gümüş ve dövizleri Ayarlar’da seçilen para birimine TCMB çapraz kurları ve ücretsiz canlı değerli maden fiyatlarıyla çevirir; otomatik değer yoksa aynı para biriminde manuel fiyat kabul eder. Birikimler işlem oluşturmaz veya bütçeleri etkilemez. Dime/Tutar CSV içe/dışa aktarma, tam JSON yedekleme, yerel saklama ve isteğe bağlı özel iCloud eşzamanlaması bulunur.
 
-Tutar, Rafael Soh ve katkıda bulunanların oluşturduğu Dime temel alınarak değiştirilmiş GPLv3 çalışmasıdır. Bu buildin değişiklik tarihi: 10 Ağustos 2026. Tam kaynak: https://github.com/furkancak1r/tutar-ios
+Tutar, Rafael Soh ve katkıda bulunanların oluşturduğu Dime temel alınarak değiştirilmiş GPLv3 çalışmasıdır. Bu buildin değişiklik tarihi: 2 Eylül 2026. Tam kaynak: https://github.com/furkancak1r/tutar-ios
 
 ## What to Test — Turkish
 
-Build 31, not alanına dokunduktan sonra tutar alanına yeniden dokunulduğunda sistem klavyesini kapatıp Tutar'ın özel numaratörünü tekrar açar. Not yazmadan ve not yazdıktan sonra tutara dönüp rakam girişinin çalıştığını doğrulayın. Tutar, Rafael Soh ve katkıda bulunanların Dime uygulamasını temel alan GPLv3 türev çalışmadır. Değişiklik: 10 Ağustos 2026. Kaynak: https://github.com/furkancak1r/tutar-ios
+Build 32, Analiz ekranında geçmiş veya gelecek herhangi bir hafta, ay ve yılı oklarla ya da native takvimle seçtirir. Yeni tekrarlayan işlemler aylık aralıkla başlar; Tutar sıradaki tekrarı Yaklaşanlar için önceden hazırlar. Taksit düzenlemeleri seçilen taksit ve sonrasını otomatik günceller; girilen yeni taksit tutarının ürünün toplam fiyatı olduğu açıkça belirtilir. Tutar, Rafael Soh ve katkıda bulunanların Dime uygulamasını temel alan GPLv3 türev çalışmadır. Değişiklik: 2 Eylül 2026. Kaynak: https://github.com/furkancak1r/tutar-ios
+
+1. Analiz’de Hafta, Ay ve Yıl görünümlerini seçin; sol/sağ okların tam bir dönem ilerlediğini ve ortadaki dönem adına dokununca takvimin açıldığını doğrulayın.
+2. Geçmiş ve gelecek bir tarih seçin; özet, grafik ve kategori toplamlarının yalnız seçilen döneme göre birlikte güncellendiğini doğrulayın.
+3. Takvimde “Bu döneme dön” eylemini ve Türkçe/English, açık/koyu görünüm, büyük metin ile VoiceOver davranışını kontrol edin.
+4. Yeni işlemde Plan → Tekrarlayan seçin; başlangıç aralığının “Her 1 ayda” olduğunu ve kaydın sıradaki tekrarının Yaklaşanlar’da yalnız bir kez göründüğünü doğrulayın.
+5. Orta bir taksiti düzenleyin; kapsam sorulmadan yalnız seçilen ve sonraki taksitlerin yeniden dağıtıldığını, önceki taksitlerin korunup kuruş farkının son taksite gittiğini doğrulayın.
 
 1. Güncellemeden sonraki ilk açılışta onboarding’in görünmesini; beş sayfanın yatay kaydırma ve İleri/Geri düğmeleriyle çalışmasını ve Birikim sayfasını doğrulayın.
 2. Onboarding’i yarıda kapatıp yeniden açın; tekrar başlamalıdır. Atla veya Tutar’ı Kullanmaya Başla sonrasında yeniden görünmemelidir.
@@ -51,11 +57,17 @@ Build 31, not alanına dokunduktan sonra tutar alanına yeniden dokunulduğunda 
 
 Tutar is a completely free, ad-free, open-source iOS app for tracking income, expenses, budgets, repeats, installments, and savings. Savings converts gold, silver, and currencies to the currency selected in Settings using CBRT cross rates and free live precious-metal prices; when no automatic value exists, it accepts a manual price in that currency. Savings do not create transactions or affect budgets. Dime/Tutar CSV import/export, complete JSON backup, local storage, and optional private iCloud sync are included.
 
-Tutar is a GPLv3 modified work based on Dime, originally created by Rafael Soh and contributors. This build was modified on 10 August 2026. Complete source: https://github.com/furkancak1r/tutar-ios
+Tutar is a GPLv3 modified work based on Dime, originally created by Rafael Soh and contributors. This build was modified on 2 September 2026. Complete source: https://github.com/furkancak1r/tutar-ios
 
 ## What to Test — English
 
-Build 31 dismisses the system keyboard and restores Tutar's custom amount keypad when the amount is tapped after focusing the note field. Verify that amount entry works both before and after entering a note. Tutar is a GPLv3 derivative of Dime by Rafael Soh and contributors. Modified 10 August 2026. Source: https://github.com/furkancak1r/tutar-ios
+Build 32 lets you select any past or future week, month, or year in Analysis using arrows or the native calendar. New repeats start monthly, and Tutar prepares the next occurrence for Upcoming in advance. Installment edits automatically update the selected installment and all following ones, while the editor clearly states that the entered installment amount is the product's full price. Tutar is a GPLv3 derivative of Dime by Rafael Soh and contributors. Modified 2 September 2026. Source: https://github.com/furkancak1r/tutar-ios
+
+1. In Analysis, choose Week, Month, and Year; verify the arrows move exactly one period and tapping the centered period label opens the calendar.
+2. Select a past and future date; verify the summary, chart, and category totals all update from the same selected period.
+3. Check “Current period” and verify Turkish/English, light/dark appearance, large text, and VoiceOver behavior.
+4. In a new transaction, choose Schedule → Repeat; confirm it starts at “Every 1 month” and exactly one next occurrence appears in Upcoming.
+5. Edit a middle installment; confirm there is no edit-scope prompt, only the selected and following installments are redistributed, earlier installments stay unchanged, and any rounding difference goes to the last installment.
 
 1. After updating, confirm onboarding appears once and all five pages—including Savings—work with horizontal swipes and the Back/Next buttons.
 2. Quit midway and relaunch; onboarding should return. After Skip or Start Using Tutar, it should stay completed.

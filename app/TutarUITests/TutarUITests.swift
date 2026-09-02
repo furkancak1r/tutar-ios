@@ -245,6 +245,30 @@ final class TutarUITests: XCTestCase {
     }
 
     @MainActor
+    func testInstallmentEditUsesThisAndFollowingWithoutScopePicker() {
+        let app = launch(language: "en", locale: "en_US")
+
+        XCTAssertTrue(app.navigationBars["Records"].waitForExistence(timeout: 8))
+        goToNextMonth(in: app)
+        revealInstallment("2/3", in: app)
+        app.staticTexts["2/3"].tap()
+
+        XCTAssertTrue(app.navigationBars["Edit transaction"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.descendants(matching: .any).matching(identifier: "editScopePicker").firstMatch.exists)
+        XCTAssertTrue(
+            app.staticTexts["The amount above is the new total for this and all following installments."]
+                .waitForExistence(timeout: 3)
+        )
+        let amount = app.buttons["amountDisplay"]
+        XCTAssertTrue(amount.waitForExistence(timeout: 3))
+        XCTAssertTrue("\(amount.label) \(String(describing: amount.value))".contains("2,000.00"))
+
+        app.buttons["saveTransactionButton"].tap()
+        XCTAssertTrue(app.navigationBars["Records"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["2/3"].waitForExistence(timeout: 3))
+    }
+
+    @MainActor
     func testDynamicTypeAuditAtSystemTextSize() throws {
         let app = launch(language: "tr", locale: "tr_TR")
         XCTAssertTrue(app.navigationBars["Kayıtlar"].waitForExistence(timeout: 8))
@@ -373,6 +397,13 @@ final class TutarUITests: XCTestCase {
         app.buttons["scheduleButton"].tap()
         XCTAssertTrue(app.buttons["Installments"].waitForExistence(timeout: 5))
         app.buttons["Installments"].tap()
+        let totalPriceGuidance = app.staticTexts.matching(NSPredicate(
+            format: "label == %@",
+            "Any rounding difference is added to the last installment, so the total always stays exact. Enter the product’s full price, not a single installment amount."
+        )).firstMatch
+        XCTAssertTrue(
+            totalPriceGuidance.waitForExistence(timeout: 3)
+        )
         app.buttons["Done"].tap()
 
         app.buttons["keypadSubmit"].tap()
@@ -538,6 +569,61 @@ final class TutarUITests: XCTestCase {
         XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "budgetGauge").firstMatch.waitForExistence(timeout: 5))
         attachScreenshot("21-budgets-gauge-dark", in: app)
         try app.performAccessibilityAudit(for: [.contrast]) { self.contrastFalsePositive($0) }
+    }
+
+    @MainActor
+    func testAnalysisPeriodNavigationAndMonthlyRecurringDefault() throws {
+        let app = launch(language: "en", locale: "en_US", appearance: "Dark")
+
+        openTab("Analysis", in: app)
+        let periodButton = app.buttons["analysisPeriodButton"]
+        XCTAssertTrue(periodButton.waitForExistence(timeout: 8))
+        XCTAssertTrue(app.segmentedControls.buttons["Month"].isSelected)
+        let currentPeriod = String(describing: periodButton.value)
+
+        app.buttons["analysisNextPeriodButton"].tap()
+        XCTAssertNotEqual(String(describing: periodButton.value), currentPeriod)
+        app.buttons["analysisPreviousPeriodButton"].tap()
+        XCTAssertEqual(String(describing: periodButton.value), currentPeriod)
+
+        periodButton.tap()
+        XCTAssertTrue(app.buttons["analysisCurrentPeriodButton"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.datePickers.firstMatch.exists)
+        attachScreenshot("32-analysis-date-picker-en-dark", in: app)
+        app.buttons["analysisCurrentPeriodButton"].tap()
+        XCTAssertTrue(periodButton.waitForExistence(timeout: 3))
+
+        app.segmentedControls.buttons["Week"].tap()
+        XCTAssertTrue(app.segmentedControls.buttons["Week"].isSelected)
+        app.segmentedControls.buttons["Year"].tap()
+        XCTAssertTrue(app.segmentedControls.buttons["Year"].isSelected)
+        attachScreenshot("32-analysis-period-navigation-en-dark", in: app)
+
+        openTab("Transactions", in: app)
+        app.buttons["addTransactionButton"].tap()
+        XCTAssertTrue(app.buttons["scheduleButton"].waitForExistence(timeout: 5))
+        app.buttons["scheduleButton"].tap()
+        XCTAssertTrue(app.buttons["Repeat"].waitForExistence(timeout: 5))
+        app.buttons["Repeat"].tap()
+        let recurringUnit = app.segmentedControls["recurringUnitPicker"]
+        for _ in 0 ..< 3 where !recurringUnit.exists { app.swipeUp() }
+        XCTAssertTrue(recurringUnit.waitForExistence(timeout: 5))
+        XCTAssertTrue(recurringUnit.buttons["Month"].isSelected)
+        attachScreenshot("32-recurring-month-default-en-dark", in: app)
+
+        app.terminate()
+        let turkish = launch(
+            language: "tr",
+            locale: "tr_TR",
+            largestText: true,
+            appearance: "Light"
+        )
+        openTab("Analiz", in: turkish)
+        XCTAssertTrue(turkish.buttons["analysisPeriodButton"].waitForExistence(timeout: 8))
+        XCTAssertTrue(turkish.buttons["analysisPreviousPeriodButton"].isHittable)
+        XCTAssertTrue(turkish.buttons["analysisNextPeriodButton"].isHittable)
+        attachScreenshot("32-analysis-period-navigation-tr-light-large", in: turkish)
+        try turkish.performAccessibilityAudit(for: [.contrast]) { self.contrastFalsePositive($0) }
     }
 
     @MainActor
