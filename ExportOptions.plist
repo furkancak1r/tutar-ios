@@ -22,6 +22,6 @@
 	<key>teamID</key>
 	<string>9LYL5R6LS4</string>
 	<key>testFlightInternalTestingOnly</key>
-	<true/>
+	<false/>
 </dict>
 </plist>
