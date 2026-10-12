@@ -306,12 +306,34 @@ final class DataController: ObservableObject {
     }
 
     func materializeRecurringTransactions(through date: Date = .now) throws {
+        try deduplicateRecurringMarkers()
         let request = Transaction.fetchRequest()
         request.predicate = NSPredicate(format: "recurringType > 0")
         for transaction in try context.fetch(request) {
             try materializeRecurringTransaction(transaction, through: date)
         }
         try save()
+    }
+
+    /// iCloud merges can leave two active markers for one series when two devices materialize it independently;
+    /// each would keep producing its own copy every period. Keep the oldest, drop the rest.
+    // shortcut: matches markers by exact date/amount/note/category/recurrence instead of a persisted series ID; add one (audit F05) if identical independent series must coexist.
+    private func deduplicateRecurringMarkers() throws {
+        let request = Transaction.fetchRequest()
+        request.predicate = NSPredicate(format: "recurringType > 0")
+        // Deterministic order so every device keeps the same copy.
+        request.sortDescriptors = [
+            NSSortDescriptor(key: "createdAt", ascending: true),
+            NSSortDescriptor(key: "id", ascending: true)
+        ]
+        var seen = Set<[AnyHashable]>()
+        for marker in try context.fetch(request) {
+            let key: [AnyHashable] = [
+                marker.date, marker.note, marker.category?.objectID, marker.income,
+                marker.amountMinorUnits, marker.recurringType, marker.recurringCoefficient
+            ]
+            if !seen.insert(key).inserted { context.delete(marker) }
+        }
     }
 
     func delete(_ transaction: Transaction, scope: EditScope) throws {
@@ -767,6 +789,7 @@ final class DataController: ObservableObject {
         defer { isReconcilingCategories = false }
         do {
             try deduplicateCategories()
+            try deduplicateRecurringMarkers()
             try save()
         } catch {
             loadError = error

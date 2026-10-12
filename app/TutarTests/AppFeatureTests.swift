@@ -620,6 +620,27 @@ final class DataFeatureTests: XCTestCase {
         XCTAssertEqual(items.first?.recurringType, 3)
     }
 
+    func testSyncedDuplicateRecurringMarkerCollapsesToOneOccurrence() async throws {
+        let controller = DataController(inMemory: true, cloudEnabled: false)
+        try await waitUntilLoaded(controller)
+        let category = try XCTUnwrap(try controller.context.fetch(Category.fetchRequest()).first { !$0.income })
+        let calendar = Calendar.current
+        let start = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 8, day: 31)))
+        let reference = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 9, day: 2, hour: 12)))
+
+        // Two devices each materialized the same series; iCloud merged both copies.
+        insertRecurring(in: controller, category: category, note: "Salary", date: start, type: 3)
+        insertRecurring(in: controller, category: category, note: "Salary", date: start, type: 3)
+        insertRecurring(in: controller, category: category, note: "Bonus", date: start, type: 3)
+        try controller.save()
+        try controller.materializeRecurringTransactions(through: reference)
+
+        let salaries = try controller.context.fetch(Transaction.fetchRequest()).filter { $0.note == "Salary" }
+        XCTAssertEqual(salaries.count, 2)
+        XCTAssertEqual(salaries.filter { $0.recurringType > 0 }.count, 1)
+        XCTAssertEqual(try controller.context.fetch(Transaction.fetchRequest()).filter { $0.note == "Bonus" }.count, 2)
+    }
+
     private func insertRecurring(
         in controller: DataController,
         category: Tutar.Category,
