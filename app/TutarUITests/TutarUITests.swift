@@ -1034,7 +1034,9 @@ final class TutarUITests: XCTestCase {
         let endMonth = try XCTUnwrap(calendar.date(byAdding: .month, value: monthOffset, to: thisMonth))
         let end = try XCTUnwrap(calendar.date(byAdding: .day, value: lastDay - 1, to: endMonth))
         let endText = end.formatted(.dateTime.day().month(.abbreviated).locale(Locale(identifier: "tr_TR")))
-        XCTAssertTrue(range.label.hasSuffix(endText), "\(range.label) / \(endText)")
+        // contains, not hasSuffix: across a year end the label adds the years ("21 Ara 2025 – 18 Oca 2026").
+        // The start date is in the month before the end month, so it cannot match endText.
+        XCTAssertTrue(range.label.contains(endText), "\(range.label) / \(endText)")
         // The month pill shows the end month of the period.
         let monthName = endMonth.formatted(.dateTime.month(.wide).year().locale(Locale(identifier: "tr_TR")))
         XCTAssertTrue(app.staticTexts[monthName].exists, monthName)
