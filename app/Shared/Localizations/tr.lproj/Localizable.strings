@@ -359,6 +359,20 @@
 "error.save.title" = "İşlem tamamlanamadı";
 
 "widget.title" = "Bu ay";
+"period.title" = "Ay dönemi";
+"period.mode.calendar" = "Ayın 1’inden 1’ine";
+"period.mode.custom" = "Özel gün";
+"period.mode.footer" = "Kayıtlar, Analiz, aylık bütçeler ve widget bu dönemi kullanır. Kayıtların değişmez.";
+"period.cutoff" = "Hesap kesim günü";
+"period.cutoff.footer" = "Kesim günü dönemin son günüdür. Dönem, bittiği ayın adını alır. Ay daha kısaysa ayın son günü kesim günü olur.";
+"period.current" = "Bu dönem";
+"period.overrides.section" = "Aylık istisnalar";
+"period.overrides.footer" = "İstisna, o ayın dönem sonunu ve sonraki dönemin başını değiştirir. İstisnası olmayan aylar kesim gününü kullanır.";
+"period.overrides.empty" = "İstisna yok";
+"period.override.month" = "Ay";
+"period.override.day" = "Kesim günü";
+"period.override.add" = "İstisna ekle";
+"period.override.remove" = "İstisnayı kaldır";
 "widget.next" = "Sıradaki taksit";
 "widget.none" = "Yaklaşan taksit yok";
 "widget.open" = "Tutar’ı aç";

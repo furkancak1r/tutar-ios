@@ -39,7 +39,10 @@ struct TutarApp: App {
             "showSuggestions": true,
             "showUpcoming": true,
             "biometricLock": false,
-            "hasCompletedOnboardingV1": false
+            "hasCompletedOnboardingV1": false,
+            MonthPeriods.Keys.mode: 0,
+            MonthPeriods.Keys.cutoffDay: MonthPeriods.defaultCutoffDay,
+            MonthPeriods.Keys.overrides: "{}"
         ])
         if !UserDefaults.tutar.bool(forKey: "didMigrateDecimalEntryV20") {
             UserDefaults.tutar.set(MoneyEntry.Mode.decimal.rawValue, forKey: "numberEntryType")
@@ -48,6 +51,7 @@ struct TutarApp: App {
         #if DEBUG
         if arguments.contains("-ui-testing") {
             UserDefaults.tutar.set("", forKey: "currencyCode")
+            MonthPeriods.Keys.all.forEach { UserDefaults.tutar.removeObject(forKey: $0) }
             UserDefaults.tutar.set(MoneyEntry.Mode.decimal.rawValue, forKey: "numberEntryType")
             if arguments.contains("-ui-test-reset-onboarding") {
                 UserDefaults.tutar.set(false, forKey: "hasCompletedOnboardingV1")
@@ -70,6 +74,7 @@ struct TutarApp: App {
             UserDefaults.tutar.set(true, forKey: "biometricLock")
         }
         #endif
+        PeriodSettingsSync.start()
     }
 
     var body: some Scene {

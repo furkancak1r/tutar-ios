@@ -988,6 +988,60 @@ final class TutarUITests: XCTestCase {
     }
 
     @MainActor
+    func testMonthPeriodSettingsCustomDayAndOverride() {
+        let app = launch(language: "tr", locale: "tr_TR", seed: false, appearance: "Light", appStoreSeed: true)
+        XCTAssertTrue(app.navigationBars["Kayıtlar"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.staticTexts["monthPeriodRange"].exists)
+
+        openTab("Ayarlar", in: app)
+        let periodLink = app.buttons["monthPeriodSettingsButton"]
+        for _ in 0 ..< 4 where !periodLink.isHittable { app.swipeUp() }
+        XCTAssertTrue(periodLink.waitForExistence(timeout: 5))
+        periodLink.tap()
+        XCTAssertTrue(app.navigationBars["Ay dönemi"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Ayın 1’inden 1’ine"].isSelected)
+        app.buttons["Özel gün"].tap()
+
+        let cutoff = app.buttons["periodCutoffDayPicker"]
+        XCTAssertTrue(cutoff.waitForExistence(timeout: 3))
+        cutoff.tap()
+        XCTAssertTrue(app.buttons["20"].waitForExistence(timeout: 3))
+        app.buttons["20"].tap()
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "periodCurrentRange").firstMatch.waitForExistence(timeout: 3))
+
+        let day = app.buttons["periodOverrideDayPicker"]
+        for _ in 0 ..< 3 where !day.isHittable { app.swipeUp() }
+        day.tap()
+        XCTAssertTrue(app.buttons["18"].waitForExistence(timeout: 3))
+        app.buttons["18"].tap()
+        app.buttons["periodOverrideAddButton"].tap()
+        let row = app.staticTexts["periodOverrideRow"]
+        XCTAssertTrue(row.waitForExistence(timeout: 3))
+        XCTAssertTrue(row.label.hasSuffix("· 18"), row.label)
+        app.swipeDown()
+        app.swipeDown()
+        attachScreenshot("period-settings-tr", in: app)
+
+        openTab("İşlemler", in: app)
+        let range = app.staticTexts["monthPeriodRange"]
+        XCTAssertTrue(range.waitForExistence(timeout: 5))
+        XCTAssertTrue(range.label.contains("18"), range.label)
+        let pillMonth = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", String(Calendar.current.component(.year, from: .now)))).firstMatch
+        XCTAssertTrue(pillMonth.exists)
+        attachScreenshot("period-transactions-tr", in: app)
+
+        openTab("Ayarlar", in: app)
+        XCTAssertTrue(app.buttons["periodOverrideRemoveButton"].waitForExistence(timeout: 5))
+        app.buttons["periodOverrideRemoveButton"].tap()
+        XCTAssertTrue(row.waitForNonExistence(timeout: 3))
+        for _ in 0 ..< 3 where !app.buttons["Ayın 1’inden 1’ine"].isHittable { app.swipeDown() }
+        app.buttons["Ayın 1’inden 1’ine"].tap()
+        XCTAssertTrue(cutoff.waitForNonExistence(timeout: 3))
+        openTab("İşlemler", in: app)
+        XCTAssertTrue(range.waitForNonExistence(timeout: 5))
+    }
+
+    @MainActor
     func testAppStoreScreenshotsTurkish() {
         captureAppStoreScreenshots(language: "tr", locale: "tr_TR", suffix: "tr")
     }

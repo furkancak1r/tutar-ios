@@ -48,6 +48,7 @@ struct BudgetsView: View {
     @Environment(\.appLanguage) private var language
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage("currencyCode", store: .tutar) private var preferredCurrency = ""
+    var periodSettings = MonthPeriodSettings()
     @State private var editorTarget: BudgetEditorTarget?
     @State private var deleting: BudgetDeletion?
     @State private var errorMessage = ""
@@ -57,6 +58,8 @@ struct BudgetsView: View {
         AppFormat.currencyCode(language: language, preferred: preferredCurrency)
     }
 
+    private var periods: MonthPeriods { periodSettings.periods() }
+
     var body: some View {
         List {
             if let overall = overallBudgets.first {
@@ -65,8 +68,8 @@ struct BudgetsView: View {
                         title: AppFormat.localized("budgets.overall", language: language),
                         emoji: "◎",
                         amount: overall.amount,
-                        spent: spent(in: overall.activeInterval),
-                        interval: overall.activeInterval,
+                        spent: spent(in: overall.activeInterval(periods)),
+                        interval: overall.activeInterval(periods),
                         type: Int(overall.type)
                     )
                     .contentShape(Rectangle())
@@ -93,8 +96,8 @@ struct BudgetsView: View {
                                 ?? AppFormat.localized("category.uncategorized", language: language),
                             emoji: budget.category?.wrappedEmoji ?? "•",
                             amount: budget.amount,
-                            spent: spent(in: budget.activeInterval, category: budget.category),
-                            interval: budget.activeInterval,
+                            spent: spent(in: budget.activeInterval(periods), category: budget.category),
+                            interval: budget.activeInterval(periods),
                             type: Int(budget.type)
                         )
                         .contentShape(Rectangle())
@@ -274,7 +277,7 @@ struct BudgetsView: View {
     private func spent(in interval: DateInterval, category: Category? = nil) -> Double {
         transactions.filter {
             !$0.income
-                && interval.contains($0.wrappedDate)
+                && interval.containsHalfOpen($0.wrappedDate)
                 && (category == nil || $0.category == category)
         }
         .reduce(0) { $0 + $1.amount }
@@ -502,18 +505,28 @@ private struct BudgetEditorView: View {
 }
 
 private extension Budget {
-    var activeInterval: DateInterval {
-        budgetInterval(start: startDate ?? .now, type: Int(type))
+    func activeInterval(_ periods: MonthPeriods) -> DateInterval {
+        budgetInterval(start: startDate ?? .now, type: Int(type), periods: periods)
     }
 }
 
 private extension MainBudget {
-    var activeInterval: DateInterval {
-        budgetInterval(start: startDate ?? .now, type: Int(type))
+    func activeInterval(_ periods: MonthPeriods) -> DateInterval {
+        budgetInterval(start: startDate ?? .now, type: Int(type), periods: periods)
     }
 }
 
-private func budgetInterval(start originalStart: Date, type: Int, reference: Date = .now) -> DateInterval {
+/// In custom period mode a monthly budget uses the statement period that contains `reference`
+/// (or its start date, when the budget starts later). Every other case keeps the budget's own start date.
+func budgetInterval(
+    start originalStart: Date,
+    type: Int,
+    reference: Date = .now,
+    periods: MonthPeriods = MonthPeriods()
+) -> DateInterval {
+    if type == 3, periods.isCustom {
+        return periods.interval(containing: max(reference, originalStart))
+    }
     let calendar = Calendar.current
     let component: Calendar.Component
     let value: Int

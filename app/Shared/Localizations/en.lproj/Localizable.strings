@@ -359,6 +359,20 @@
 "error.save.title" = "Couldn’t complete that";
 
 "widget.title" = "This month";
+"period.title" = "Month period";
+"period.mode.calendar" = "1st to 1st of the month";
+"period.mode.custom" = "Custom day";
+"period.mode.footer" = "Records, Analysis, monthly budgets and the widget use this period. Your records do not change.";
+"period.cutoff" = "Statement cut-off day";
+"period.cutoff.footer" = "The cut-off day is the last day of a period. The period has the name of the month in which it ends. When a month is shorter, its last day is the cut-off day.";
+"period.current" = "Current period";
+"period.overrides.section" = "Monthly exceptions";
+"period.overrides.footer" = "An exception changes the end of that month's period and the start of the next period. Months without an exception use the cut-off day.";
+"period.overrides.empty" = "No exceptions";
+"period.override.month" = "Month";
+"period.override.day" = "Cut-off day";
+"period.override.add" = "Add exception";
+"period.override.remove" = "Remove exception";
 "widget.next" = "Next installment";
 "widget.none" = "No upcoming installment";
 "widget.open" = "Open Tutar";
