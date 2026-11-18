@@ -988,7 +988,7 @@ final class TutarUITests: XCTestCase {
     }
 
     @MainActor
-    func testMonthPeriodSettingsCustomDayAndOverride() {
+    func testMonthPeriodSettingsCustomDayAndOverride() throws {
         let app = launch(language: "tr", locale: "tr_TR", seed: false, appearance: "Light", appStoreSeed: true)
         XCTAssertTrue(app.navigationBars["Kayıtlar"].waitForExistence(timeout: 8))
         XCTAssertFalse(app.staticTexts["monthPeriodRange"].exists)
@@ -1025,9 +1025,19 @@ final class TutarUITests: XCTestCase {
         openTab("İşlemler", in: app)
         let range = app.staticTexts["monthPeriodRange"]
         XCTAssertTrue(range.waitForExistence(timeout: 5))
-        XCTAssertTrue(range.label.contains("18"), range.label)
-        let pillMonth = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", String(Calendar.current.component(.year, from: .now)))).firstMatch
-        XCTAssertTrue(pillMonth.exists)
+        // The override 18 is for the period month that contained today (cut-off 20). On days 19 and 20
+        // today is then in the next period, which ends on the cut-off day 20.
+        let calendar = Calendar(identifier: .gregorian)
+        let today = calendar.component(.day, from: .now)
+        let (monthOffset, lastDay) = today <= 18 ? (0, 18) : today <= 20 ? (1, 20) : (1, 18)
+        let thisMonth = try XCTUnwrap(calendar.dateInterval(of: .month, for: .now)).start
+        let endMonth = try XCTUnwrap(calendar.date(byAdding: .month, value: monthOffset, to: thisMonth))
+        let end = try XCTUnwrap(calendar.date(byAdding: .day, value: lastDay - 1, to: endMonth))
+        let endText = end.formatted(.dateTime.day().month(.abbreviated).locale(Locale(identifier: "tr_TR")))
+        XCTAssertTrue(range.label.hasSuffix(endText), "\(range.label) / \(endText)")
+        // The month pill shows the end month of the period.
+        let monthName = endMonth.formatted(.dateTime.month(.wide).year().locale(Locale(identifier: "tr_TR")))
+        XCTAssertTrue(app.staticTexts[monthName].exists, monthName)
         attachScreenshot("period-transactions-tr", in: app)
 
         openTab("Ayarlar", in: app)

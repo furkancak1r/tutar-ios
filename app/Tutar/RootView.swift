@@ -453,6 +453,7 @@ struct TransactionsView: View {
                 MonthSummaryView(
                     month: selectedMonth,
                     interval: monthInterval,
+                    calendar: periods.calendar,
                     showsRange: periods.isCustom,
                     expense: expenses,
                     income: income,
@@ -881,6 +882,8 @@ private struct MonthSummaryView: View {
     @ScaledMetric(relativeTo: .largeTitle) private var netAmountSize = 42
     let month: Date
     let interval: DateInterval
+    /// The period calendar. It is Gregorian in custom mode.
+    let calendar: Calendar
     let showsRange: Bool
     let expense: Double
     let income: Double
@@ -936,7 +939,7 @@ private struct MonthSummaryView: View {
             }
 
             if showsRange {
-                Text(verbatim: AppFormat.periodRange(interval, language: language))
+                Text(verbatim: AppFormat.periodRange(interval, language: language, calendar: calendar))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
