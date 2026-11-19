@@ -269,6 +269,65 @@ final class TutarUITests: XCTestCase {
     }
 
     @MainActor
+    func testTurkishSavedExpenseCanBecomeThreeInstallments() {
+        let app = launch(language: "tr", locale: "tr_TR", seed: false)
+        addTransaction(note: "Bisiklet", in: app)
+
+        app.staticTexts["Bisiklet"].tap()
+        XCTAssertTrue(app.navigationBars["İşlemi düzenle"].waitForExistence(timeout: 5))
+        app.buttons["scheduleButton"].tap()
+        XCTAssertTrue(app.buttons["Taksit"].waitForExistence(timeout: 5))
+        app.buttons["Taksit"].tap()
+        let count = app.descendants(matching: .any).matching(identifier: "installmentCountStepper").firstMatch
+        XCTAssertTrue(count.waitForExistence(timeout: 3))
+        XCTAssertTrue("\(count.label) \(String(describing: count.value))".contains("3"))
+        attachScreenshot("edit-installments-tr", in: app)
+        app.buttons["Bitti"].firstMatch.tap()
+        app.buttons["saveTransactionButton"].tap()
+        XCTAssertTrue(app.navigationBars["Kayıtlar"].waitForExistence(timeout: 5))
+
+        // One row per month: the saved record became 1/3, so no extra record stays.
+        let rows = app.staticTexts.matching(NSPredicate(format: "label == %@", "Bisiklet"))
+        var previous: String?
+        for (position, amount) in [("1/3", "33,33"), ("2/3", "33,33"), ("3/3", "33,34")] {
+            if let previous {
+                goToNextMonth(in: app)
+                XCTAssertTrue(app.staticTexts[previous].waitForNonExistence(timeout: 3), position)
+            }
+            revealInstallment(position, in: app)
+            XCTAssertEqual(rows.count, 1, position)
+            // The caption "Harcama" has the same identifier, so match the amount text too.
+            let expense = app.staticTexts.matching(NSPredicate(
+                format: "identifier == 'monthExpenseAmount' AND label == %@", "₺\(amount)"
+            )).firstMatch
+            XCTAssertTrue(expense.waitForExistence(timeout: 5), position)
+            previous = position
+        }
+    }
+
+    @MainActor
+    func testRecurringRecordEditDoesNotOfferInstallments() {
+        let app = launch(language: "en", locale: "en_US", seed: false)
+        app.buttons["addTransactionButton"].tap()
+        app.buttons["keypad1"].tap()
+        app.buttons["scheduleButton"].tap()
+        app.buttons["Repeat"].tap()
+        app.buttons["Done"].tap()
+        app.buttons["keypadSubmit"].tap()
+        XCTAssertTrue(app.navigationBars["Records"].waitForExistence(timeout: 5))
+
+        // Today's entry is a materialized occurrence. The series marker is the next month's entry.
+        goToNextMonth(in: app)
+        let marker = app.descendants(matching: .any).matching(identifier: "transactionRow").firstMatch
+        XCTAssertTrue(marker.waitForExistence(timeout: 5))
+        marker.tap()
+        XCTAssertTrue(app.navigationBars["Edit transaction"].waitForExistence(timeout: 5))
+        app.buttons["scheduleButton"].tap()
+        XCTAssertTrue(app.buttons["Repeat"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Installments"].exists)
+    }
+
+    @MainActor
     func testDynamicTypeAuditAtSystemTextSize() throws {
         let app = launch(language: "tr", locale: "tr_TR")
         XCTAssertTrue(app.navigationBars["Kayıtlar"].waitForExistence(timeout: 8))

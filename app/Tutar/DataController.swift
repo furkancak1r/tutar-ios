@@ -177,9 +177,14 @@ final class DataController: ObservableObject {
         firstDate: Date,
         intervalMonths: Int,
         groupID: UUID = UUID(),
-        calendar: Calendar = .current
+        calendar: Calendar = .current,
+        converting existing: Transaction? = nil
     ) throws -> [Transaction] {
         guard (2 ... 120).contains(count) else { throw InstallmentError.invalidCount }
+        // Only a plain single record can become a plan. An installment or a recurring marker would break its group or series.
+        guard existing?.isInstallment != true, (existing?.recurringType ?? 0) == 0 else {
+            throw InstallmentError.duplicate
+        }
         let duplicateRequest = Transaction.fetchRequest()
         duplicateRequest.fetchLimit = 1
         duplicateRequest.predicate = NSPredicate(format: "installmentGroupID == %@", groupID as CVarArg)
@@ -194,7 +199,8 @@ final class DataController: ObservableObject {
         )
 
         let transactions = plan.map { slice in
-            let transaction = NSEntityDescription.insertNewObject(
+            // A converted record becomes the first installment, so its id and createdAt stay.
+            let transaction = (slice.index == 1 ? existing : nil) ?? NSEntityDescription.insertNewObject(
                 forEntityName: "Transaction",
                 into: context
             ) as! Transaction
