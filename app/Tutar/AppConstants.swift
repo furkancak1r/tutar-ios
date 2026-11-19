@@ -91,6 +91,17 @@ enum AppFormat {
         date.formatted(.dateTime.month(.wide).year().locale(language.locale))
     }
 
+    /// "21 Oct – 20 Nov" for a half-open period [start, end).
+    static func periodRange(_ interval: DateInterval, language: AppLanguage, calendar: Calendar = .current) -> String {
+        let formatter = DateIntervalFormatter()
+        formatter.calendar = calendar
+        formatter.locale = language.locale
+        formatter.timeZone = calendar.timeZone
+        formatter.dateTemplate = "dMMM"
+        let lastDay = calendar.date(byAdding: .day, value: -1, to: interval.end) ?? interval.end
+        return formatter.string(from: interval.start, to: max(lastDay, interval.start))
+    }
+
     static func dayHeader(_ date: Date, language: AppLanguage) -> String {
         let calendar = Calendar.current
         if calendar.isDateInToday(date) {

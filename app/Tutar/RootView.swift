@@ -217,6 +217,8 @@ struct RootView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 try? dataController.materializeRecurringTransactions()
+                // A new period can start while the app is closed.
+                dataController.updateWidgetSnapshot()
             }
             if phase == .background, lockEnabled {
                 showingEditor = false
@@ -378,12 +380,12 @@ struct TransactionsView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage("currencyCode", store: .tutar) private var preferredCurrency = ""
     @AppStorage("showUpcoming", store: .tutar) private var showUpcoming = true
+    var periodSettings = MonthPeriodSettings()
     @Binding var showingEditor: Bool
     @Binding var navigationTarget: TransactionNavigationTarget?
 
-    @State private var selectedMonth = Calendar.current.date(
-        from: Calendar.current.dateComponents([.year, .month], from: .now)
-    ) ?? .now
+    /// The period month: the first instant of the calendar month in which the period ends.
+    @State private var selectedMonth = MonthPeriods.stored().month(containing: .now)
     @State private var monthTransitionEdge: Edge = .trailing
     @State private var searchText = ""
     @State private var filter: TransactionFilter = .all
@@ -401,14 +403,16 @@ struct TransactionsView: View {
         AppFormat.currencyCode(language: language, preferred: preferredCurrency)
     }
 
+    private var periods: MonthPeriods { periodSettings.periods() }
+
     private var monthInterval: DateInterval {
-        Calendar.current.dateInterval(of: .month, for: selectedMonth)
-            ?? DateInterval(start: selectedMonth, duration: 2_592_000)
+        periods.interval(containing: selectedMonth)
     }
 
     private var monthTransactions: [Transaction] {
-        transactions.filter {
-            monthInterval.contains($0.wrappedDate) && matchesSearch($0) && matchesFilter($0)
+        let interval = monthInterval
+        return transactions.filter {
+            interval.containsHalfOpen($0.wrappedDate) && matchesSearch($0) && matchesFilter($0)
         }
     }
 
@@ -448,6 +452,9 @@ struct TransactionsView: View {
             Section {
                 MonthSummaryView(
                     month: selectedMonth,
+                    interval: monthInterval,
+                    calendar: periods.calendar,
+                    showsRange: periods.isCustom,
                     expense: expenses,
                     income: income,
                     transactions: monthTransactions,
@@ -577,6 +584,9 @@ struct TransactionsView: View {
         .onChange(of: navigationTarget) { _, target in
             guard let target else { return }
             navigate(to: target)
+        }
+        .onChange(of: periods) { _, periods in
+            selectedMonth = periods.month(containing: .now)
         }
         .task(id: highlightRequestID) {
             guard highlightRequestID != nil else { return }
@@ -760,9 +770,7 @@ struct TransactionsView: View {
         clearHighlight()
         searchText = ""
         filter = .all
-        selectedMonth = Calendar.current.date(
-            from: Calendar.current.dateComponents([.year, .month], from: target.interval.start)
-        ) ?? target.interval.start
+        selectedMonth = periods.month(containing: target.interval.start)
         Task { @MainActor in
             await Task.yield()
             await Task.yield()
@@ -770,7 +778,7 @@ struct TransactionsView: View {
                 .filter {
                     target.transactionIDs.contains(transactionID($0))
                         && $0.income == target.income
-                        && target.interval.contains($0.wrappedDate)
+                        && target.interval.containsHalfOpen($0.wrappedDate)
                 }
                 .sorted { $0.wrappedDate > $1.wrappedDate }
             let targetDays = Set(matches.map { Calendar.current.startOfDay(for: $0.wrappedDate) })
@@ -794,7 +802,8 @@ struct TransactionsView: View {
     }
 
     private func moveMonth(_ value: Int) {
-        guard let month = Calendar.current.date(byAdding: .month, value: value, to: selectedMonth) else { return }
+        guard let date = periods.calendar.date(byAdding: .month, value: value, to: selectedMonth) else { return }
+        let month = periods.month(containing: date)
         navigationRevealsUpcoming = false
         clearHighlight()
         monthTransitionEdge = value > 0 ? .trailing : .leading
@@ -872,6 +881,10 @@ private struct MonthSummaryView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ScaledMetric(relativeTo: .largeTitle) private var netAmountSize = 42
     let month: Date
+    let interval: DateInterval
+    /// The period calendar. It is Gregorian in custom mode.
+    let calendar: Calendar
+    let showsRange: Bool
     let expense: Double
     let income: Double
     let transactions: [Transaction]
@@ -923,6 +936,16 @@ private struct MonthSummaryView: View {
                 .accessibilityLabel(Text("month.next"))
                 .accessibilityIdentifier("nextMonthButton")
                 .buttonStyle(.plain)
+            }
+
+            if showsRange {
+                Text(verbatim: AppFormat.periodRange(interval, language: language, calendar: calendar))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.78)
+                    .padding(.top, -8)
+                    .accessibilityIdentifier("monthPeriodRange")
             }
 
             Text(AppFormat.money(net, language: language, currencyCode: currency))
@@ -1003,7 +1026,6 @@ private struct MonthSummaryView: View {
 
     private var balancePoints: [(date: Date, balance: Double)] {
         let calendar = Calendar.current
-        guard let interval = calendar.dateInterval(of: .month, for: month) else { return [] }
         let transactionsByDay = Dictionary(grouping: transactions) {
             calendar.startOfDay(for: $0.wrappedDate)
         }
@@ -1195,6 +1217,138 @@ struct TransactionRow: View {
     }
 }
 
+extension DateInterval {
+    /// Half-open membership [start, end). A date exactly on a boundary belongs only to the later period (F08).
+    func containsHalfOpen(_ date: Date) -> Bool {
+        start <= date && date < end
+    }
+}
+
+/// Month periods: "1st to 1st" (calendar months) or a statement cut-off day with per-month overrides.
+/// Pure read-time math on `Transaction.date` with an injected calendar. A setting change writes no record.
+/// A period month has the name of the month in which it ends (bank rule). Its `Date` value is the first
+/// instant of that calendar month, and that instant is always inside the period.
+struct MonthPeriods: Equatable {
+    enum Keys {
+        /// 0: from the 1st to the 1st. 1: custom cut-off day.
+        static let mode = "periodMode"
+        /// 1...31, the last day of a period. Days 29-31 become the last day of a shorter month.
+        static let cutoffDay = "periodCutoffDay"
+        /// JSON object keyed by period month, for example {"2026-11":18}.
+        static let overrides = "periodOverrides"
+        static let all = [mode, cutoffDay, overrides]
+    }
+
+    static let defaultCutoffDay = 31
+
+    let calendar: Calendar
+    /// nil: calendar months. Otherwise the default cut-off day.
+    let cutoffDay: Int?
+    let overrides: [String: Int]
+
+    init(calendar: Calendar = .current, cutoffDay: Int? = nil, overrides: [String: Int] = [:]) {
+        var calendar = calendar
+        if cutoffDay != nil, calendar.identifier != .gregorian {
+            // Cut-off days and override keys are Gregorian dates, also for a Buddhist or Japanese system calendar.
+            var gregorian = Calendar(identifier: .gregorian)
+            gregorian.locale = calendar.locale
+            gregorian.timeZone = calendar.timeZone
+            gregorian.firstWeekday = calendar.firstWeekday
+            gregorian.minimumDaysInFirstWeek = calendar.minimumDaysInFirstWeek
+            calendar = gregorian
+        }
+        self.calendar = calendar
+        self.cutoffDay = cutoffDay.map { min(max($0, 1), 31) }
+        self.overrides = overrides.filter { Self.isValidKey($0.key) && (1 ... 31).contains($0.value) }
+    }
+
+    init(calendar: Calendar = .current, mode: Int, cutoffDay: Int, overridesJSON: String) {
+        self.init(calendar: calendar, cutoffDay: mode == 1 ? cutoffDay : nil, overrides: Self.decode(overridesJSON))
+    }
+
+    /// The saved settings in the App Group store.
+    static func stored(calendar: Calendar = .current, defaults: UserDefaults = .tutar) -> MonthPeriods {
+        MonthPeriods(
+            calendar: calendar,
+            mode: defaults.integer(forKey: Keys.mode),
+            cutoffDay: defaults.object(forKey: Keys.cutoffDay) as? Int ?? defaultCutoffDay,
+            overridesJSON: defaults.string(forKey: Keys.overrides) ?? "{}"
+        )
+    }
+
+    /// Invalid JSON, keys and days are dropped: the values can come from another device.
+    static func decode(_ json: String) -> [String: Int] {
+        let values = (try? JSONDecoder().decode([String: Int].self, from: Data(json.utf8))) ?? [:]
+        return values.filter { isValidKey($0.key) && (1 ... 31).contains($0.value) }
+    }
+
+    /// "YYYY-MM"
+    static func isValidKey(_ key: String) -> Bool {
+        let parts = key.split(separator: "-", omittingEmptySubsequences: false)
+        return parts.count == 2 && parts[0].count == 4 && parts[1].count == 2
+            && Int(parts[0]) != nil && (1 ... 12).contains(Int(parts[1]) ?? 0)
+    }
+
+    static func encode(_ overrides: [String: Int]) -> String {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .sortedKeys
+        return (try? encoder.encode(overrides)).flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
+    }
+
+    var isCustom: Bool { cutoffDay != nil }
+
+    /// The period month that contains `date`, as the first instant of that calendar month.
+    func month(containing date: Date) -> Date {
+        let month = monthStart(date)
+        guard isCustom, date >= end(of: month) else { return month }
+        return monthStart(month, adding: 1)
+    }
+
+    /// The half-open period [start, end) that contains `date`.
+    func interval(containing date: Date) -> DateInterval {
+        guard isCustom else {
+            return calendar.dateInterval(of: .month, for: date) ?? DateInterval(start: date, duration: 86_400)
+        }
+        let month = month(containing: date)
+        return DateInterval(start: end(of: monthStart(month, adding: -1)), end: end(of: month))
+    }
+
+    func key(for month: Date) -> String {
+        let components = calendar.dateComponents([.year, .month], from: month)
+        return String(format: "%04d-%02d", components.year ?? 0, components.month ?? 0)
+    }
+
+    func month(forKey key: String) -> Date? {
+        guard Self.isValidKey(key) else { return nil }
+        let parts = key.split(separator: "-").compactMap { Int($0) }
+        return calendar.date(from: DateComponents(year: parts[0], month: parts[1], day: 1)).map { monthStart($0) }
+    }
+
+    /// The first instant after the cut-off day of the calendar month that starts at `month`.
+    private func end(of month: Date) -> Date {
+        let day = overrides[key(for: month)] ?? cutoffDay ?? Self.defaultCutoffDay
+        let lastDay = calendar.range(of: .day, in: .month, for: month)?.count ?? 28
+        let next = calendar.date(byAdding: .day, value: min(day, lastDay), to: month) ?? month
+        return calendar.startOfDay(for: next)
+    }
+
+    private func monthStart(_ date: Date, adding months: Int = 0) -> Date {
+        let shifted = months == 0 ? date : calendar.date(byAdding: .month, value: months, to: date) ?? date
+        return calendar.dateInterval(of: .month, for: shifted)?.start ?? shifted
+    }
+}
+
+/// The saved month period settings. A view that holds this property redraws when they change.
+struct MonthPeriodSettings: DynamicProperty {
+    @AppStorage(MonthPeriods.Keys.mode, store: .tutar) var mode = 0
+    @AppStorage(MonthPeriods.Keys.cutoffDay, store: .tutar) var cutoffDay = MonthPeriods.defaultCutoffDay
+    @AppStorage(MonthPeriods.Keys.overrides, store: .tutar) var overridesJSON = "{}"
+
+    func periods(calendar: Calendar = .current) -> MonthPeriods {
+        MonthPeriods(calendar: calendar, mode: mode, cutoffDay: cutoffDay, overridesJSON: overridesJSON)
+    }
+}
+
 enum AnalysisPeriod: Int, CaseIterable, Identifiable {
     case week
     case month
@@ -1220,15 +1374,48 @@ enum AnalysisPeriod: Int, CaseIterable, Identifiable {
         }
     }
 
-    func interval(containing date: Date, calendar: Calendar = .current) -> DateInterval {
-        calendar.dateInterval(of: component, for: date)
-            ?? calendar.dateInterval(of: .day, for: date)
-            ?? DateInterval(start: date, duration: 86_400)
+    /// A week is a calendar week. A month is a period month. A year holds the period months January to December.
+    func interval(containing date: Date, in periods: MonthPeriods) -> DateInterval {
+        let calendar = periods.calendar
+        switch self {
+        case .week:
+            return calendar.dateInterval(of: .weekOfYear, for: date)
+                ?? calendar.dateInterval(of: .day, for: date)
+                ?? DateInterval(start: date, duration: 86_400)
+        case .month:
+            return periods.interval(containing: date)
+        case .year:
+            let january = anchor(for: date, in: periods)
+            let december = calendar.date(byAdding: .month, value: 11, to: january) ?? january
+            return DateInterval(
+                start: periods.interval(containing: january).start,
+                end: periods.interval(containing: december).end
+            )
+        }
     }
 
-    func date(byMoving offset: Int, from date: Date, calendar: Calendar = .current) -> Date {
-        calendar.date(byAdding: component, value: offset, to: interval(containing: date, calendar: calendar).start)
-            ?? date
+    func date(byMoving offset: Int, from date: Date, in periods: MonthPeriods) -> Date {
+        periods.calendar.date(byAdding: component, value: offset, to: anchor(for: date, in: periods)) ?? date
+    }
+
+    /// The calendar range that holds the bars: for a year, the calendar months of its period months.
+    func chartRange(containing date: Date, in periods: MonthPeriods) -> DateInterval {
+        guard self == .year else { return interval(containing: date, in: periods) }
+        return periods.calendar.dateInterval(of: .year, for: anchor(for: date, in: periods))
+            ?? interval(containing: date, in: periods)
+    }
+
+    /// First instant of the calendar week, of the period month, or of the period month's year.
+    private func anchor(for date: Date, in periods: MonthPeriods) -> Date {
+        switch self {
+        case .week:
+            return interval(containing: date, in: periods).start
+        case .month:
+            return periods.month(containing: date)
+        case .year:
+            let month = periods.month(containing: date)
+            return periods.calendar.dateInterval(of: .year, for: month)?.start ?? month
+        }
     }
 }
 
@@ -1253,6 +1440,7 @@ struct AnalysisView: View {
     @Environment(\.appLanguage) private var language
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @AppStorage("currencyCode", store: .tutar) private var preferredCurrency = ""
+    var periodSettings = MonthPeriodSettings()
     @State private var period = AnalysisPeriod.month
     @State private var kind = AnalysisKind.expense
     @State private var selectedAnalysisDate = Date.now
@@ -1271,12 +1459,22 @@ struct AnalysisView: View {
         AnalysisPeriod.localizedCalendar(locale: language.locale)
     }
 
+    private var periods: MonthPeriods {
+        periodSettings.periods(calendar: analysisCalendar)
+    }
+
     private var interval: DateInterval {
-        period.interval(containing: selectedAnalysisDate, calendar: analysisCalendar)
+        period.interval(containing: selectedAnalysisDate, in: periods)
+    }
+
+    /// The calendar range of the bars. It equals `interval`, except for a year in custom period mode.
+    private var chartRange: DateInterval {
+        period.chartRange(containing: selectedAnalysisDate, in: periods)
     }
 
     private var periodTransactions: [Transaction] {
-        transactions.filter { interval.contains($0.wrappedDate) }
+        let interval = interval
+        return transactions.filter { interval.containsHalfOpen($0.wrappedDate) }
     }
 
     private var selectedTransactions: [Transaction] {
@@ -1292,9 +1490,11 @@ struct AnalysisView: View {
     }
 
     private var chartData: [AnalysisChartPoint] {
-        let component: Calendar.Component = period == .year ? .month : .day
+        let periods = periods
         return Dictionary(grouping: selectedTransactions) {
-            analysisCalendar.dateInterval(of: component, for: $0.wrappedDate)?.start ?? $0.wrappedDate
+            period == .year
+                ? periods.month(containing: $0.wrappedDate)
+                : analysisCalendar.startOfDay(for: $0.wrappedDate)
         }
         .map { date, items in
             AnalysisChartPoint(
@@ -1392,7 +1592,7 @@ struct AnalysisView: View {
                             }
                         }
                     }
-                    .chartXScale(domain: interval.start...interval.end)
+                    .chartXScale(domain: chartRange.start...chartRange.end)
                     .frame(height: 200)
                     .chartGesture { proxy in
                         SpatialTapGesture().onEnded { value in
@@ -1435,11 +1635,7 @@ struct AnalysisView: View {
     private var periodNavigation: some View {
         HStack(spacing: 8) {
             Button {
-                selectedAnalysisDate = period.date(
-                    byMoving: -1,
-                    from: selectedAnalysisDate,
-                    calendar: analysisCalendar
-                )
+                selectedAnalysisDate = period.date(byMoving: -1, from: selectedAnalysisDate, in: periods)
             } label: {
                 Image(systemName: "chevron.left")
                     .frame(width: 44, height: 44)
@@ -1451,12 +1647,19 @@ struct AnalysisView: View {
             Button {
                 isSelectingAnalysisDate = true
             } label: {
-                Text(verbatim: periodLabel)
-                    .font(.subheadline.weight(.semibold))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.72)
-                    .frame(maxWidth: .infinity, minHeight: 44)
-                    .contentShape(Rectangle())
+                VStack(spacing: 1) {
+                    Text(verbatim: periodLabel)
+                        .font(.subheadline.weight(.semibold))
+                    if periods.isCustom, period == .month {
+                        Text(verbatim: AppFormat.periodRange(interval, language: language, calendar: analysisCalendar))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Text("analysis.period.choose"))
@@ -1502,11 +1705,7 @@ struct AnalysisView: View {
             }
 
             Button {
-                selectedAnalysisDate = period.date(
-                    byMoving: 1,
-                    from: selectedAnalysisDate,
-                    calendar: analysisCalendar
-                )
+                selectedAnalysisDate = period.date(byMoving: 1, from: selectedAnalysisDate, in: periods)
             } label: {
                 Image(systemName: "chevron.right")
                     .frame(width: 44, height: 44)
@@ -1528,9 +1727,10 @@ struct AnalysisView: View {
             let inclusiveEnd = analysisCalendar.date(byAdding: .day, value: -1, to: interval.end) ?? interval.end
             return formatter.string(from: interval.start, to: inclusiveEnd)
         case .month:
-            return interval.start.formatted(.dateTime.month(.wide).year().locale(language.locale))
+            // A period month has the name of the month in which it ends.
+            return AppFormat.month(periods.month(containing: selectedAnalysisDate), language: language)
         case .year:
-            return interval.start.formatted(.dateTime.year().locale(language.locale))
+            return chartRange.start.formatted(.dateTime.year().locale(language.locale))
         }
     }
 
@@ -1584,8 +1784,9 @@ struct AnalysisView: View {
         }
 
         var values = [Date]()
-        var date = interval.start
-        while date < interval.end {
+        let range = chartRange
+        var date = range.start
+        while date < range.end {
             values.append(date)
             guard let next = analysisCalendar.date(byAdding: step.0, value: step.1, to: date) else { break }
             date = next
@@ -1616,18 +1817,19 @@ struct AnalysisView: View {
             let point = chartData.min(by: {
                 abs($0.date.timeIntervalSince(date)) < abs($1.date.timeIntervalSince(date))
             }),
-            let selectedInterval = analysisCalendar.dateInterval(
+            let barInterval = analysisCalendar.dateInterval(
                 of: period == .year ? .month : .day,
                 for: point.date
             ),
-            let barX = proxy.position(forX: selectedInterval.start.addingTimeInterval(selectedInterval.duration / 2)),
+            let barX = proxy.position(forX: barInterval.start.addingTimeInterval(barInterval.duration / 2)),
             abs(barX - location.x) <= chartHitTolerance,
             let barY = proxy.position(forY: point.amount),
             location.y >= barY - 10,
             location.y <= proxy.plotSize.height + 10
         else { return }
+        // A year bar is a period month. Its records can start before the calendar month of the bar.
         onSelectInterval(TransactionNavigationTarget(
-            interval: selectedInterval,
+            interval: period == .year ? periods.interval(containing: point.date) : barInterval,
             income: kind == .income,
             transactionIDs: point.transactionIDs
         ))

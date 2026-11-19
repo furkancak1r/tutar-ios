@@ -21,8 +21,15 @@ struct SettingsView: View {
     @AppStorage("icloudSync", store: .tutar) private var iCloudSync = true
     @AppStorage("dailyReminder", store: .tutar) private var dailyReminder = false
     @AppStorage("reminderHour", store: .tutar) private var reminderHour = 20
+    var periodSettings = MonthPeriodSettings()
 
     @State private var showingDeleteConfirmation = false
+
+    private var periodSummary: String {
+        periodSettings.mode == 1
+            ? "\(AppFormat.localized("period.mode.custom", language: language)) · \(periodSettings.cutoffDay)"
+            : AppFormat.localized("period.mode.calendar", language: language)
+    }
     @State private var showingImporter = false
     @State private var showingExporter = false
     @State private var exportDocument: TransferDocument?
@@ -81,6 +88,14 @@ struct SettingsView: View {
                     }
                 }
                 .accessibilityIdentifier("currencyPicker")
+                NavigationLink {
+                    MonthPeriodSettingsView()
+                } label: {
+                    LabeledContent("period.title") {
+                        Text(verbatim: periodSummary)
+                    }
+                }
+                .accessibilityIdentifier("monthPeriodSettingsButton")
             } header: {
                 Text("settings.money.section")
             } footer: {
@@ -434,6 +449,193 @@ private struct CurrencyPickerView: View {
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}
+
+/// Month period settings: "1st to 1st" or a statement cut-off day with per-month overrides.
+/// A change writes only settings. It does not change a record.
+struct MonthPeriodSettingsView: View {
+    @EnvironmentObject private var dataController: DataController
+    @Environment(\.appLanguage) private var language
+    var periodSettings = MonthPeriodSettings()
+    @State private var overrideMonth: String?
+    @State private var overrideDay = MonthPeriods.defaultCutoffDay
+
+    private var periods: MonthPeriods { periodSettings.periods() }
+
+    private var overrides: [(key: String, month: Date, day: Int)] {
+        periods.overrides
+            .compactMap { key, day in periods.month(forKey: key).map { (key, $0, day) } }
+            .sorted { $0.month < $1.month }
+    }
+
+    /// Period months from 12 months before to 12 months after the current period month.
+    private var selectableMonths: [String] {
+        let current = periods.month(containing: .now)
+        return (-12 ... 12).compactMap { offset in
+            periods.calendar.date(byAdding: .month, value: offset, to: current).map(periods.key(for:))
+        }
+    }
+
+    var body: some View {
+        Form {
+            Section {
+                Picker("period.title", selection: periodSettings.$mode) {
+                    Text("period.mode.calendar").tag(0)
+                    Text("period.mode.custom").tag(1)
+                }
+                .pickerStyle(.inline)
+                .labelsHidden()
+                .accessibilityIdentifier("periodModePicker")
+            } footer: {
+                Text("period.mode.footer")
+            }
+
+            if periods.isCustom {
+                Section {
+                    Picker("period.cutoff", selection: periodSettings.$cutoffDay) {
+                        ForEach(1 ... 31, id: \.self) { Text(verbatim: "\($0)").tag($0) }
+                    }
+                    .accessibilityIdentifier("periodCutoffDayPicker")
+                    LabeledContent("period.current") {
+                        let current = periods.interval(containing: .now)
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text(verbatim: AppFormat.month(periods.month(containing: .now), language: language))
+                            Text(verbatim: AppFormat.periodRange(current, language: language, calendar: periods.calendar))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("periodCurrentRange")
+                } footer: {
+                    Text("period.cutoff.footer")
+                }
+
+                Section {
+                    Picker("period.override.month", selection: overrideMonthBinding) {
+                        ForEach(selectableMonths, id: \.self) { key in
+                            Text(verbatim: periods.month(forKey: key).map { AppFormat.month($0, language: language) } ?? key)
+                                .tag(key)
+                        }
+                    }
+                    .accessibilityIdentifier("periodOverrideMonthPicker")
+                    Picker("period.override.day", selection: $overrideDay) {
+                        ForEach(1 ... 31, id: \.self) { Text(verbatim: "\($0)").tag($0) }
+                    }
+                    .accessibilityIdentifier("periodOverrideDayPicker")
+                    Button {
+                        setOverride(overrideMonthBinding.wrappedValue, day: overrideDay)
+                    } label: {
+                        Label("period.override.add", systemImage: "plus.circle")
+                    }
+                    .accessibilityIdentifier("periodOverrideAddButton")
+
+                    if overrides.isEmpty {
+                        Text("period.overrides.empty")
+                            .foregroundStyle(.secondary)
+                    }
+                    ForEach(overrides, id: \.key) { item in
+                        HStack {
+                            Text(verbatim: "\(AppFormat.month(item.month, language: language)) · \(item.day)")
+                                .monospacedDigit()
+                                .accessibilityIdentifier("periodOverrideRow")
+                            Spacer()
+                            Button(role: .destructive) {
+                                setOverride(item.key, day: nil)
+                            } label: {
+                                Image(systemName: "minus.circle.fill")
+                                    .frame(width: 44, height: 44)
+                            }
+                            .buttonStyle(.borderless)
+                            .accessibilityLabel(Text("period.override.remove"))
+                            .accessibilityIdentifier("periodOverrideRemoveButton")
+                        }
+                    }
+                } header: {
+                    Text("period.overrides.section")
+                } footer: {
+                    Text("period.overrides.footer")
+                }
+            }
+        }
+        .navigationTitle("period.title")
+        .navigationBarTitleDisplayMode(.inline)
+        .frame(maxWidth: 760)
+        .frame(maxWidth: .infinity)
+        .onChange(of: periods) { _, _ in
+            PeriodSettingsSync.push()
+            dataController.updateWidgetSnapshot()
+        }
+    }
+
+    private var overrideMonthBinding: Binding<String> {
+        Binding(
+            get: { overrideMonth ?? periods.key(for: periods.month(containing: .now)) },
+            set: { overrideMonth = $0 }
+        )
+    }
+
+    private func setOverride(_ key: String, day: Int?) {
+        var values = periods.overrides
+        values[key] = day
+        periodSettings.overridesJSON = MonthPeriods.encode(values)
+    }
+}
+
+/// Syncs the month period settings between devices with iCloud key-value storage.
+/// The App Group copy stays the source for the app, the widget and offline use.
+@MainActor
+enum PeriodSettingsSync {
+    private static var observer: NSObjectProtocol?
+
+    /// Off in tests and when the user turned off iCloud sync.
+    private static var isEnabled: Bool {
+        !DataController.isTesting && UserDefaults.tutar.bool(forKey: "icloudSync")
+    }
+
+    static func start() {
+        guard observer == nil, isEnabled else { return }
+        let cloud = NSUbiquitousKeyValueStore.default
+        observer = NotificationCenter.default.addObserver(
+            forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
+            object: cloud,
+            queue: .main
+        ) { _ in
+            MainActor.assumeIsolated {
+                pull()
+                DataController.shared.updateWidgetSnapshot()
+            }
+        }
+        cloud.synchronize()
+        pull()
+    }
+
+    static func push() {
+        guard isEnabled else { return }
+        let cloud = NSUbiquitousKeyValueStore.default
+        for key in MonthPeriods.Keys.all {
+            let value = UserDefaults.tutar.object(forKey: key)
+            if (cloud.object(forKey: key) as? NSObject) != (value as? NSObject) {
+                cloud.set(value, forKey: key)
+            }
+        }
+    }
+
+    /// Copies only valid values: the store holds data from other devices.
+    private static func pull() {
+        guard isEnabled else { return }
+        let cloud = NSUbiquitousKeyValueStore.default
+        let defaults = UserDefaults.tutar
+        if let mode = cloud.object(forKey: MonthPeriods.Keys.mode) as? Int, [0, 1].contains(mode) {
+            defaults.set(mode, forKey: MonthPeriods.Keys.mode)
+        }
+        if let day = cloud.object(forKey: MonthPeriods.Keys.cutoffDay) as? Int, (1 ... 31).contains(day) {
+            defaults.set(day, forKey: MonthPeriods.Keys.cutoffDay)
+        }
+        if let json = cloud.string(forKey: MonthPeriods.Keys.overrides) {
+            defaults.set(MonthPeriods.encode(MonthPeriods.decode(json)), forKey: MonthPeriods.Keys.overrides)
+        }
     }
 }
 

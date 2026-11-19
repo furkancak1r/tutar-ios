@@ -94,8 +94,8 @@ final class AnalysisPeriodTests: XCTestCase {
         )
         let date = try self.date(year: 2026, month: 9, day: 2, calendar: turkish)
 
-        let turkishWeek = AnalysisPeriod.week.interval(containing: date, calendar: turkish)
-        let americanWeek = AnalysisPeriod.week.interval(containing: date, calendar: americanEnglish)
+        let turkishWeek = AnalysisPeriod.week.interval(containing: date, in: MonthPeriods(calendar: turkish))
+        let americanWeek = AnalysisPeriod.week.interval(containing: date, in: MonthPeriods(calendar: americanEnglish))
 
         XCTAssertEqual(turkish.component(.weekday, from: turkishWeek.start), 2)
         XCTAssertEqual(americanEnglish.component(.weekday, from: americanWeek.start), 1)
@@ -110,29 +110,29 @@ final class AnalysisPeriodTests: XCTestCase {
         calendar.minimumDaysInFirstWeek = 4
 
         let december = try date(year: 2026, month: 12, day: 15, calendar: calendar)
-        let january = AnalysisPeriod.month.date(byMoving: 1, from: december, calendar: calendar)
+        let january = AnalysisPeriod.month.date(byMoving: 1, from: december, in: MonthPeriods(calendar: calendar))
         XCTAssertEqual(calendar.dateComponents([.year, .month, .day], from: january), DateComponents(year: 2027, month: 1, day: 1))
         XCTAssertEqual(
             calendar.dateComponents(
                 [.year, .month, .day],
-                from: AnalysisPeriod.month.date(byMoving: -1, from: january, calendar: calendar)
+                from: AnalysisPeriod.month.date(byMoving: -1, from: january, in: MonthPeriods(calendar: calendar))
             ),
             DateComponents(year: 2026, month: 12, day: 1)
         )
 
         let leapDay = try date(year: 2028, month: 2, day: 29, calendar: calendar)
-        XCTAssertTrue(AnalysisPeriod.month.interval(containing: leapDay, calendar: calendar).contains(leapDay))
-        let nextYear = AnalysisPeriod.year.date(byMoving: 1, from: december, calendar: calendar)
+        XCTAssertTrue(AnalysisPeriod.month.interval(containing: leapDay, in: MonthPeriods(calendar: calendar)).contains(leapDay))
+        let nextYear = AnalysisPeriod.year.date(byMoving: 1, from: december, in: MonthPeriods(calendar: calendar))
         XCTAssertEqual(calendar.component(.year, from: nextYear), 2027)
 
         let yearEnd = try date(year: 2026, month: 12, day: 31, calendar: calendar)
-        let week = AnalysisPeriod.week.interval(containing: yearEnd, calendar: calendar)
+        let week = AnalysisPeriod.week.interval(containing: yearEnd, in: MonthPeriods(calendar: calendar))
         XCTAssertTrue(week.contains(try date(year: 2027, month: 1, day: 1, calendar: calendar)))
 
         calendar.timeZone = try XCTUnwrap(TimeZone(identifier: "America/Los_Angeles"))
         let dstDate = try date(year: 2026, month: 3, day: 8, calendar: calendar)
-        let dstWeek = AnalysisPeriod.week.interval(containing: dstDate, calendar: calendar)
-        let followingWeek = AnalysisPeriod.week.date(byMoving: 1, from: dstDate, calendar: calendar)
+        let dstWeek = AnalysisPeriod.week.interval(containing: dstDate, in: MonthPeriods(calendar: calendar))
+        let followingWeek = AnalysisPeriod.week.date(byMoving: 1, from: dstDate, in: MonthPeriods(calendar: calendar))
         XCTAssertEqual(followingWeek, dstWeek.end)
     }
 

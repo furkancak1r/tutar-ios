@@ -40,7 +40,7 @@ enum CategoryEmoji {
 
 @MainActor
 final class DataController: ObservableObject {
-    private static let isTesting = ProcessInfo.processInfo.arguments.contains("-ui-testing")
+    static let isTesting = ProcessInfo.processInfo.arguments.contains("-ui-testing")
         || ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
         || NSClassFromString("XCTestCase") != nil
 
@@ -989,16 +989,14 @@ final class DataController: ObservableObject {
         }
     }
 
-    private func updateWidgetSnapshot() {
-        let calendar = Calendar.current
-        guard
-            let monthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: Date.now)),
-            let nextMonth = calendar.date(byAdding: .month, value: 1, to: monthStart)
-        else { return }
-
+    /// Writes the widget values to the App Group. `widget.monthExpense` is the expense total of the current period.
+    func updateWidgetSnapshot() {
+        // Before the store loads, a fetch finds nothing and would write a zero total.
+        guard !container.persistentStoreCoordinator.persistentStores.isEmpty else { return }
+        let period = MonthPeriods.stored().interval(containing: .now)
         let monthlyRequest = Transaction.fetchRequest()
         monthlyRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
-            NSPredicate(format: "date >= %@ AND date < %@", monthStart as CVarArg, nextMonth as CVarArg),
+            NSPredicate(format: "date >= %@ AND date < %@", period.start as CVarArg, period.end as CVarArg),
             NSPredicate(format: "income == NO")
         ])
         let total = (try? context.fetch(monthlyRequest))?.reduce(0) { $0 + $1.amount } ?? 0
