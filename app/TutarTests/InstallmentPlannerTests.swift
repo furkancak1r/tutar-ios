@@ -235,6 +235,93 @@ final class InstallmentPersistenceTests: XCTestCase {
         XCTAssertEqual(second.amountMinorUnits, 2_000)
     }
 
+    func testSavedSingleExpenseConvertsIntoInstallmentPlanWithoutExtraRecord() async throws {
+        let controller = DataController(inMemory: true, cloudEnabled: false)
+        try await waitUntilLoaded(controller)
+        let category = try XCTUnwrap(try controller.context.fetch(Category.fetchRequest()).first { !$0.income })
+        let calendar = Calendar.current
+        let firstDate = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 1, day: 31, hour: 14, minute: 5)))
+        let saved = try controller.createTransaction(
+            note: "Bike",
+            category: category,
+            income: false,
+            amountMinorUnits: 100_000,
+            date: firstDate
+        )
+        let savedID = saved.id
+
+        let plan = try controller.createInstallments(
+            note: "Bike",
+            category: category,
+            income: false,
+            totalMinorUnits: saved.amountMinorUnits,
+            count: 3,
+            firstDate: saved.wrappedDate,
+            intervalMonths: 1,
+            converting: saved
+        )
+
+        let all = try controller.context.fetch(Transaction.fetchRequest())
+        XCTAssertEqual(all.count, 3)
+        let groupID = try XCTUnwrap(saved.installmentGroupID)
+        let group = try controller.installments(groupID: groupID)
+        XCTAssertEqual(group.map(\.objectID), plan.map(\.objectID))
+        XCTAssertEqual(group.first?.objectID, saved.objectID)
+        XCTAssertEqual(group.first?.id, savedID)
+        XCTAssertEqual(group.map(\.installmentIndex), [1, 2, 3])
+        XCTAssertEqual(group.map(\.amountMinorUnits), [33_333, 33_333, 33_334])
+        XCTAssertEqual(group.reduce(0) { $0 + $1.amountMinorUnits }, 100_000)
+        XCTAssertEqual(Set(group.map(\.installmentOriginalTotalMinorUnits)), [100_000])
+        XCTAssertEqual(group.map { calendar.component(.month, from: $0.wrappedDate) }, [1, 2, 3])
+        XCTAssertEqual(group.map { calendar.component(.day, from: $0.wrappedDate) }, [31, 28, 31])
+        XCTAssertEqual(group.first?.wrappedDate, firstDate)
+        XCTAssertEqual(Set(group.map(\.note)), ["Bike"])
+        XCTAssertEqual(Set(group.compactMap(\.category?.objectID)), [category.objectID])
+    }
+
+    func testConversionRejectsInstallmentsAndRecurringMarkers() async throws {
+        let controller = DataController(inMemory: true, cloudEnabled: false)
+        try await waitUntilLoaded(controller)
+        let category = try XCTUnwrap(try controller.context.fetch(Category.fetchRequest()).first { !$0.income })
+        let installment = try XCTUnwrap(try controller.createInstallments(
+            note: "Plan",
+            category: category,
+            income: false,
+            totalMinorUnits: 30_000,
+            count: 3,
+            firstDate: .now,
+            intervalMonths: 1
+        ).first)
+        let marker = try controller.createTransaction(
+            note: "Rent",
+            category: category,
+            income: false,
+            amountMinorUnits: 10_000,
+            date: Calendar.current.date(byAdding: .day, value: 3, to: .now)!,
+            recurringType: 3
+        )
+        XCTAssertGreaterThan(marker.recurringType, 0)
+        let countBefore = try controller.context.count(for: Transaction.fetchRequest())
+
+        for existing in [installment, marker] {
+            XCTAssertThrowsError(try controller.createInstallments(
+                note: "Convert",
+                category: category,
+                income: false,
+                totalMinorUnits: 30_000,
+                count: 3,
+                firstDate: .now,
+                intervalMonths: 1,
+                converting: existing
+            )) { error in
+                XCTAssertEqual(error as? InstallmentError, .duplicate)
+            }
+        }
+        XCTAssertEqual(try controller.context.count(for: Transaction.fetchRequest()), countBefore)
+        XCTAssertEqual(installment.note, "Plan")
+        XCTAssertEqual(marker.note, "Rent")
+    }
+
     func testVersionTwoStoreMigratesWithoutChangingExistingTransaction() async throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("TutarMigration-\(UUID().uuidString)", isDirectory: true)

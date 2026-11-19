@@ -268,7 +268,8 @@ struct TransactionEditorView: View {
                     recurringCoefficient: $recurringCoefficient,
                     installmentCount: $installmentCount,
                     intervalMonths: $intervalMonths,
-                    allowsInstallments: !income && (transaction == nil || isEditingInstallment),
+                    // A saved single expense can become a plan. A recurring marker keeps its series.
+                    allowsInstallments: !income && (isEditingInstallment || (transaction?.recurringType ?? 0) == 0),
                     locksScheduleKind: isEditingInstallment
                 )
             }
@@ -295,7 +296,9 @@ struct TransactionEditorView: View {
         let storedRecurringType = Int(transaction?.recurringType ?? 0)
         _recurringType = State(initialValue: storedRecurringType > 0 ? storedRecurringType : 3)
         _recurringCoefficient = State(initialValue: max(Int(transaction?.recurringCoefficient ?? 1), 1))
-        _installmentCount = State(initialValue: max(Int(transaction?.installmentCount ?? 3), 2))
+        // A saved single record stores 0. It gets the same default as a new record.
+        let storedInstallmentCount = Int(transaction?.installmentCount ?? 0)
+        _installmentCount = State(initialValue: storedInstallmentCount >= 2 ? storedInstallmentCount : 3)
         _intervalMonths = State(initialValue: max(Int(transaction?.installmentIntervalMonths ?? 1), 1))
 
         if transaction?.isInstallment == true {
@@ -350,7 +353,7 @@ struct TransactionEditorView: View {
         }
 
         do {
-            if let transaction {
+            if let transaction, isEditingInstallment || schedule != .installments {
                 try dataController.update(
                     transaction,
                     note: note,
@@ -370,7 +373,8 @@ struct TransactionEditorView: View {
                     totalMinorUnits: amount,
                     count: installmentCount,
                     firstDate: date,
-                    intervalMonths: intervalMonths
+                    intervalMonths: intervalMonths,
+                    converting: transaction
                 )
             } else {
                 try dataController.createTransaction(
