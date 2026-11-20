@@ -26,6 +26,7 @@ struct TransactionEditorView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage("currencyCode", store: .tutar) private var preferredCurrency = ""
     @AppStorage("showSuggestions", store: .tutar) private var showSuggestions = true
+    var periodSettings = MonthPeriodSettings()
 
     let transaction: Transaction?
 
@@ -33,6 +34,7 @@ struct TransactionEditorView: View {
     @State private var amountEntry: MoneyEntry
     @State private var date: Date
     @State private var income: Bool
+    @State private var countsInPreviousMonth: Bool
     @State private var category: Category?
     @State private var schedule: TransactionSchedule
     @State private var recurringType: Int
@@ -91,6 +93,7 @@ struct TransactionEditorView: View {
                         .disabled(isEditingInstallment)
                         .onChange(of: income) { _, newValue in
                             if newValue, schedule == .installments { schedule = .once }
+                            if !newValue { countsInPreviousMonth = false }
                             category = categories.first { $0.income == newValue }
                         }
 
@@ -192,6 +195,11 @@ struct TransactionEditorView: View {
 
                             Divider()
 
+                            if income {
+                                previousMonthToggle
+                                Divider()
+                            }
+
                             LabeledContent("editor.schedule") {
                                 Button {
                                     showingSchedule = true
@@ -292,6 +300,7 @@ struct TransactionEditorView: View {
         _amountEntry = State(initialValue: MoneyEntry(minorUnits: transaction?.amountMinorUnits ?? 0, mode: mode))
         _date = State(initialValue: transaction?.wrappedDate ?? .now)
         _income = State(initialValue: transaction?.income ?? false)
+        _countsInPreviousMonth = State(initialValue: transaction?.countsInPreviousPeriod ?? false)
         _category = State(initialValue: transaction?.category)
         let storedRecurringType = Int(transaction?.recurringType ?? 0)
         _recurringType = State(initialValue: storedRecurringType > 0 ? storedRecurringType : 3)
@@ -308,6 +317,30 @@ struct TransactionEditorView: View {
         } else {
             _schedule = State(initialValue: .once)
         }
+    }
+
+    /// "Önceki aya say": the income counts in the period month before the one of its real date.
+    private var previousMonthToggle: some View {
+        Toggle(isOn: $countsInPreviousMonth) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text("editor.previousMonth")
+                if countsInPreviousMonth {
+                    Text(verbatim: AppFormat.format(
+                        "editor.previousMonth.note",
+                        language: language,
+                        AppFormat.month(
+                            periodSettings.periods().countedMonth(of: date, previous: true),
+                            language: language
+                        )
+                    ))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .tint(Color(.systemGray))
+        .padding(.vertical, 10)
+        .accessibilityIdentifier("previousMonthToggle")
     }
 
     private var scheduleIcon: String {
@@ -363,7 +396,8 @@ struct TransactionEditorView: View {
                     date: date,
                     intervalMonths: intervalMonths,
                     recurringType: schedule == .recurring ? recurringType : 0,
-                    recurringCoefficient: recurringCoefficient
+                    recurringCoefficient: recurringCoefficient,
+                    countsInPreviousMonth: countsInPreviousMonth
                 )
             } else if schedule == .installments {
                 try dataController.createInstallments(
@@ -384,7 +418,8 @@ struct TransactionEditorView: View {
                     amountMinorUnits: amount,
                     date: date,
                     recurringType: schedule == .recurring ? recurringType : 0,
-                    recurringCoefficient: recurringCoefficient
+                    recurringCoefficient: recurringCoefficient,
+                    countsInPreviousMonth: countsInPreviousMonth
                 )
             }
             dismiss()

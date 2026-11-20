@@ -140,6 +140,9 @@
 "editor.amount" = "Total amount";
 "editor.category" = "Category";
 "editor.date" = "Date";
+"editor.previousMonth" = "Count in previous month";
+"editor.previousMonth.note" = "Counts in %@";
+"transaction.previousMonth.badge" = "Counts in previous month";
 "editor.category.choose" = "Choose";
 "editor.schedule" = "Schedule";
 "editor.suggestions" = "Suggested transactions";

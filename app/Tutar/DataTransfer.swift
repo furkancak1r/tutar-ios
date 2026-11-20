@@ -137,6 +137,8 @@ private struct TransactionRecord: Codable {
     let installmentCount: Int
     let installmentIntervalMonths: Int
     let installmentOriginalTotalMinorUnits: Int64
+    /// "Önceki aya say". Optional, so a backup without the field still imports.
+    let countsInPreviousMonth: Bool?
 }
 
 private struct BudgetRecord: Codable {
@@ -187,7 +189,8 @@ extension DataController {
             "InstallmentGroupID", "InstallmentIndex", "InstallmentCount",
             "InstallmentIntervalMonths", "InstallmentOriginalTotalMinorUnits",
             "RecurringType", "RecurringCoefficient", "RecordKind",
-            "AssetCode", "Quantity", "QuoteMode", "ManualUnitPrice", "ManualPriceCurrency"
+            "AssetCode", "Quantity", "QuoteMode", "ManualUnitPrice", "ManualPriceCurrency",
+            "CountsInPreviousMonth"
         ]
 
         var rows = try context.fetch(request).map { transaction in
@@ -208,7 +211,8 @@ extension DataController {
                     ? String(transaction.installmentOriginalTotalMinorUnits) : "",
                 transaction.recurringType > 0 ? String(transaction.recurringType) : "",
                 transaction.recurringCoefficient > 0 ? String(transaction.recurringCoefficient) : "",
-                "Transaction", "", "", "", "", ""
+                "Transaction", "", "", "", "", "",
+                transaction.countsInPreviousPeriod ? "1" : ""
             ]
         }
         rows += try context.fetch(SavingsHolding.fetchRequest()).map { holding in
@@ -219,7 +223,7 @@ extension DataController {
                 "Savings", holding.wrappedAsset.rawValue,
                 SavingsFormatting.editable(holding.wrappedQuantity), String(holding.quoteMode),
                 SavingsFormatting.editable(holding.wrappedManualPrice),
-                holding.wrappedManualPriceCurrencyCode
+                holding.wrappedManualPriceCurrencyCode, ""
             ]
         }
         guard let data = CSVCodec.encode([header] + rows).data(using: .utf8) else {
@@ -257,7 +261,8 @@ extension DataController {
                 installmentIndex: Int(transaction.installmentIndex),
                 installmentCount: Int(transaction.installmentCount),
                 installmentIntervalMonths: Int(transaction.installmentIntervalMonths),
-                installmentOriginalTotalMinorUnits: transaction.installmentOriginalTotalMinorUnits
+                installmentOriginalTotalMinorUnits: transaction.installmentOriginalTotalMinorUnits,
+                countsInPreviousMonth: transaction.countsInPreviousPeriod
             )
         }
         let budgets = try context.fetch(Budget.fetchRequest()).map { budget in
@@ -445,7 +450,8 @@ extension DataController {
                 category: category,
                 income: record.income,
                 amountMinorUnits: record.amountMinorUnits,
-                date: record.date
+                date: record.date,
+                countsInPreviousMonth: record.countsInPreviousMonth ?? false
             )
             transaction.id = record.id
             transaction.createdAt = record.createdAt ?? record.date
@@ -591,6 +597,7 @@ extension DataController {
         let quoteModeColumn = headers.firstIndex(of: "quotemode")
         let manualPriceColumn = headers.firstIndex(of: "manualunitprice")
         let manualPriceCurrencyColumn = headers.firstIndex(of: "manualpricecurrency")
+        let previousMonthColumn = headers.firstIndex(of: "countsinpreviousmonth")
 
         let existingTransactions = try context.fetch(Transaction.fetchRequest())
         var existingIDs = Set(existingTransactions.compactMap(\.id))
@@ -716,7 +723,10 @@ extension DataController {
                 category: category,
                 income: income,
                 amountMinorUnits: amountMinorUnits,
-                date: date
+                date: date,
+                countsInPreviousMonth: ["1", "true"].contains(
+                    previousMonthColumn.flatMap { row[safe: $0] }?.trimmingCharacters(in: .whitespaces).lowercased()
+                )
             )
             transaction.id = id
             transaction.installmentGroupID = groupID

@@ -104,6 +104,7 @@
 		973393404F492F753E5EB52D /* MainModel 2.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "MainModel 2.xcdatamodel"; sourceTree = "<group>"; };
 		98F8FFA1996DE28EE24FC373 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		9977C7291E7851E4761BDBF1 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = en; path = en.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		A314D247DAFB2FBF85CD673F /* MainModel 7.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "MainModel 7.xcdatamodel"; sourceTree = "<group>"; };
 		A7E142DDFCCF1285D5D98427 /* DataController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataController.swift; sourceTree = "<group>"; };
 		AC3AAB8299869AB72CF43C5F /* TutarWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = TutarWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		BA43D5E60619F8A47B58A074 /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = tr; path = tr.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
@@ -849,9 +850,10 @@
 				662A4BBE6CB4D995AC13CC8D /* MainModel 4.xcdatamodel */,
 				F35A111C2A703736A7A6C4AD /* MainModel 5.xcdatamodel */,
 				E8BE0873776244DF5A1FD8A9 /* MainModel 6.xcdatamodel */,
+				A314D247DAFB2FBF85CD673F /* MainModel 7.xcdatamodel */,
 				77718213FB560780D40C32B9 /* MainModel.xcdatamodel */,
 			);
-			currentVersion = E8BE0873776244DF5A1FD8A9 /* MainModel 6.xcdatamodel */;
+			currentVersion = A314D247DAFB2FBF85CD673F /* MainModel 7.xcdatamodel */;
 			path = MainModel.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;

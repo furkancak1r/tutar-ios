@@ -140,6 +140,9 @@
 "editor.amount" = "Toplam tutar";
 "editor.category" = "Kategori";
 "editor.date" = "Tarih";
+"editor.previousMonth" = "Önceki aya say";
+"editor.previousMonth.note" = "Sayıldığı ay: %@";
+"transaction.previousMonth.badge" = "Önceki aya sayılır";
 "editor.category.choose" = "Seç";
 "editor.schedule" = "Plan";
 "editor.suggestions" = "Önerilen işlemler";

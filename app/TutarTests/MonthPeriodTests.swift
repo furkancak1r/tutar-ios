@@ -281,6 +281,92 @@ final class MonthPeriodTests: XCTestCase {
         }
     }
 
+    // "Önceki aya say": the record counts in the period month before the period month of its real date.
+    func testPreviousMonthUsesThePeriodMonthBeforeTheRealDate() throws {
+        let calendar = try gregorian("Europe/Istanbul")
+        let calendarMonths = MonthPeriods(calendar: calendar)
+        let november = try date(calendar, 2026, 11, 1)
+        let december = try date(calendar, 2026, 12, 1)
+
+        // Same month: the salary comes on 28 November. With the switch off it stays in November.
+        let sameMonth = try date(calendar, 2026, 11, 28, 9)
+        XCTAssertEqual(calendarMonths.countedMonth(of: sameMonth, previous: false), november)
+        XCTAssertTrue(calendarMonths.countedRange(from: november).contains(sameMonth, previous: false))
+        // Late: the November salary comes on 2 December. With the switch on it counts in November only.
+        let late = try date(calendar, 2026, 12, 2, 9)
+        XCTAssertEqual(calendarMonths.countedMonth(of: late, previous: true), november)
+        XCTAssertTrue(calendarMonths.countedRange(from: november).contains(late, previous: true))
+        XCTAssertFalse(calendarMonths.countedRange(from: december).contains(late, previous: true))
+        // Switch off: the same date counts in December.
+        XCTAssertEqual(calendarMonths.countedMonth(of: late, previous: false), december)
+        XCTAssertFalse(calendarMonths.countedRange(from: november).contains(late, previous: false))
+        XCTAssertTrue(calendarMonths.countedRange(from: december).contains(late, previous: false))
+
+        // Year end: the December salary comes on 4 January.
+        let january = try date(calendar, 2027, 1, 4, 9)
+        XCTAssertEqual(calendarMonths.countedMonth(of: january, previous: true), december)
+        XCTAssertTrue(calendarMonths.countedRange(from: december).contains(january, previous: true))
+        let year2026 = AnalysisPeriod.year.countedRange(containing: november, in: calendarMonths)
+        let year2027 = AnalysisPeriod.year.countedRange(containing: try date(calendar, 2027, 6, 1), in: calendarMonths)
+        XCTAssertTrue(year2026.contains(january, previous: true))
+        XCTAssertFalse(year2027.contains(january, previous: true))
+        XCTAssertTrue(year2027.contains(january, previous: false))
+        // A week uses the real date only.
+        let week = AnalysisPeriod.week.countedRange(containing: january, in: calendarMonths)
+        XCTAssertTrue(week.contains(january, previous: true))
+        XCTAssertTrue(week.contains(january, previous: false))
+        XCTAssertTrue(AnalysisPeriod.month.countedRange(containing: november, in: calendarMonths).contains(late, previous: true))
+
+        // "Ay dönemi" with cut-off day 20: 22 November is in the December period, so it counts in November.
+        let statement = MonthPeriods(calendar: calendar, cutoffDay: 20)
+        let afterCutoff = try date(calendar, 2026, 11, 22, 9)
+        XCTAssertEqual(statement.countedMonth(of: afterCutoff, previous: true), november)
+        XCTAssertTrue(statement.countedRange(from: november).contains(afterCutoff, previous: true))
+        XCTAssertFalse(statement.countedRange(from: december).contains(afterCutoff, previous: true))
+        // 19 November is in the November period, so it counts in October.
+        let beforeCutoff = try date(calendar, 2026, 11, 19, 9)
+        XCTAssertEqual(statement.countedMonth(of: beforeCutoff, previous: true), try date(calendar, 2026, 10, 1))
+        // A monthly exception moves the boundary: with 18 for November, 19 November is in the December period.
+        let overridden = MonthPeriods(calendar: calendar, cutoffDay: 20, overrides: ["2026-11": 18])
+        XCTAssertEqual(overridden.countedMonth(of: beforeCutoff, previous: true), november)
+        XCTAssertTrue(overridden.countedRange(from: november).contains(beforeCutoff, previous: true))
+    }
+
+    // With random settings and switches, each record counts in exactly one month: the one of `countedMonth`.
+    func testPreviousMonthRangesPartitionRecords() throws {
+        var generator = SplitMix64(state: 11)
+        for zone in zones + ["America/Santiago"] {
+            let calendar = try gregorian(zone)
+            let first = try date(calendar, 2026, 1, 1)
+            let last = try date(calendar, 2028, 1, 1)
+            for round in 0 ..< 12 {
+                let periods = MonthPeriods(
+                    calendar: calendar,
+                    mode: round % 3 == 0 ? 0 : 1,
+                    cutoffDay: Int.random(in: 1 ... 31, using: &generator),
+                    overridesJSON: MonthPeriods.encode([
+                        MonthPeriods(calendar: calendar).key(for: randomDate(from: first, to: last, using: &generator)):
+                            Int.random(in: 1 ... 31, using: &generator)
+                    ])
+                )
+                var months = [periods.month(containing: first)]
+                while let month = months.last, month < last {
+                    months.append(try XCTUnwrap(calendar.date(byAdding: .month, value: 1, to: month)))
+                }
+                let ranges = months.map { ($0, periods.countedRange(from: $0)) }
+                // Dates from the second month on, so that the month before is also in the list.
+                let start = periods.interval(containing: months[1]).start
+                let end = periods.interval(containing: months[months.count - 2]).end
+                for _ in 0 ..< 200 {
+                    let instant = randomDate(from: start, to: end, using: &generator)
+                    let previous = Bool.random(using: &generator)
+                    let matches = ranges.filter { $0.1.contains(instant, previous: previous) }.map(\.0)
+                    XCTAssertEqual(matches, [periods.countedMonth(of: instant, previous: previous)], "\(zone) \(instant)")
+                }
+            }
+        }
+    }
+
     func testOverridesJSONDropsInvalidValues() {
         XCTAssertEqual(MonthPeriods.decode(#"{"2026-11":18,"2026-13":5,"bad":4,"2026-12":0,"2027-01":32}"#), ["2026-11": 18])
         XCTAssertEqual(MonthPeriods.decode("not json"), [:])
@@ -421,6 +507,144 @@ final class MonthPeriodDataTests: XCTestCase {
                 .filter { !$0.income && current.containsHalfOpen($0.wrappedDate) }
                 .reduce(0) { $0 + $1.amount }
             XCTAssertEqual(UserDefaults.tutar.double(forKey: "widget.monthExpense"), expected, accuracy: 0.001, "\(setting)")
+        }
+    }
+
+    // "Önceki aya say" is for income only: an expense, a change to expense and a new recurring copy get false.
+    func testPreviousMonthFlagIsIncomeOnly() async throws {
+        let controller = DataController(inMemory: true, cloudEnabled: false)
+        try await waitUntilLoaded(controller)
+        let categories = try controller.context.fetch(Tutar.Category.fetchRequest())
+        let salary = try XCTUnwrap(categories.first { $0.income })
+        let market = try XCTUnwrap(categories.first { !$0.income })
+        let paid = Date.now.addingTimeInterval(-3 * 86_400)
+
+        let expense = try controller.createTransaction(
+            note: "Market", category: market, income: false, amountMinorUnits: 1_000, date: paid,
+            countsInPreviousMonth: true
+        )
+        XCTAssertFalse(expense.countsInPreviousMonth)
+        XCTAssertFalse(expense.countsInPreviousPeriod)
+
+        let income = try controller.createTransaction(
+            note: "Maaş", category: salary, income: true, amountMinorUnits: 5_000_000, date: paid,
+            countsInPreviousMonth: true
+        )
+        XCTAssertTrue(income.countsInPreviousPeriod)
+        try controller.update(
+            income, note: "Maaş", category: market, income: false, amountMinorUnits: 5_000_000, date: paid,
+            intervalMonths: 1, countsInPreviousMonth: true
+        )
+        XCTAssertFalse(income.countsInPreviousMonth, "Saving as expense clears the flag.")
+        try controller.update(
+            income, note: "Maaş", category: salary, income: true, amountMinorUnits: 5_000_000, date: paid,
+            intervalMonths: 1, countsInPreviousMonth: true
+        )
+        XCTAssertTrue(income.countsInPreviousMonth)
+
+        // A CloudKit merge can leave the flag on an expense. The read side ignores it.
+        expense.countsInPreviousMonth = true
+        XCTAssertFalse(expense.countsInPreviousPeriod)
+        controller.context.rollback()
+
+        // A monthly salary that started 3 months ago: the copies get false.
+        let start = try XCTUnwrap(Calendar.current.date(byAdding: .month, value: -3, to: paid))
+        let marker = try controller.createTransaction(
+            note: "Recurring salary", category: salary, income: true, amountMinorUnits: 4_000_000, date: start,
+            recurringType: 3, countsInPreviousMonth: true
+        )
+        XCTAssertTrue(marker.countsInPreviousMonth)
+        let copies = try controller.context.fetch(Transaction.fetchRequest())
+            .filter { $0.note == "Recurring salary" && $0 != marker }
+        XCTAssertGreaterThanOrEqual(copies.count, 3)
+        XCTAssertTrue(copies.allSatisfy { !$0.countsInPreviousMonth })
+    }
+
+    // Backup and CSV keep the flag. An old backup without the field imports with the flag off.
+    func testPreviousMonthFlagRoundTripsAndOldBackupImports() async throws {
+        let source = DataController(inMemory: true, cloudEnabled: false)
+        try await waitUntilLoaded(source)
+        let salary = try XCTUnwrap(try source.context.fetch(Tutar.Category.fetchRequest()).first { $0.income })
+        let paid = try XCTUnwrap(Calendar.current.date(from: DateComponents(year: 2026, month: 12, day: 2, hour: 9)))
+        try source.createTransaction(
+            note: "Late salary", category: salary, income: true, amountMinorUnits: 8_000_000, date: paid,
+            countsInPreviousMonth: true
+        )
+        try source.createTransaction(
+            note: "Bonus", category: salary, income: true, amountMinorUnits: 100_000, date: paid
+        )
+
+        let backup = try source.exportBackup()
+        let destination = DataController(inMemory: true, cloudEnabled: false)
+        try await waitUntilLoaded(destination)
+        _ = try destination.importData(backup, fileExtension: "json", language: .turkish)
+        try assertFlags(destination, late: true)
+
+        let csv = try source.exportCSV(language: .english)
+        XCTAssertTrue(String(decoding: csv, as: UTF8.self).contains("CountsInPreviousMonth"))
+        let fromCSV = DataController(inMemory: true, cloudEnabled: false)
+        try await waitUntilLoaded(fromCSV)
+        _ = try fromCSV.importData(csv, fileExtension: "csv", language: .english)
+        try assertFlags(fromCSV, late: true)
+
+        // A backup from version 1.1.0 (38) has no field.
+        var json = try XCTUnwrap(JSONSerialization.jsonObject(with: backup) as? [String: Any])
+        var transactions = try XCTUnwrap(json["transactions"] as? [[String: Any]])
+        for index in transactions.indices { transactions[index].removeValue(forKey: "countsInPreviousMonth") }
+        json["transactions"] = transactions
+        let old = DataController(inMemory: true, cloudEnabled: false)
+        try await waitUntilLoaded(old)
+        let result = try old.importData(JSONSerialization.data(withJSONObject: json), fileExtension: "json", language: .turkish)
+        XCTAssertGreaterThanOrEqual(result.imported, 2)
+        try assertFlags(old, late: false)
+    }
+
+    private func assertFlags(_ controller: DataController, late: Bool, line: UInt = #line) throws {
+        let transactions = try controller.context.fetch(Transaction.fetchRequest())
+        let lateSalary = try XCTUnwrap(transactions.first { $0.note == "Late salary" }, line: line)
+        let bonus = try XCTUnwrap(transactions.first { $0.note == "Bonus" }, line: line)
+        XCTAssertEqual(lateSalary.countsInPreviousMonth, late, line: line)
+        XCTAssertFalse(bonus.countsInPreviousMonth, line: line)
+        XCTAssertEqual(
+            lateSalary.wrappedDate,
+            try XCTUnwrap(Calendar.current.date(from: DateComponents(year: 2026, month: 12, day: 2, hour: 9))),
+            "The real date stays.", line: line
+        )
+    }
+
+    // A version 6 store gets the new field with the value false.
+    func testVersionSixStoreMigratesWithPreviousMonthOff() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("TutarPreviousMonth-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let storeURL = directory.appendingPathComponent("Main.sqlite")
+        let modelDirectory = try XCTUnwrap(Bundle.main.url(forResource: "MainModel", withExtension: "momd"))
+        let oldModel = try XCTUnwrap(NSManagedObjectModel(contentsOf: modelDirectory.appendingPathComponent("MainModel 6.mom")))
+        XCTAssertNil(oldModel.entitiesByName["Transaction"]?.attributesByName["countsInPreviousMonth"])
+        let oldContainer = NSPersistentContainer(name: "MainModel", managedObjectModel: oldModel)
+        oldContainer.persistentStoreDescriptions = [NSPersistentStoreDescription(url: storeURL)]
+        var loadError: Error?
+        oldContainer.loadPersistentStores { _, error in loadError = error }
+        XCTAssertNil(loadError)
+        let old = NSEntityDescription.insertNewObject(forEntityName: "Transaction", into: oldContainer.viewContext)
+        old.setValue(UUID(), forKey: "id")
+        old.setValue("Salary v6", forKey: "note")
+        old.setValue(true, forKey: "income")
+        old.setValue(50.0, forKey: "amount")
+        old.setValue(Date(timeIntervalSince1970: 1_790_000_000), forKey: "date")
+        try oldContainer.viewContext.save()
+        try oldContainer.persistentStoreCoordinator.persistentStores.forEach {
+            try oldContainer.persistentStoreCoordinator.remove($0)
+        }
+
+        let migrated = DataController(storeURL: storeURL, cloudEnabled: false)
+        try await waitUntilLoaded(migrated)
+        let salary = try XCTUnwrap(try migrated.context.fetch(Transaction.fetchRequest()).first { $0.note == "Salary v6" })
+        XCTAssertFalse(salary.countsInPreviousMonth)
+        XCTAssertEqual(salary.amount, 50, accuracy: 0.001)
+        for store in migrated.container.persistentStoreCoordinator.persistentStores {
+            try migrated.container.persistentStoreCoordinator.remove(store)
         }
     }
 

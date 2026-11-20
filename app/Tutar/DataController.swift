@@ -142,7 +142,8 @@ final class DataController: ObservableObject {
         amountMinorUnits: Int64,
         date: Date,
         recurringType: Int = 0,
-        recurringCoefficient: Int = 1
+        recurringCoefficient: Int = 1,
+        countsInPreviousMonth: Bool = false
     ) throws -> Transaction {
         guard amountMinorUnits > 0 else { throw InstallmentError.invalidAmount }
         let transaction = NSEntityDescription.insertNewObject(
@@ -155,7 +156,8 @@ final class DataController: ObservableObject {
             category: category,
             income: income,
             amountMinorUnits: amountMinorUnits,
-            date: date
+            date: date,
+            countsInPreviousMonth: countsInPreviousMonth
         )
         configureRecurrence(
             transaction,
@@ -233,7 +235,8 @@ final class DataController: ObservableObject {
         date: Date,
         intervalMonths: Int,
         recurringType: Int = 0,
-        recurringCoefficient: Int = 1
+        recurringCoefficient: Int = 1,
+        countsInPreviousMonth: Bool = false
     ) throws {
         guard amountMinorUnits > 0 else { throw InstallmentError.invalidAmount }
 
@@ -247,7 +250,8 @@ final class DataController: ObservableObject {
                 category: category,
                 income: income,
                 amountMinorUnits: amountMinorUnits,
-                date: date
+                date: date,
+                countsInPreviousMonth: countsInPreviousMonth
             )
             configureRecurrence(
                 transaction,
@@ -301,7 +305,8 @@ final class DataController: ObservableObject {
                 category: category,
                 income: income,
                 amountMinorUnits: plan[index].amountMinorUnits,
-                date: dates[index]
+                date: dates[index],
+                countsInPreviousMonth: countsInPreviousMonth
             )
             item.installmentIntervalMonths = Int16(intervalMonths)
         }
@@ -541,7 +546,8 @@ final class DataController: ObservableObject {
         category: Category,
         income: Bool,
         amountMinorUnits: Int64,
-        date: Date
+        date: Date,
+        countsInPreviousMonth: Bool = false
     ) {
         let calendar = Calendar.current
         transaction.id = transaction.id ?? UUID()
@@ -553,6 +559,8 @@ final class DataController: ObservableObject {
         transaction.date = date
         transaction.day = calendar.startOfDay(for: date)
         transaction.month = calendar.date(from: calendar.dateComponents([.year, .month], from: date))
+        // Only income can count in the previous month. An expense or a new recurring copy gets false.
+        transaction.countsInPreviousMonth = income && countsInPreviousMonth
     }
 
     private func configureRecurrence(_ transaction: Transaction, type: Int, coefficient: Int) {
@@ -1044,6 +1052,9 @@ extension Transaction {
     }
     var amountMinorUnits: Int64 { Int64((amount * 100).rounded()) }
     var isInstallment: Bool { installmentGroupID != nil && installmentIndex > 0 }
+    /// "Önceki aya say": the record counts in the period month before the one of its real date.
+    /// The income check also covers a CloudKit merge that joins an expense change with a flag change.
+    var countsInPreviousPeriod: Bool { income && countsInPreviousMonth }
     var installmentLabel: String? {
         isInstallment ? "\(installmentIndex)/\(installmentCount)" : nil
     }
