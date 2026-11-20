@@ -1113,6 +1113,54 @@ final class TutarUITests: XCTestCase {
     }
 
     @MainActor
+    func testTurkishIncomeCanCountInPreviousMonth() throws {
+        let app = launch(language: "tr", locale: "tr_TR", seed: false, appearance: "Light")
+        XCTAssertTrue(app.buttons["addTransactionButton"].waitForExistence(timeout: 8))
+        app.buttons["addTransactionButton"].tap()
+        XCTAssertTrue(app.buttons["keypad8"].waitForExistence(timeout: 5))
+        let toggle = app.switches["previousMonthToggle"]
+        XCTAssertFalse(toggle.exists, "The switch is for income only.")
+        app.segmentedControls.buttons["Gelir"].tap()
+        XCTAssertTrue(toggle.waitForExistence(timeout: 3))
+        for key in ["keypad8", "keypad0", "keypad0", "keypad0"] { app.buttons[key].tap() }
+        let noteField = app.textFields["noteField"]
+        noteField.tap()
+        noteField.typeText("Maaş")
+        app.buttons["keyboardDoneButton"].tap()
+
+        toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        let turkish = Locale(identifier: "tr_TR")
+        let calendar = Calendar(identifier: .gregorian)
+        let thisMonth = try XCTUnwrap(calendar.dateInterval(of: .month, for: .now)).start
+        let previousMonth = try XCTUnwrap(calendar.date(byAdding: .month, value: -1, to: thisMonth))
+        let monthName = previousMonth.formatted(.dateTime.month(.wide).year().locale(turkish))
+        let noteText = "Sayıldığı ay: \(monthName)"
+        let labeledToggle = app.switches.matching(NSPredicate(
+            format: "identifier == 'previousMonthToggle' AND label CONTAINS %@", noteText
+        )).firstMatch
+        XCTAssertTrue(labeledToggle.waitForExistence(timeout: 3), toggle.label)
+        attachScreenshot("previous-month-editor-tr", in: app)
+        app.buttons["keypadSubmit"].tap()
+        XCTAssertTrue(app.buttons["keypadSubmit"].waitForNonExistence(timeout: 5))
+
+        // The real date is in this month, but the record counts and shows only in the month before.
+        let title = app.staticTexts.matching(NSPredicate(format: "identifier == 'transactionTitle' AND label == 'Maaş'")).firstMatch
+        assertRemainsAbsent(title, duration: 1)
+        app.buttons["previousMonthButton"].tap()
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", monthName)).firstMatch.exists, monthName)
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "previousMonthBadge").firstMatch.exists)
+        let realDate = Date.now.formatted(.dateTime.day().month(.abbreviated).locale(turkish))
+        let metadata = app.staticTexts["transactionMetadata"].label
+        XCTAssertTrue(metadata.contains(realDate), "\(metadata) / \(realDate)")
+        let income = app.staticTexts.matching(NSPredicate(
+            format: "identifier == 'monthIncomeAmount' AND label == %@", "₺8.000,00"
+        )).firstMatch
+        XCTAssertTrue(income.waitForExistence(timeout: 3))
+        attachScreenshot("previous-month-records-tr", in: app)
+    }
+
+    @MainActor
     func testAppStoreScreenshotsTurkish() {
         captureAppStoreScreenshots(language: "tr", locale: "tr_TR", suffix: "tr")
     }

@@ -409,10 +409,11 @@ struct TransactionsView: View {
         periods.interval(containing: selectedMonth)
     }
 
+    /// The records of the selected month: by real date, or one month later for "Önceki aya say".
     private var monthTransactions: [Transaction] {
-        let interval = monthInterval
+        let range = periods.countedRange(from: selectedMonth)
         return transactions.filter {
-            interval.containsHalfOpen($0.wrappedDate) && matchesSearch($0) && matchesFilter($0)
+            range.contains($0) && matchesSearch($0) && matchesFilter($0)
         }
     }
 
@@ -770,16 +771,23 @@ struct TransactionsView: View {
         clearHighlight()
         searchText = ""
         filter = .all
-        selectedMonth = periods.month(containing: target.interval.start)
+        let periods = periods
+        let records = transactions.filter {
+            target.transactionIDs.contains(transactionID($0)) && $0.income == target.income
+        }
+        let countedMonths = records.map {
+            periods.countedMonth(of: $0.wrappedDate, previous: $0.countsInPreviousPeriod)
+        }
+        // A week bar uses real dates, so its records can count in two months. Prefer the month of the bar.
+        let barMonth = periods.month(containing: target.interval.start)
+        let month = countedMonths.contains(barMonth) ? barMonth : countedMonths.first ?? barMonth
+        selectedMonth = month
         Task { @MainActor in
             await Task.yield()
             await Task.yield()
-            let matches = transactions
-                .filter {
-                    target.transactionIDs.contains(transactionID($0))
-                        && $0.income == target.income
-                        && target.interval.containsHalfOpen($0.wrappedDate)
-                }
+            let range = periods.countedRange(from: month)
+            let matches = records
+                .filter { range.contains($0) }
                 .sorted { $0.wrappedDate > $1.wrappedDate }
             let targetDays = Set(matches.map { Calendar.current.startOfDay(for: $0.wrappedDate) })
             collapsedDays.subtract(targetDays)
@@ -1026,8 +1034,10 @@ private struct MonthSummaryView: View {
 
     private var balancePoints: [(date: Date, balance: Double)] {
         let calendar = Calendar.current
+        let lastInstant = interval.end.addingTimeInterval(-1)
+        // An "Önceki aya say" record has a real date after the period. It counts on the last day.
         let transactionsByDay = Dictionary(grouping: transactions) {
-            calendar.startOfDay(for: $0.wrappedDate)
+            calendar.startOfDay(for: min($0.wrappedDate, lastInstant))
         }
         var runningBalance = 0.0
         var points = [(date: interval.start, balance: runningBalance)]
@@ -1157,6 +1167,13 @@ struct TransactionRow: View {
                     .allowsTightening(true)
                     .accessibilityIdentifier("transactionMetadata")
                 scheduleIndicator
+                if transaction.countsInPreviousPeriod {
+                    Image(systemName: "arrow.uturn.backward")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .accessibilityLabel(Text("transaction.previousMonth.badge"))
+                        .accessibilityIdentifier("previousMonthBadge")
+                }
             }
             .lineLimit(1)
         }
@@ -1313,6 +1330,43 @@ struct MonthPeriods: Equatable {
         return DateInterval(start: end(of: monthStart(month, adding: -1)), end: end(of: month))
     }
 
+    /// The period month in which a record counts. An income marked "Önceki aya say" (`previous`) counts in the
+    /// period month before the one of its real date.
+    func countedMonth(of date: Date, previous: Bool) -> Date {
+        let month = month(containing: date)
+        return previous ? monthStart(month, adding: -1) : month
+    }
+
+    /// The real dates of the records that count in some period months. Two date ranges keep the filter a
+    /// comparison per record, without calendar math.
+    struct CountedRange: Equatable {
+        /// A record counts when its date is here, except an income marked "Önceki aya say".
+        let interval: DateInterval
+        /// An income marked "Önceki aya say" counts when its date is here, one period month later.
+        let shifted: DateInterval
+
+        func contains(_ transaction: Transaction) -> Bool {
+            contains(transaction.wrappedDate, previous: transaction.countsInPreviousPeriod)
+        }
+
+        func contains(_ date: Date, previous: Bool) -> Bool {
+            (previous ? shifted : interval).containsHalfOpen(date)
+        }
+    }
+
+    /// The records that count in the period months that contain `first` through `last`.
+    func countedRange(from first: Date, through last: Date? = nil) -> CountedRange {
+        let first = month(containing: first)
+        let last = month(containing: last ?? first)
+        return CountedRange(
+            interval: DateInterval(start: interval(containing: first).start, end: interval(containing: last).end),
+            shifted: DateInterval(
+                start: interval(containing: monthStart(first, adding: 1)).start,
+                end: interval(containing: monthStart(last, adding: 1)).end
+            )
+        )
+    }
+
     func key(for month: Date) -> String {
         let components = calendar.dateComponents([.year, .month], from: month)
         return String(format: "%04d-%02d", components.year ?? 0, components.month ?? 0)
@@ -1394,6 +1448,13 @@ enum AnalysisPeriod: Int, CaseIterable, Identifiable {
         }
     }
 
+    /// The records of the period: by real date for a week, by counted month ("Önceki aya say") otherwise.
+    func countedRange(containing date: Date, in periods: MonthPeriods) -> MonthPeriods.CountedRange {
+        let interval = interval(containing: date, in: periods)
+        guard self != .week else { return MonthPeriods.CountedRange(interval: interval, shifted: interval) }
+        return periods.countedRange(from: interval.start, through: interval.end.addingTimeInterval(-1))
+    }
+
     func date(byMoving offset: Int, from date: Date, in periods: MonthPeriods) -> Date {
         periods.calendar.date(byAdding: component, value: offset, to: anchor(for: date, in: periods)) ?? date
     }
@@ -1473,8 +1534,8 @@ struct AnalysisView: View {
     }
 
     private var periodTransactions: [Transaction] {
-        let interval = interval
-        return transactions.filter { interval.containsHalfOpen($0.wrappedDate) }
+        let range = period.countedRange(containing: selectedAnalysisDate, in: periods)
+        return transactions.filter { range.contains($0) }
     }
 
     private var selectedTransactions: [Transaction] {
@@ -1491,10 +1552,12 @@ struct AnalysisView: View {
 
     private var chartData: [AnalysisChartPoint] {
         let periods = periods
+        // In a month an "Önceki aya say" record has a real date after the period. Its bar is the last day.
+        let lastInstant = interval.end.addingTimeInterval(-1)
         return Dictionary(grouping: selectedTransactions) {
             period == .year
-                ? periods.month(containing: $0.wrappedDate)
-                : analysisCalendar.startOfDay(for: $0.wrappedDate)
+                ? periods.countedMonth(of: $0.wrappedDate, previous: $0.countsInPreviousPeriod)
+                : analysisCalendar.startOfDay(for: min($0.wrappedDate, lastInstant))
         }
         .map { date, items in
             AnalysisChartPoint(
