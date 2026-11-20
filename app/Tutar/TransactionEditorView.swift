@@ -397,7 +397,7 @@ struct TransactionEditorView: View {
                     intervalMonths: intervalMonths,
                     recurringType: schedule == .recurring ? recurringType : 0,
                     recurringCoefficient: recurringCoefficient,
-                    countsInPreviousMonth: income && countsInPreviousMonth
+                    countsInPreviousMonth: countsInPreviousMonth
                 )
             } else if schedule == .installments {
                 try dataController.createInstallments(
@@ -419,7 +419,7 @@ struct TransactionEditorView: View {
                     date: date,
                     recurringType: schedule == .recurring ? recurringType : 0,
                     recurringCoefficient: recurringCoefficient,
-                    countsInPreviousMonth: income && countsInPreviousMonth
+                    countsInPreviousMonth: countsInPreviousMonth
                 )
             }
             dismiss()
